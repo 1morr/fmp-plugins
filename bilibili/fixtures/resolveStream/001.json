@@ -1,0 +1,89 @@
+{
+  "meta": {
+    "recordedAt": "2026-09-30T03:18:23.575685Z"
+  },
+  "request": {
+    "method": "GET",
+    "url": "https://api.bilibili.com/x/web-interface/nav",
+    "headers": {
+      "accept": "application/json, text/plain, */*",
+      "cookie": "***",
+      "origin": "https://www.bilibili.com",
+      "referer": "https://www.bilibili.com/",
+      "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "access-control-allow-credentials": [
+        "true"
+      ],
+      "access-control-allow-headers": [
+        "origin,no-cache,x-requested-with,if-modified-since,pragma,last-modified,cache-control,expires,content-type,access-control-allow-credentials,dnt,x-customheader,keep-alive,user-agent,x-cache-webcdn,x-bilibili-key-real-ip,x-backend-bili-real-ip,x-risk-header,x-event-traceid"
+      ],
+      "access-control-allow-methods": [
+        "GET,POST,PUT,DELETE,PATCH"
+      ],
+      "access-control-allow-origin": [
+        "https://www.bilibili.com"
+      ],
+      "access-control-expose-headers": [
+        "x-bili-gaia-vvoucher,x-bili-metadata-legal-region,x-bili-metadata-ip-region,x-bili-trace-id,x-bili-gaia-param",
+        "X-Cache-Webcdn"
+      ],
+      "bili-status-code": [
+        "-101"
+      ],
+      "bili-trace-id": [
+        "6b390327e96abc7f"
+      ],
+      "cache-control": [
+        "no-cache"
+      ],
+      "connection": [
+        "keep-alive"
+      ],
+      "content-type": [
+        "application/json; charset=utf-8"
+      ],
+      "cpu_usage": [
+        "88"
+      ],
+      "cross-origin-resource-policy": [
+        "cross-origin"
+      ],
+      "date": [
+        "Wed, 30 Sep 2026 03:18:24 GMT"
+      ],
+      "expires": [
+        "Wed, 30 Sep 2026 03:18:23 GMT"
+      ],
+      "vary": [
+        "Origin"
+      ],
+      "x-bili-metadata-ip-region": [
+        "***"
+      ],
+      "x-bili-trace-id": [
+        "5416efc6fa86a2ce6b390327e96abc7f"
+      ],
+      "x-cache-webcdn": [
+        "BYPASS from blzone09"
+      ]
+    },
+    "jsonBody": {
+      "code": -101,
+      "message": "账号未登录",
+      "ttl": 1,
+      "data": {
+        "isLogin": false,
+        "wbi_img": {
+          "img_url": "https://i0.hdslb.com/bfs/wbi/7cd084941338484aae1ad9425b84077c.png",
+          "sub_url": "https://i0.hdslb.com/bfs/wbi/4932caff0ff746eab6f01bf08b70ac45.png"
+        },
+        "ip_region": "***"
+      }
+    }
+  }
+}
