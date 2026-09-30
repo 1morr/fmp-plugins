@@ -1,0 +1,20 @@
+{
+  "search": {
+    "input": { "keyword": "钢琴", "page": 1 },
+    "expect": {
+      "minItems": 10,
+      "nonEmpty": ["sourceId", "title", "uploader", "durationMs", "artwork"]
+    }
+  },
+  "resolveStream": {
+    "input": {
+      "sourceId": "BV1xx411c79H",
+      "purpose": "playback",
+      "formats": [{ "container": "mp4", "codec": "aac" }]
+    },
+    "expect": {
+      "minItems": 1,
+      "nonEmpty": ["url", "headers", "container", "codec", "bitrate"]
+    }
+  }
+}

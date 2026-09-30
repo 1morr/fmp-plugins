@@ -1,0 +1,344 @@
+{
+  "meta": {
+    "recordedAt": "2026-09-30T03:18:24.186891Z"
+  },
+  "request": {
+    "method": "GET",
+    "url": "https://api.bilibili.com/x/player/playurl?bvid=BV1xx411c79H&cid=3724723&fnval=16&qn=0&fourk=1",
+    "headers": {
+      "accept": "application/json, text/plain, */*",
+      "cookie": "***",
+      "origin": "https://www.bilibili.com",
+      "referer": "https://www.bilibili.com/",
+      "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "access-control-allow-credentials": [
+        "true"
+      ],
+      "access-control-allow-headers": [
+        "origin,no-cache,x-requested-with,if-modified-since,pragma,last-modified,cache-control,expires,content-type,access-control-allow-credentials,dnt,x-customheader,keep-alive,user-agent,x-cache-webcdn,x-bilibili-key-real-ip,x-backend-bili-real-ip,x-risk-header,x-event-traceid"
+      ],
+      "access-control-allow-methods": [
+        "GET,POST,PUT,DELETE"
+      ],
+      "access-control-allow-origin": [
+        "https://www.bilibili.com"
+      ],
+      "access-control-expose-headers": [
+        "x-bili-gaia-vvoucher,x-bili-trace-id,x-bili-gaia-param"
+      ],
+      "bili-status-code": [
+        "0"
+      ],
+      "bili-trace-id": [
+        "58a4033ec66abc7f"
+      ],
+      "cache-control": [
+        "no-cache"
+      ],
+      "connection": [
+        "keep-alive"
+      ],
+      "content-type": [
+        "application/json; charset=utf-8"
+      ],
+      "cpu_usage": [
+        "134"
+      ],
+      "cross-origin-resource-policy": [
+        "cross-origin"
+      ],
+      "date": [
+        "Wed, 30 Sep 2026 03:18:25 GMT"
+      ],
+      "expires": [
+        "Wed, 30 Sep 2026 03:18:24 GMT"
+      ],
+      "vary": [
+        "Origin"
+      ],
+      "x-bili-trace-id": [
+        "7772dece8403527058a4033ec66abc7f"
+      ],
+      "x-cache-webcdn": [
+        "BYPASS from blzone09"
+      ]
+    },
+    "jsonBody": {
+      "code": 0,
+      "message": "OK",
+      "ttl": 1,
+      "data": {
+        "from": "local",
+        "result": "suee",
+        "message": "",
+        "quality": 32,
+        "format": "flv480",
+        "timelength": 219195,
+        "accept_format": "flv480,mp4",
+        "accept_description": [
+          "清晰 480P",
+          "流畅 360P"
+        ],
+        "accept_quality": [
+          32,
+          16
+        ],
+        "video_codecid": 7,
+        "seek_param": "start",
+        "seek_type": "offset",
+        "dash": {
+          "duration": 220,
+          "minBufferTime": 1.5,
+          "min_buffer_time": 1.5,
+          "video": [
+            {
+              "id": 32,
+              "baseUrl": "https://upos-hz-mirrorakam.akamaized.net/upgcxcode/23/47/3724723/3724723_da3-1-30032.m4s?gen=playurlv3&os=akam&og=cos&platform=pc&nbs=1&uipk=5&hdnts=***&bvc=vod&nettype=0&bw=378152&lrs=0&build=0&dl=0&f=u_0_0&qn_dyeid=1b1e4f9a7b816bfb007729ec6abc7f81&agrr=0&buvid=***&orderid=0,2",
+              "base_url": "https://upos-hz-mirrorakam.akamaized.net/upgcxcode/23/47/3724723/3724723_da3-1-30032.m4s?gen=playurlv3&os=akam&og=cos&platform=pc&nbs=1&uipk=5&hdnts=***&bvc=vod&nettype=0&bw=378152&lrs=0&build=0&dl=0&f=u_0_0&qn_dyeid=1b1e4f9a7b816bfb007729ec6abc7f81&agrr=0&buvid=***&orderid=0,2",
+              "backupUrl": [
+                "https://upos-sz-mirrorcosov.bilivideo.com/upgcxcode/23/47/3724723/3724723_da3-1-30032.m4s?gen=playurlv3&os=cosovbv&og=cos&platform=pc&nbs=1&uipk=5&bvc=vod&nettype=0&bw=378152&lrs=0&build=0&dl=0&f=u_0_0&qn_dyeid=1b1e4f9a7b816bfb007729ec6abc7f81&agrr=0&buvid=***&orderid=1,2"
+              ],
+              "backup_url": [
+                "https://upos-sz-mirrorcosov.bilivideo.com/upgcxcode/23/47/3724723/3724723_da3-1-30032.m4s?gen=playurlv3&os=cosovbv&og=cos&platform=pc&nbs=1&uipk=5&bvc=vod&nettype=0&bw=378152&lrs=0&build=0&dl=0&f=u_0_0&qn_dyeid=1b1e4f9a7b816bfb007729ec6abc7f81&agrr=0&buvid=***&orderid=1,2"
+              ],
+              "bandwidth": 377922,
+              "mimeType": "video/mp4",
+              "mime_type": "video/mp4",
+              "codecs": "avc1.64001E",
+              "width": 512,
+              "height": 384,
+              "frameRate": "29.412",
+              "frame_rate": "29.412",
+              "sar": "1:1",
+              "startWithSap": 1,
+              "start_with_sap": 1,
+              "SegmentBase": {
+                "Initialization": "0-985",
+                "indexRange": "986-1545"
+              },
+              "segment_base": {
+                "initialization": "0-985",
+                "index_range": "986-1545"
+              },
+              "codecid": 7
+            },
+            {
+              "id": 32,
+              "baseUrl": "https://upos-hz-mirrorakam.akamaized.net/upgcxcode/23/47/3724723/3724723_da3x2-1-30033.m4s?platform=pc&uipk=5&os=akam&nbs=1&gen=playurlv3&og=hw&hdnts=***&bvc=vod&nettype=0&bw=143146&lrs=0&agrr=0&buvid=***&build=0&dl=0&f=u_0_0&qn_dyeid=1b1e4f9a7b816bfb007729ec6abc7f81&orderid=0,2",
+              "base_url": "https://upos-hz-mirrorakam.akamaized.net/upgcxcode/23/47/3724723/3724723_da3x2-1-30033.m4s?platform=pc&uipk=5&os=akam&nbs=1&gen=playurlv3&og=hw&hdnts=***&bvc=vod&nettype=0&bw=143146&lrs=0&agrr=0&buvid=***&build=0&dl=0&f=u_0_0&qn_dyeid=1b1e4f9a7b816bfb007729ec6abc7f81&orderid=0,2",
+              "backupUrl": [
+                "https://upos-sz-mirrorcosov.bilivideo.com/upgcxcode/23/47/3724723/3724723_da3x2-1-30033.m4s?nbs=1&uipk=5&gen=playurlv3&os=cosovbv&og=hw&platform=pc&bvc=vod&nettype=0&bw=143146&lrs=0&build=0&dl=0&f=u_0_0&qn_dyeid=1b1e4f9a7b816bfb007729ec6abc7f81&agrr=0&buvid=***&orderid=1,2"
+              ],
+              "backup_url": [
+                "https://upos-sz-mirrorcosov.bilivideo.com/upgcxcode/23/47/3724723/3724723_da3x2-1-30033.m4s?nbs=1&uipk=5&gen=playurlv3&os=cosovbv&og=hw&platform=pc&bvc=vod&nettype=0&bw=143146&lrs=0&build=0&dl=0&f=u_0_0&qn_dyeid=1b1e4f9a7b816bfb007729ec6abc7f81&agrr=0&buvid=***&orderid=1,2"
+              ],
+              "bandwidth": 143082,
+              "mimeType": "video/mp4",
+              "mime_type": "video/mp4",
+              "codecs": "hev1.1.6.L120.90",
+              "width": 512,
+              "height": 384,
+              "frameRate": "30.303",
+              "frame_rate": "30.303",
+              "sar": "1:1",
+              "startWithSap": 1,
+              "start_with_sap": 1,
+              "SegmentBase": {
+                "Initialization": "0-1152",
+                "indexRange": "1153-1712"
+              },
+              "segment_base": {
+                "initialization": "0-1152",
+                "index_range": "1153-1712"
+              },
+              "codecid": 12
+            },
+            {
+              "id": 16,
+              "baseUrl": "https://upos-hz-mirrorakam.akamaized.net/upgcxcode/23/47/3724723/3724723_da3x2-1-30011.m4s?os=akam&og=cos&platform=pc&uipk=5&nbs=1&gen=playurlv3&hdnts=***&bvc=vod&nettype=0&bw=308044&lrs=0&qn_dyeid=1b1e4f9a7b816bfb007729ec6abc7f81&agrr=0&buvid=***&build=0&dl=0&f=u_0_0&orderid=0,2",
+              "base_url": "https://upos-hz-mirrorakam.akamaized.net/upgcxcode/23/47/3724723/3724723_da3x2-1-30011.m4s?os=akam&og=cos&platform=pc&uipk=5&nbs=1&gen=playurlv3&hdnts=***&bvc=vod&nettype=0&bw=308044&lrs=0&qn_dyeid=1b1e4f9a7b816bfb007729ec6abc7f81&agrr=0&buvid=***&build=0&dl=0&f=u_0_0&orderid=0,2",
+              "backupUrl": [
+                "https://upos-sz-mirrorcosov.bilivideo.com/upgcxcode/23/47/3724723/3724723_da3x2-1-30011.m4s?uipk=5&gen=playurlv3&os=cosovbv&og=cos&nbs=1&platform=pc&bvc=vod&nettype=0&bw=308044&lrs=0&f=u_0_0&qn_dyeid=1b1e4f9a7b816bfb007729ec6abc7f81&agrr=0&buvid=***&build=0&dl=0&orderid=1,2"
+              ],
+              "backup_url": [
+                "https://upos-sz-mirrorcosov.bilivideo.com/upgcxcode/23/47/3724723/3724723_da3x2-1-30011.m4s?uipk=5&gen=playurlv3&os=cosovbv&og=cos&nbs=1&platform=pc&bvc=vod&nettype=0&bw=308044&lrs=0&f=u_0_0&qn_dyeid=1b1e4f9a7b816bfb007729ec6abc7f81&agrr=0&buvid=***&build=0&dl=0&orderid=1,2"
+              ],
+              "bandwidth": 307905,
+              "mimeType": "video/mp4",
+              "mime_type": "video/mp4",
+              "codecs": "hev1.1.6.L120.90",
+              "width": 480,
+              "height": 360,
+              "frameRate": "30.303",
+              "frame_rate": "30.303",
+              "sar": "1:1",
+              "startWithSap": 1,
+              "start_with_sap": 1,
+              "SegmentBase": {
+                "Initialization": "0-1054",
+                "indexRange": "1055-1614"
+              },
+              "segment_base": {
+                "initialization": "0-1054",
+                "index_range": "1055-1614"
+              },
+              "codecid": 12
+            },
+            {
+              "id": 16,
+              "baseUrl": "https://upos-hz-mirrorakam.akamaized.net/upgcxcode/23/47/3724723/3724723_da3-1-30016.m4s?platform=pc&nbs=1&uipk=5&os=akam&gen=playurlv3&og=hw&hdnts=***&bvc=vod&nettype=0&bw=352228&lrs=0&build=0&dl=0&f=u_0_0&qn_dyeid=1b1e4f9a7b816bfb007729ec6abc7f81&agrr=0&buvid=***&orderid=0,2",
+              "base_url": "https://upos-hz-mirrorakam.akamaized.net/upgcxcode/23/47/3724723/3724723_da3-1-30016.m4s?platform=pc&nbs=1&uipk=5&os=akam&gen=playurlv3&og=hw&hdnts=***&bvc=vod&nettype=0&bw=352228&lrs=0&build=0&dl=0&f=u_0_0&qn_dyeid=1b1e4f9a7b816bfb007729ec6abc7f81&agrr=0&buvid=***&orderid=0,2",
+              "backupUrl": [
+                "https://upos-sz-mirrorcosov.bilivideo.com/upgcxcode/23/47/3724723/3724723_da3-1-30016.m4s?nbs=1&uipk=5&platform=pc&gen=playurlv3&os=cosovbv&og=hw&bvc=vod&nettype=0&bw=352228&lrs=0&dl=0&f=u_0_0&qn_dyeid=1b1e4f9a7b816bfb007729ec6abc7f81&agrr=0&buvid=***&build=0&orderid=1,2"
+              ],
+              "backup_url": [
+                "https://upos-sz-mirrorcosov.bilivideo.com/upgcxcode/23/47/3724723/3724723_da3-1-30016.m4s?nbs=1&uipk=5&platform=pc&gen=playurlv3&os=cosovbv&og=hw&bvc=vod&nettype=0&bw=352228&lrs=0&dl=0&f=u_0_0&qn_dyeid=1b1e4f9a7b816bfb007729ec6abc7f81&agrr=0&buvid=***&build=0&orderid=1,2"
+              ],
+              "bandwidth": 352015,
+              "mimeType": "video/mp4",
+              "mime_type": "video/mp4",
+              "codecs": "avc1.64001E",
+              "width": 480,
+              "height": 360,
+              "frameRate": "29.412",
+              "frame_rate": "29.412",
+              "sar": "1:1",
+              "startWithSap": 1,
+              "start_with_sap": 1,
+              "SegmentBase": {
+                "Initialization": "0-1012",
+                "indexRange": "1013-1572"
+              },
+              "segment_base": {
+                "initialization": "0-1012",
+                "index_range": "1013-1572"
+              },
+              "codecid": 7
+            }
+          ],
+          "audio": [
+            {
+              "id": 30216,
+              "baseUrl": "https://upos-hz-mirrorakam.akamaized.net/upgcxcode/23/47/3724723/3724723_da3-1-30216.m4s?uipk=5&nbs=1&platform=pc&gen=playurlv3&os=akam&og=hw&hdnts=***&bvc=vod&nettype=0&bw=66295&lrs=0&dl=0&f=u_0_0&qn_dyeid=1b1e4f9a7b816bfb007729ec6abc7f81&agrr=0&buvid=***&build=0&orderid=0,2",
+              "base_url": "https://upos-hz-mirrorakam.akamaized.net/upgcxcode/23/47/3724723/3724723_da3-1-30216.m4s?uipk=5&nbs=1&platform=pc&gen=playurlv3&os=akam&og=hw&hdnts=***&bvc=vod&nettype=0&bw=66295&lrs=0&dl=0&f=u_0_0&qn_dyeid=1b1e4f9a7b816bfb007729ec6abc7f81&agrr=0&buvid=***&build=0&orderid=0,2",
+              "backupUrl": [
+                "https://upos-sz-mirrorcosov.bilivideo.com/upgcxcode/23/47/3724723/3724723_da3-1-30216.m4s?uipk=5&platform=pc&gen=playurlv3&os=cosovbv&nbs=1&og=hw&bvc=vod&nettype=0&bw=66295&lrs=0&buvid=***&build=0&dl=0&f=u_0_0&qn_dyeid=1b1e4f9a7b816bfb007729ec6abc7f81&agrr=0&orderid=1,2"
+              ],
+              "backup_url": [
+                "https://upos-sz-mirrorcosov.bilivideo.com/upgcxcode/23/47/3724723/3724723_da3-1-30216.m4s?uipk=5&platform=pc&gen=playurlv3&os=cosovbv&nbs=1&og=hw&bvc=vod&nettype=0&bw=66295&lrs=0&buvid=***&build=0&dl=0&f=u_0_0&qn_dyeid=1b1e4f9a7b816bfb007729ec6abc7f81&agrr=0&orderid=1,2"
+              ],
+              "bandwidth": 66236,
+              "mimeType": "audio/mp4",
+              "mime_type": "audio/mp4",
+              "codecs": "mp4a.40.2",
+              "width": 0,
+              "height": 0,
+              "frameRate": "",
+              "frame_rate": "",
+              "sar": "",
+              "startWithSap": 0,
+              "start_with_sap": 0,
+              "SegmentBase": {
+                "Initialization": "0-932",
+                "indexRange": "933-1492"
+              },
+              "segment_base": {
+                "initialization": "0-932",
+                "index_range": "933-1492"
+              },
+              "codecid": 0
+            },
+            {
+              "id": 30232,
+              "baseUrl": "https://upos-hz-mirrorakam.akamaized.net/upgcxcode/23/47/3724723/3724723_da3-1-30232.m4s?nbs=1&os=akam&og=cos&platform=pc&uipk=5&gen=playurlv3&hdnts=***&bvc=vod&nettype=0&bw=66294&lrs=0&qn_dyeid=1b1e4f9a7b816bfb007729ec6abc7f81&agrr=0&buvid=***&build=0&dl=0&f=u_0_0&orderid=0,2",
+              "base_url": "https://upos-hz-mirrorakam.akamaized.net/upgcxcode/23/47/3724723/3724723_da3-1-30232.m4s?nbs=1&os=akam&og=cos&platform=pc&uipk=5&gen=playurlv3&hdnts=***&bvc=vod&nettype=0&bw=66294&lrs=0&qn_dyeid=1b1e4f9a7b816bfb007729ec6abc7f81&agrr=0&buvid=***&build=0&dl=0&f=u_0_0&orderid=0,2",
+              "backupUrl": [
+                "https://upos-sz-mirrorcosov.bilivideo.com/upgcxcode/23/47/3724723/3724723_da3-1-30232.m4s?platform=pc&nbs=1&uipk=5&gen=playurlv3&og=cos&os=cosovbv&bvc=vod&nettype=0&bw=66294&lrs=0&dl=0&f=u_0_0&qn_dyeid=1b1e4f9a7b816bfb007729ec6abc7f81&agrr=0&buvid=***&build=0&orderid=1,2"
+              ],
+              "backup_url": [
+                "https://upos-sz-mirrorcosov.bilivideo.com/upgcxcode/23/47/3724723/3724723_da3-1-30232.m4s?platform=pc&nbs=1&uipk=5&gen=playurlv3&og=cos&os=cosovbv&bvc=vod&nettype=0&bw=66294&lrs=0&dl=0&f=u_0_0&qn_dyeid=1b1e4f9a7b816bfb007729ec6abc7f81&agrr=0&buvid=***&build=0&orderid=1,2"
+              ],
+              "bandwidth": 66235,
+              "mimeType": "audio/mp4",
+              "mime_type": "audio/mp4",
+              "codecs": "mp4a.40.2",
+              "width": 0,
+              "height": 0,
+              "frameRate": "",
+              "frame_rate": "",
+              "sar": "",
+              "startWithSap": 0,
+              "start_with_sap": 0,
+              "SegmentBase": {
+                "Initialization": "0-907",
+                "indexRange": "908-1467"
+              },
+              "segment_base": {
+                "initialization": "0-907",
+                "index_range": "908-1467"
+              },
+              "codecid": 0
+            }
+          ],
+          "dolby": {
+            "type": 0,
+            "audio": null
+          },
+          "flac": null
+        },
+        "support_formats": [
+          {
+            "quality": 32,
+            "format": "flv480",
+            "new_description": "480P 标清",
+            "display_desc": "480P",
+            "superscript": "",
+            "codecs": [
+              "avc1.64001E",
+              "hev1.1.6.L120.90"
+            ],
+            "can_watch_qn_reason": 0,
+            "limit_watch_reason": 0,
+            "report": {}
+          },
+          {
+            "quality": 16,
+            "format": "mp4",
+            "new_description": "360P 流畅",
+            "display_desc": "360P",
+            "superscript": "",
+            "codecs": [
+              "avc1.64001E",
+              "hev1.1.6.L120.90"
+            ],
+            "can_watch_qn_reason": 0,
+            "limit_watch_reason": 0,
+            "report": {}
+          }
+        ],
+        "high_format": null,
+        "last_play_time": 0,
+        "last_play_cid": 0,
+        "view_info": null,
+        "play_conf": {
+          "is_new_description": false
+        },
+        "cur_language": "",
+        "cur_production_type": 0,
+        "auto_qn_resp": {
+          "dyeid": "1b1e4f9a7b816bfb007729ec6abc7f81",
+          "qn_feature": {
+            "quality_tag": "高清优先",
+            "tid_name": "",
+            "sub_tid_name": ""
+          }
+        }
+      }
+    }
+  }
+}
