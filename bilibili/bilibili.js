@@ -407,18 +407,44 @@ async function playurl(bvid, cid, fnval, qn, extra) {
   return checkCode(json, 'playurl');
 }
 
-/** DASH 音訊，依頻寬由高到低。 */
-async function dashCandidates(bvid, cid, formats, dropped) {
+/**
+ * 依頻寬由高到低排好的音軌裡，音質偏好選中的那一個的位置：high 最高、low 最低、medium 取中間
+ * （`Math.floor(n / 2)`，兩個時是低的那個）。與舊專案 selectByQualityLevel 相同。沒給或不認得時當
+ * high。
+ */
+function qualityIndex(count, quality) {
+  if (quality === 'low') return Math.max(count - 1, 0);
+  if (quality === 'medium') return Math.floor(count / 2);
+  return 0;
+}
+
+/**
+ * 依頻寬由高到低排好的音軌，改成備援的順序：選中的那一個、比它低的（由高到低）、比它高的（由低到
+ * 高）。先往下降，沒有更低的才往上（舊專案 audioQualityFallbackLevels 也是先降）。
+ */
+function fallbackOrder(sortedByBandwidthDesc, quality) {
+  const chosen = qualityIndex(sortedByBandwidthDesc.length, quality);
+  return [
+    ...sortedByBandwidthDesc.slice(chosen),
+    ...sortedByBandwidthDesc.slice(0, chosen).reverse(),
+  ];
+}
+
+/** DASH 音訊：平台能播的音軌依頻寬排好，照 fallbackOrder 排成候選。 */
+async function dashCandidates(bvid, cid, formats, quality, dropped) {
   const data = await playurl(bvid, cid, FNVAL_DASH, QN_DEFAULT, { fourk: 1 });
   const audios = data.dash && Array.isArray(data.dash.audio) ? data.dash.audio : [];
-  const sorted = audios
-    .filter((a) => typeof a.bandwidth === 'number')
-    .sort((a, b) => b.bandwidth - a.bandwidth);
-  const out = [];
-  for (const audio of sorted) {
+  const playable = [];
+  for (const audio of audios) {
+    if (typeof audio.bandwidth !== 'number') continue;
     const container = String(audio.mimeType || audio.mime_type || '') === 'audio/mp4' ? 'mp4' : null;
     const codec = dashCodec(audio.codecs);
     if (container === null || codec === null || !accepts(formats, container, codec)) continue;
+    playable.push({ audio, container, codec });
+  }
+  playable.sort((a, b) => b.audio.bandwidth - a.audio.bandwidth);
+  const out = [];
+  for (const { audio, container, codec } of fallbackOrder(playable, quality)) {
     const urls = [
       audio.baseUrl,
       audio.base_url,
@@ -430,8 +456,8 @@ async function dashCandidates(bvid, cid, formats, dropped) {
   return out;
 }
 
-/** durl（音訊與影像混在一起）；容器看 format，音訊是 aac。 */
-async function durlCandidates(bvid, cid, formats, dropped) {
+/** durl（音訊與影像混在一起）；容器看 format，音訊是 aac。音質偏好不適用（只有一條）。 */
+async function durlCandidates(bvid, cid, formats, quality, dropped) {
   const data = await playurl(bvid, cid, FNVAL_DURL, QN_HIGH, {});
   const format = String(data.format || '');
   const container = format.startsWith('flv') ? 'flv' : format.startsWith('mp4') ? 'mp4' : null;
@@ -447,7 +473,7 @@ function fallsBack(e) {
   return e !== null && typeof e === 'object' && (e.fmpError === 'NotFound' || e.fmpError === 'Unavailable');
 }
 
-export async function resolveStream({ sourceId, cid, formats }) {
+export async function resolveStream({ sourceId, cid, formats, quality }) {
   const resolvedCid = typeof cid === 'number' ? cid : await cidOf(sourceId);
   const dropped = [];
   // 先 DASH 音訊，再 durl（舊專案 streamPriority：audioOnly → muxed）。NotFound、
@@ -456,7 +482,7 @@ export async function resolveStream({ sourceId, cid, formats }) {
   let lastError = null;
   for (const resolve of [dashCandidates, durlCandidates]) {
     try {
-      candidates = await resolve(sourceId, resolvedCid, formats, dropped);
+      candidates = await resolve(sourceId, resolvedCid, formats, quality, dropped);
       if (candidates.length > 0) break;
     } catch (e) {
       if (!fallsBack(e)) throw e;
