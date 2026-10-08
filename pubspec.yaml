@@ -1,0 +1,12 @@
+name: fmp_plugins_tool
+description: Generates index.json for the fmp-plugins repository (not a package).
+publish_to: none
+
+environment:
+  sdk: ^3.5.0
+
+dependencies:
+  crypto: 3.0.7
+
+dev_dependencies:
+  test: 1.33.0

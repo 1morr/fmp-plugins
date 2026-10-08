@@ -1,0 +1,203 @@
+name: CI
+
+# 每個頂層目錄只要有 `<目錄>/<目錄>.js` 就是一個插件。`discover` 動態列出它們，
+# 新增插件不用改這個檔。
+# - index：`index.json` 是最新的，產生腳本的單元測試通過。
+# - npm：有 package.json 的插件目錄跑自己的單元測試。
+# - contract：以 FMP_REF 釘住的 FMP 對每個插件重播契約（不連網）。
+# - version：PR 裡 `.js` 有改動的插件，manifest 版本必須比 main 的高（semver）。
+# 冒煙測試（--live）會連網，不進 CI（FMP ADR 0015 §決定 4）。
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
+  cancel-in-progress: true
+
+env:
+  # 契約執行器所在的 FMP commit（完整 SHA）。FMP 的宿主 API 變了，就開 PR 改它。
+  FMP_REF: fcb52d28236f36f924950a98dc2947b625d1aa11
+  # 跟 FMP 自己的 app CI 同一版。
+  FLUTTER_VERSION: '3.47.5'
+  DART_VERSION: '3.13.4'
+  NODE_VERSION: '24'
+
+jobs:
+  discover:
+    name: Discover Plugins
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      plugins: ${{ steps.list.outputs.plugins }}
+      npm_plugins: ${{ steps.list.outputs.npm_plugins }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: List plugin directories
+        id: list
+        run: |
+          plugins=()
+          npm_plugins=()
+          for dir in */; do
+            dir="${dir%/}"
+            [ -f "$dir/$dir.js" ] || continue
+            plugins+=("$dir")
+            [ -f "$dir/package.json" ] && npm_plugins+=("$dir")
+          done
+          to_json() { if [ "$#" -eq 0 ]; then echo '[]'; else printf '%s\n' "$@" | jq -R . | jq -sc .; fi; }
+          echo "plugins=$(to_json "${plugins[@]}")" >> "$GITHUB_OUTPUT"
+          echo "npm_plugins=$(to_json "${npm_plugins[@]}")" >> "$GITHUB_OUTPUT"
+
+  index:
+    name: Index Is Up To Date
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Setup Dart
+        uses: dart-lang/setup-dart@6afc89df92d6eb3834022f73cd65adc8cdfcb92d # v1.8.1
+        with:
+          sdk: ${{ env.DART_VERSION }}
+
+      - name: Dart dependencies
+        run: dart pub get
+
+      - name: Check formatting
+        run: dart format --output=none --set-exit-if-changed tool test
+
+      - name: Analyze
+        run: dart analyze --fatal-infos
+
+      - name: Unit tests
+        run: dart test
+
+      - name: Check index.json
+        run: dart run tool/build_index.dart --check
+
+  npm:
+    name: Unit Tests (${{ matrix.plugin }})
+    needs: discover
+    if: needs.discover.outputs.npm_plugins != '[]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        plugin: ${{ fromJSON(needs.discover.outputs.npm_plugins) }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Setup Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install and test
+        working-directory: ${{ matrix.plugin }}
+        run: |
+          npm ci
+          npm test
+
+  contract:
+    name: Contract Replay (${{ matrix.plugin }})
+    needs: discover
+    if: needs.discover.outputs.plugins != '[]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        plugin: ${{ fromJSON(needs.discover.outputs.plugins) }}
+
+    steps:
+      - name: Checkout plugins
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Checkout FMP
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: 1morr/FMP
+          ref: ${{ env.FMP_REF }}
+          path: fmp
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+          cache-key: flutter-${{ env.FLUTTER_VERSION }}-${{ runner.os }}
+          pub-cache: true
+
+      - name: Flutter dependencies
+        working-directory: fmp/app
+        run: flutter pub get
+
+      - name: Replay contract
+        working-directory: fmp/app
+        env:
+          FMP_PLUGIN_DIR: ${{ github.workspace }}/${{ matrix.plugin }}
+        run: flutter test test/plugins/contract/contract_test.dart
+
+  version:
+    name: Version Bump
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      # 相對 PR 與 main 的共同祖先：`.js` 有差異就要求 manifest 版本比那時的高；
+      # 祖先裡沒有這個插件（新插件）就通過。
+      - name: Require a higher version when the script changed
+        env:
+          BASE_REF: origin/${{ github.base_ref }}
+        run: |
+          base=$(git merge-base "$BASE_REF" HEAD)
+          failed=0
+          for dir in */; do
+            dir="${dir%/}"
+            file="$dir/$dir.js"
+            [ -f "$file" ] || continue
+            if ! git cat-file -e "$base:$file" 2>/dev/null; then
+              echo "$dir: new plugin"
+              continue
+            fi
+            if git diff --quiet "$base" HEAD -- "$file"; then
+              echo "$dir: unchanged"
+              continue
+            fi
+            old=$(git show "$base:$file" | node tool/manifest_version.mjs)
+            new=$(node tool/manifest_version.mjs < "$file")
+            if node -e '
+              const parse = (v) => v.split(/[-+]/)[0].split(".").map(Number);
+              const [a, b] = [parse(process.argv[1]), parse(process.argv[2])];
+              for (let i = 0; i < 3; i++) if (a[i] !== b[i]) process.exit(a[i] > b[i] ? 0 : 1);
+              process.exit(1);
+            ' "$new" "$old"; then
+              echo "$dir: $old -> $new"
+            else
+              echo "::error file=$file::$file changed but version $new is not higher than $old on main. Bump \"version\" in the header."
+              failed=1
+            fi
+          done
+          exit "$failed"
