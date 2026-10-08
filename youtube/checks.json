@@ -1,0 +1,25 @@
+{
+  "search": {
+    "input": { "keyword": "rick astley never gonna give you up", "page": 1 },
+    "expect": {
+      "minItems": 5,
+      "nonEmpty": ["sourceId", "title", "uploader", "durationMs", "artwork"]
+    }
+  },
+  "resolveStream": {
+    "input": {
+      "sourceId": "dQw4w9WgXcQ",
+      "purpose": "playback",
+      "formats": [
+        { "container": "webm", "codec": "opus" },
+        { "container": "mp4", "codec": "aac" }
+      ],
+      "quality": "high"
+    },
+    "expect": {
+      "minItems": 2,
+      "nonEmpty": ["url", "container", "codec", "bitrate", "expiresAt"]
+    },
+    "expiresAtPattern": "[?&]expire=(\\d+)"
+  }
+}

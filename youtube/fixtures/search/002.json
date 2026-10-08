@@ -1,0 +1,1074 @@
+{
+  "meta": {
+    "recordedAt": "2026-10-08T12:08:47.334028Z"
+  },
+  "request": {
+    "method": "POST",
+    "url": "https://www.youtube.com/youtubei/v1/config?prettyPrint=false",
+    "headers": {
+      "accept": "*/*",
+      "accept-language": "",
+      "content-length": "2390",
+      "content-type": "application/json",
+      "cookie": "***",
+      "origin": "https://www.youtube.com",
+      "referer": "https://www.youtube.com",
+      "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Safari/605.1.15",
+      "x-goog-visitor-id": "CgtTa0lsUUh5czBsRyjRj57WBjIKCgJNTxIEGgAgSGLfAgrcAjIyLllUPWk5N1U4WHRlYUhJdGZrbGlwN0otb1djOE1vUGdKWUR2SUhDSk0yOHVYa3g0RDdBWFNhVElsV09pRTVKcGoxNHc5dFlna0lsM0pHRjFIcTA5cnpxSVZBeWJYNFdqdE1mZTZBTDZ0emc1YlFVWDJGNXdkN0JwRXBJT1hGQkZEMnZxWVVsMTZxai1zYUN6NEtnZTRkZmtYTkt0dy1RSlpCMTdrRkFtbEpuaFhHTnc5X1NXY0x0UjA3YkJVb3MzNmNuVDlnM2w2Z1hfM0k4TkR2dEF6a1JvZk1Oa1lhOTlyR1ctNWhSMkwxek14SVJyc3UwRXB3OWU1VHBpZk15emZnYW14aVNMaXQ1cVNXZjItaGxYVDhfMS05Si1kMzNVTVNfbW1kbVUzWFRMTWtTOVBRWmUyOV8zN3VDS003VTVHMlpjcmlJS0U5NkJ1eFRPYWlWZWZtOVVsZw%3D%3D",
+      "x-origin": "https://www.youtube.com",
+      "x-youtube-client-version": "2.20261007.01.00"
+    },
+    "body": "{\"context\":{\"client\":{\"hl\":\"en\",\"gl\":\"US\",\"remoteHost\":\"203.0.113.77\",\"screenDensityFloat\":1,\"screenHeightPoints\":1440,\"screenPixelDensity\":1,\"screenWidthPoints\":2560,\"visitorData\":\"CgtTa0lsUUh5czBsRyjRj57WBjIKCgJNTxIEGgAgSGLfAgrcAjIyLllUPWk5N1U4WHRlYUhJdGZrbGlwN0otb1djOE1vUGdKWUR2SUhDSk0yOHVYa3g0RDdBWFNhVElsV09pRTVKcGoxNHc5dFlna0lsM0pHRjFIcTA5cnpxSVZBeWJYNFdqdE1mZTZBTDZ0emc1YlFVWDJGNXdkN0JwRXBJT1hGQkZEMnZxWVVsMTZxai1zYUN6NEtnZTRkZmtYTkt0dy1RSlpCMTdrRkFtbEpuaFhHTnc5X1NXY0x0UjA3YkJVb3MzNmNuVDlnM2w2Z1hfM0k4TkR2dEF6a1JvZk1Oa1lhOTlyR1ctNWhSMkwxek14SVJyc3UwRXB3OWU1VHBpZk15emZnYW14aVNMaXQ1cVNXZjItaGxYVDhfMS05Si1kMzNVTVNfbW1kbVUzWFRMTWtTOVBRWmUyOV8zN3VDS003VTVHMlpjcmlJS0U5NkJ1eFRPYWlWZWZtOVVsZw%3D%3D\",\"clientName\":\"WEB\",\"clientVersion\":\"2.20261007.01.00\",\"osName\":\"Macintosh\",\"osVersion\":\"10_15_7\",\"userAgent\":\"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Safari/605.1.15\",\"platform\":\"DESKTOP\",\"clientFormFactor\":\"UNKNOWN_FORM_FACTOR\",\"userInterfaceTheme\":\"USER_INTERFACE_THEME_LIGHT\",\"timeZone\":\"UTC\",\"originalUrl\":\"https://www.youtube.com\",\"deviceMake\":\"Apple\",\"deviceModel\":\"\",\"browserName\":\"Safari\",\"browserVersion\":\"18.6\",\"utcOffsetMinutes\":0,\"memoryTotalKbytes\":\"8000000\",\"rolloutToken\":\"***\",\"deviceExperimentId\":\"ChxOelk1TkRJMk56Z3lNVFF6T1RJM01ERXlOUT09ENGPntYGGNGPntYG\",\"mainAppWebInfo\":{\"graftUrl\":\"https://www.youtube.com\",\"pwaInstallabilityStatus\":\"PWA_INSTALLABILITY_STATUS_UNKNOWN\",\"webDisplayMode\":\"WEB_DISPLAY_MODE_BROWSER\",\"isWebNativeShareAvailable\":true},\"configInfo\":{\"appInstallData\":\"CNGPntYGEMn2gBMQyvuAExD36NIcEKSOgRMQw5HQHBDBj9AcEOLUrgUQvrauBRCc5dIcENyt0hwQy9GxBRC45M4cENr3zhwQh6zOHBCwirgiEL7a0hwQn8-AExDM364FEM3RsQUQnpWBExDevM4cEPDe0RwQ4YKAExCBzc4cEJmNsQUQ9quwBRCCj88cEL6E0RwQ-MSAExDS2tIcEPza0hwQ5-vRHBCu3tEcEKSp0RwQrtbPHBC4hIETEPG00BwQvYqwBRDklbAFEJ7QsAUQ0r3QHBC8pNAcEI7L0hwQpePSHBCMudIcEO-70hwQkN7SHBCw-NEcELbr0hwQibDOHBDax9IcEP-C0hwQs5DPHBDXi9EcEMOt0hwQj8rSHBDx7tIcEKH40BwQ9vfRHBCZ6M4cEJaH0RwQt4bPHBChl4ETENqF0BwQmeXSHBCj6dIcKpwBQ0FNU2J4VnN1TGJKREpVQ25BNzVGWEtrQnVBV3YtUVA0UVBTQlF6SEJad0JzZ1RRQkpHZzN3dndzUktIVERLcnJBU1R6QU8yNUFhRkZJS09BOWFERDh0S3ZKTUVyTHNEMmRVRjNTenhwd1c2VXVHU0J1T2ZCQVVGQkFPbEhadVhCTUVRQmE4T3R3STN2MG5kaEFhOGp3VWRCdz09MAA%3D\"}},\"user\":{\"enableSafetyMode\":false,\"lockedSafetyMode\":false},\"request\":{\"useSsl\":true,\"internalExperimentFlags\":[]}}}"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "alt-svc": [
+        "h3=\":443\"; ma=2592000,h3-29=\":443\"; ma=2592000"
+      ],
+      "content-type": [
+        "application/json; charset=UTF-8"
+      ],
+      "date": [
+        "Thu, 08 Oct 2026 12:08:49 GMT"
+      ],
+      "server": [
+        "scaffolding on HTTPServer2"
+      ],
+      "vary": [
+        "Origin",
+        "X-Origin",
+        "Referer"
+      ],
+      "x-content-type-options": [
+        "nosniff"
+      ],
+      "x-frame-options": [
+        "SAMEORIGIN"
+      ],
+      "x-xss-protection": [
+        "0"
+      ]
+    },
+    "jsonBody": {
+      "responseContext": {
+        "serviceTrackingParams": [
+          {
+            "service": "CSI",
+            "params": [
+              {
+                "key": "c",
+                "value": "WEB"
+              },
+              {
+                "key": "cver",
+                "value": "2.20261007.01.00"
+              },
+              {
+                "key": "yt_li",
+                "value": "0"
+              },
+              {
+                "key": "GetConfig_rid",
+                "value": "0x664001d12b5909f5"
+              }
+            ]
+          },
+          {
+            "service": "GFEEDBACK",
+            "params": [
+              {
+                "key": "logged_in",
+                "value": "0"
+              },
+              {
+                "key": "visitor_data",
+                "value": "CgtTa0lsUUh5czBsRyjRj57WBjIKCgJNTxIEGgAgSGLfAgrcAjIyLllUPWk5N1U4WHRlYUhJdGZrbGlwN0otb1djOE1vUGdKWUR2SUhDSk0yOHVYa3g0RDdBWFNhVElsV09pRTVKcGoxNHc5dFlna0lsM0pHRjFIcTA5cnpxSVZBeWJYNFdqdE1mZTZBTDZ0emc1YlFVWDJGNXdkN0JwRXBJT1hGQkZEMnZxWVVsMTZxai1zYUN6NEtnZTRkZmtYTkt0dy1RSlpCMTdrRkFtbEpuaFhHTnc5X1NXY0x0UjA3YkJVb3MzNmNuVDlnM2w2Z1hfM0k4TkR2dEF6a1JvZk1Oa1lhOTlyR1ctNWhSMkwxek14SVJyc3UwRXB3OWU1VHBpZk15emZnYW14aVNMaXQ1cVNXZjItaGxYVDhfMS05Si1kMzNVTVNfbW1kbVUzWFRMTWtTOVBRWmUyOV8zN3VDS003VTVHMlpjcmlJS0U5NkJ1eFRPYWlWZWZtOVVsZw%3D%3D"
+              }
+            ]
+          },
+          {
+            "service": "GUIDED_HELP",
+            "params": [
+              {
+                "key": "logged_in",
+                "value": "0"
+              }
+            ]
+          },
+          {
+            "service": "ECATCHER",
+            "params": [
+              {
+                "key": "client.version",
+                "value": "2.20261007"
+              },
+              {
+                "key": "client.name",
+                "value": "WEB"
+              }
+            ]
+          }
+        ],
+        "globalConfigGroup": {
+          "hotHashData": "CNGPntYGEhM5MjM4NjUzMjg3NzAzNTY3NDQzGNGPntYGKJTk_BIopdD9EijIyv4SKOGCgBMokJuAEyjYsIATKMq-gBMo-IWBEyiOhoETKIaMgRMolI2BEyikjoETKMyQgRMo-5GBEyjtkoETKJ6VgRMom5eBEzIyQUt6WlVzeWFCb251d3o0WjBNZWwxajBwV3FNelBtRWlELVRTVXYtX09rUC1JM281T2c6MkFLelpVc3lhQm9udXd6NFowTWVsMWowcFdxTXpQbUVpRC1UU1V2LV9Pa1AtSTNvNU9nQjxDQU1TSncwWG90ZjZGYTdCQnNpX0JvVU4waXVpQ0JVVTNjX0NESldORHFiN0Q5WUZ2WkRmQzg3NUt3PT0%3D",
+          "coldHashData": "CNGPntYGEhQxMjQ4OTI5OTI1NjI2MjM4ODU3NxjRj57WBjIyQUt6WlVzeWFCb251d3o0WjBNZWwxajBwV3FNelBtRWlELVRTVXYtX09rUC1JM281T2c6MkFLelpVc3lhQm9udXd6NFowTWVsMWowcFdxTXpQbUVpRC1UU1V2LV9Pa1AtSTNvNU9nQsgBQ0FNU2tBRU5QN2pkdHdLa0dlOHB4emFaa3BvUS14YU5OdjRqalJrMDloajJMYzRDbWdVTTJHX1lDOHNKX2hmd0E5RWI3eGU3SXFRQTJRV3BHZVlFRlZPbTNyVWZrWndGMWNZRWxKd0V6OElBajZjR19kUUdNcy1BQmVTa0J2ZjdCUE1EaU9RRjJJY0RwMC1ZRzdNR3JyQUJub1VDZ2FjRTl1a0dsOGtHcjVnRzRhOEczX0FFMF9RR3NuWFROZ1dYMlFhRjh3WT0%3D",
+          "rawColdConfigGroup": {
+            "configData": "CNGPntYGEL62rgUQ4tSuBRDj-LAFEK-nzhwQmejOHBCzkM8cEK7WzxwQpqfQHBDxkNEcEKWw0RwQhb3RHBDM3NEcEK7e0RwQ7Y_SHBCFkNIcEN6Z0hwQjp7SHBDcrdIcENKu0hwQwbTSHBDEvtIcEMPQ0hwQ4tHSHBDx1tIcEL7a0hwQ_NrSHBDz3NIcENXg0hwQ3OLSHBCc49IcEJzl0hwQz-bSHBDx7tIcEN3z0hwQsIq4IhoyQUt6WlVzeWFCb251d3o0WjBNZWwxajBwV3FNelBtRWlELVRTVXYtX09rUC1JM281T2ciMkFLelpVc3lhQm9udXd6NFowTWVsMWowcFdxTXpQbUVpRC1UU1V2LV9Pa1AtSTNvNU9nKsgBQ0FNU2tBRU5QN2pkdHdLa0dlOHB4emFaa3BvUS14YU5OdjRqalJrMDloajJMYzRDbWdVTTJHX1lDOHNKX2hmd0E5RWI3eGU3SXFRQTJRV3BHZVlFRlZPbTNyVWZrWndGMWNZRWxKd0V6OElBajZjR19kUUdNcy1BQmVTa0J2ZjdCUE1EaU9RRjJJY0RwMC1ZRzdNR3JyQUJub1VDZ2FjRTl1a0dsOGtHcjVnRzRhOEczX0FFMF9RR3NuWFROZ1dYMlFhRjh3WT0%3D",
+            "mainAppColdConfig": {
+              "iosSsoSafariFsiPromoEnabled": true,
+              "iosTodayWidgetEnabled": false,
+              "iosEnableDynamicFontSizing": false,
+              "enableMobileAutoOffline": false,
+              "androidEnablePip": false,
+              "postsV2": false,
+              "enableDetailedNetworkStatusReporting": false,
+              "hourToReportNetworkStatus": 0,
+              "networkStatusReportingWindowSecs": 0,
+              "iosSearchviewRefactoryEnabled": false,
+              "ngwFlexyEnabled": false,
+              "iosWatchExpandTransitionWithoutSnapshot": false,
+              "androidNgwUiEnabled": false,
+              "androidThumbnailMonitorEnabled": false,
+              "androidThumbnailMonitorCount": 0,
+              "androidThumbnailMonitorMinimumWidth": 0,
+              "enableGhostCards": false,
+              "enableInlineMuted": false,
+              "ngwFlexyMaxCropRatio": 1,
+              "androidRestoreBrowseContentsFromBackStack": false,
+              "searchHintExp": "search_youtube",
+              "webTracingSessionReplayNumEvents": 0,
+              "webAdaptiveEnableLightTouchResponse": false
+            },
+            "experimentFlags": {
+              "flags": [
+                {
+                  "key": "45744676",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45352180",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45375565",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45387332",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45381478",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45685672",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45692272",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45372814",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45737471",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45620945",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45726335",
+                  "value": {
+                    "bytesFlagValue": "CgswOmxvZ19ldmVudAoSMDpwbGF5ZXIvaGVhcnRiZWF0CgoxMDA6cGxheWVyCgkxMjA6d2F0Y2gKDTEyMDpnZXRfd2F0Y2g="
+                  }
+                },
+                {
+                  "key": "45790681",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45410776",
+                  "value": {
+                    "intFlagValue": "2"
+                  }
+                },
+                {
+                  "key": "45424595",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45743865",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45387236",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45623076",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45368787",
+                  "value": {
+                    "intFlagValue": "200"
+                  }
+                },
+                {
+                  "key": "45721490",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45778837",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45707137",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45807892",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45370188",
+                  "value": {
+                    "intFlagValue": "536870912"
+                  }
+                },
+                {
+                  "key": "45690537",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45423919",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45620946",
+                  "value": {
+                    "stringFlagValue": "https://youtubei-att.googleapis.com/"
+                  }
+                },
+                {
+                  "key": "45358110",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45366266",
+                  "value": {
+                    "intFlagValue": "60000"
+                  }
+                },
+                {
+                  "key": "45709856",
+                  "value": {
+                    "intFlagValue": "500"
+                  }
+                },
+                {
+                  "key": "45796644",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45719163",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45368386",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45460730",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45379475",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45697267",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45414700",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45688529",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45366268",
+                  "value": {
+                    "doubleFlagValue": 1
+                  }
+                },
+                {
+                  "key": "45358145",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45807891",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45732740",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45716770",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45792657",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45409727",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45367987",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45731194",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45390898",
+                  "value": {
+                    "doubleFlagValue": 0.8
+                  }
+                },
+                {
+                  "key": "45765124",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45407330",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45400202",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45616866",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45780072",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45743379",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45370189",
+                  "value": {
+                    "intFlagValue": "20737418240"
+                  }
+                },
+                {
+                  "key": "45410774",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45731490",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45622882",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45792656",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45778222",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45731227",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45768078",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45375564",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45624446",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45407731",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45776185",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45629813",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45374306",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45428086",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45385711",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45429079",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45620519",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45718893",
+                  "value": {
+                    "intFlagValue": "130"
+                  }
+                },
+                {
+                  "key": "45364993",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45388742",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45386074",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45743870",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45532296",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45390708",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45723105",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45370961",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45374860",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45664500",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45545471",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45711156",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45366267",
+                  "value": {
+                    "intFlagValue": "1"
+                  }
+                },
+                {
+                  "key": "45733724",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45744375",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45410777",
+                  "value": {
+                    "stringFlagValue": "test2"
+                  }
+                },
+                {
+                  "key": "45717071",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45744652",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45738856",
+                  "value": {
+                    "intFlagValue": "-4000"
+                  }
+                },
+                {
+                  "key": "45399459",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45642069",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45767526",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                }
+              ]
+            }
+          },
+          "rawHotConfigGroup": {
+            "mainAppHotConfig": {
+              "iosWatchExpandTransition": false,
+              "iosEarlySetWatchTransition": false,
+              "exposeConfigRefreshSetting": false,
+              "iosEnableSearchButtonOnPlayerOverlay": false,
+              "iosMinimumTooltipDurationMsecs": 1000,
+              "iosFreshHomeIntervalSecs": 0,
+              "iosFreshSubscriptionsIntervalSecs": 0,
+              "iosTodayWidgetRefreshIntervalSecs": 28800,
+              "iosFreshNotificationsInboxIntervalSecs": 0,
+              "signedOutNotificationsIosPrompt": true,
+              "iosFreshFullRefresh": false
+            },
+            "loggingHotConfig": {
+              "eventLoggingConfig": {
+                "enabled": true,
+                "payloadPolicies": [
+                  {
+                    "enabled": true,
+                    "payloadNumber": 219,
+                    "tier": "DELAYED_EVENT_TIER_FAST"
+                  },
+                  {
+                    "enabled": true,
+                    "payloadNumber": 446,
+                    "tier": "DELAYED_EVENT_TIER_FAST"
+                  },
+                  {
+                    "enabled": true,
+                    "payloadNumber": 469,
+                    "tier": "DELAYED_EVENT_TIER_FAST"
+                  },
+                  {
+                    "enabled": true,
+                    "payloadNumber": 6,
+                    "tier": "DELAYED_EVENT_TIER_DISPATCH_TO_EMPTY"
+                  },
+                  {
+                    "enabled": true,
+                    "payloadNumber": 5,
+                    "tier": "DELAYED_EVENT_TIER_DISPATCH_TO_EMPTY"
+                  },
+                  {
+                    "enabled": true,
+                    "payloadNumber": 7,
+                    "tier": "DELAYED_EVENT_TIER_DISPATCH_TO_EMPTY"
+                  },
+                  {
+                    "enabled": true,
+                    "payloadNumber": 434,
+                    "tier": "DELAYED_EVENT_TIER_DISPATCH_TO_EMPTY"
+                  }
+                ],
+                "maxAgeHours": 720,
+                "requestRetryEnabled": true,
+                "retryConfig": {
+                  "fixedBatchRetryEnabled": false
+                },
+                "shouldForceSetAllPayloadsToImmediateTier": false
+              },
+              "csiConfig": {
+                "loggingUrl": {
+                  "baseUrl": "https://www.youtube.com/csi_204"
+                },
+                "iosHomeActionThroughCsi204Enabled": false,
+                "browseActionThroughCsi204Enabled": true,
+                "browseActionThroughGelEnabled": false,
+                "debugSampleWeight": 10,
+                "debugTicks": [
+                  {
+                    "tickName": "ada"
+                  },
+                  {
+                    "tickName": "ais_a"
+                  },
+                  {
+                    "tickName": "ais_r"
+                  },
+                  {
+                    "tickName": "arb_f"
+                  },
+                  {
+                    "tickName": "ari"
+                  },
+                  {
+                    "tickName": "fab_r"
+                  },
+                  {
+                    "tickName": "fcb_r"
+                  },
+                  {
+                    "tickName": "fvb"
+                  },
+                  {
+                    "tickName": "fvb_r"
+                  },
+                  {
+                    "tickName": "gv"
+                  },
+                  {
+                    "tickName": "mb_s"
+                  },
+                  {
+                    "tickName": "nreqs"
+                  },
+                  {
+                    "tickName": "nrese"
+                  },
+                  {
+                    "tickName": "oafs_r"
+                  },
+                  {
+                    "tickName": "ogpd"
+                  },
+                  {
+                    "tickName": "omd_c"
+                  },
+                  {
+                    "tickName": "omd_s"
+                  },
+                  {
+                    "tickName": "omp_c"
+                  },
+                  {
+                    "tickName": "omp_r"
+                  },
+                  {
+                    "tickName": "oprd_c"
+                  },
+                  {
+                    "tickName": "oprd_s"
+                  },
+                  {
+                    "tickName": "oprr"
+                  },
+                  {
+                    "tickName": "or_fs"
+                  },
+                  {
+                    "tickName": "or_p"
+                  },
+                  {
+                    "tickName": "or100k"
+                  },
+                  {
+                    "tickName": "orf"
+                  },
+                  {
+                    "tickName": "orfb"
+                  },
+                  {
+                    "tickName": "orh_r"
+                  },
+                  {
+                    "tickName": "ormk"
+                  },
+                  {
+                    "tickName": "orpr"
+                  },
+                  {
+                    "tickName": "osor"
+                  },
+                  {
+                    "tickName": "ovfs_r"
+                  },
+                  {
+                    "tickName": "pl_c"
+                  },
+                  {
+                    "tickName": "r_wrr"
+                  },
+                  {
+                    "tickName": "r_wrs"
+                  },
+                  {
+                    "tickName": "vda"
+                  },
+                  {
+                    "tickName": "vis_a"
+                  },
+                  {
+                    "tickName": "vis_r"
+                  },
+                  {
+                    "tickName": "vrb_f"
+                  },
+                  {
+                    "tickName": "vri"
+                  }
+                ]
+              }
+            },
+            "adsHotConfig": {
+              "webEnablePremiumAdsSeenLogging": true,
+              "h5EnablePremiumAdsSeenEventFiltering": true
+            },
+            "experimentFlags": {
+              "flags": [
+                {
+                  "key": "45745455",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45745051",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45368011",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45616522",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45377081",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45382142",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45362297",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45362386",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45356979",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45353338",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45410771",
+                  "value": {
+                    "intFlagValue": "1"
+                  }
+                },
+                {
+                  "key": "45355378",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45375445",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45367289",
+                  "value": {
+                    "doubleFlagValue": 2
+                  }
+                },
+                {
+                  "key": "45791088",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45368132",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45366943",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45726838",
+                  "value": {
+                    "intFlagValue": "-31"
+                  }
+                },
+                {
+                  "key": "45360864",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45410773",
+                  "value": {
+                    "stringFlagValue": "test"
+                  }
+                },
+                {
+                  "key": "45410769",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45622564",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45368949",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                },
+                {
+                  "key": "45365137",
+                  "value": {
+                    "booleanFlagValue": true
+                  }
+                }
+              ]
+            },
+            "adsSeenHotConfig": {
+              "logOnAdsSeen": false
+            }
+          }
+        },
+        "mainAppWebResponseContext": {
+          "loggedOut": true
+        },
+        "responseId": "IhMI4eexwbGqlwMV6pHWCB1JkTyu",
+        "webResponseContextExtensionData": {
+          "hasDecorated": true
+        }
+      },
+      "configData": "CNGPntYGEL62rgUQ4tSuBRDT4a8FEMn3rwUQiIewBRC9irAFEOSVsAUQ4_iwBRCU5PwSEKXQ_RIQyMr-EhDhgoATEJCbgBMQ2LCAExDKvoATEPiFgRMQjoaBExCGjIETEJSNgRMQpI6BExDMkIETEPuRgRMQ7ZKBExCelYETEJuXgRMQr6fOHBCZ6M4cELOQzxwQrtbPHBCmp9AcEPGQ0RwQpbDRHBCFvdEcEMzc0RwQrt7RHBDtj9IcEIWQ0hwQ3pnSHBCOntIcENyt0hwQ0q7SHBDBtNIcEMS-0hwQw9DSHBDi0dIcEPHW0hwQvtrSHBDS2tIcEPza0hwQ89zSHBDV4NIcENzi0hwQnOPSHBCc5dIcEM_m0hwQ8e7SHBDd89IcELCKuCIaMkFLelpVc3lhQm9udXd6NFowTWVsMWowcFdxTXpQbUVpRC1UU1V2LV9Pa1AtSTNvNU9nIjJBS3paVXN5YUJvbnV3ejRaME1lbDFqMHBXcU16UG1FaUQtVFNVdi1fT2tQLUkzbzVPZyr0AUNBTVNzZ0VOVDdqZHR3S2tHZThweHphUThNd0tyc0VHeUw4R2hRM1NLNklJaXQ3S0R2c1dqVGItSTQwWk5QWVk5aTNPQXBvRkROaHYyQXZMQ2Y0WDhBUFJHLThYdXlLa0FOa0ZxUm5tQkJWaDNjX0NESldORHFiN0Q5WUZ2WkRmQzRQM0JaR2NCZFhHQkpTY0JNX0NBSS1uQnYzVUJqTFBnQVhrcEFiMy13VHpBNGprQmRpSEE2ZFBtQnV6QnE2d0FhZXBCdl9VQklHbkJQYnBCcGZKQnEtWUJ1R3ZCdF93Qk5QMEJySjEwellGbDlrR2hmTUc%3D",
+      "globalConfig": {}
+    }
+  }
+}
