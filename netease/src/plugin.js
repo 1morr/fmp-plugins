@@ -59,12 +59,19 @@ function form(fields) {
     .join('&');
 }
 
+/**
+ * 取流要帶的 `X-Real-IP`：網路出口在大陸以外時，有地區限制的歌不給網址（`code` 404、
+ * `fee` 0），帶這個大陸位址就給（舊專案的值；2026-10-08 實測，見 README）。只在取流送，
+ * 搜尋不需要。
+ */
+const MAINLAND_IP_HEADERS = { 'X-Real-IP': '118.88.88.88' };
+
 /** 查詢類 POST，語意冪等，暫時失敗時由網路層重試（FMP ADR 0028）。 */
-async function post(url, body, context) {
+async function post(url, body, context, extraHeaders) {
   const response = await fmp.http.request({
     url,
     method: 'POST',
-    headers: API_HEADERS,
+    headers: { ...API_HEADERS, ...extraHeaders },
     body,
     idempotent: true,
   });
@@ -161,6 +168,7 @@ export async function resolveStream({ sourceId, formats, quality }) {
     `${INTERFACE}/eapi/song/enhance/player/url/v1`,
     form({ params: eapiParams(EAPI_PATH, payload) }),
     'player',
+    MAINLAND_IP_HEADERS,
   );
   const item = Array.isArray(json.data) ? json.data[0] : null;
   if (item === null || typeof item !== 'object') throw error('NotFound', 'player: no stream data');

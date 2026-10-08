@@ -1,6 +1,6 @@
 {
   "meta": {
-    "recordedAt": "2026-10-08T14:04:14.115628Z"
+    "recordedAt": "2026-10-08T14:22:35.946710Z"
   },
   "request": {
     "method": "POST",
@@ -11,7 +11,8 @@
       "content-type": "application/x-www-form-urlencoded",
       "origin": "https://music.163.com",
       "referer": "https://music.163.com/",
-      "user-agent": "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Safari/537.36 Chrome/91.0.4472.164 NeteaseMusicDesktop/3.0.18.203152"
+      "user-agent": "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Safari/537.36 Chrome/91.0.4472.164 NeteaseMusicDesktop/3.0.18.203152",
+      "x-real-ip": "203.0.113.1"
     },
     "body": "params=FA90B329E9614F79E79598F37DC2EDB487F00D1BC4C9B24CD57E6C318B9073569338432CD7D98D1A3626E997A2C53121CDC8E3282CDCC7A0AD381E663A5F2CEB02AC4DBA2598F07EFBB77FBE5C53603D485DB260FA577059C3E1CFBFB3B6E9C1AC64AB1597E1C2D54FD28846F716061311FEF73D7AECDA69A203CFAA8A4E28EBF9079749AE9ECDFBA6FED169217C91BC"
   },
@@ -38,16 +39,16 @@
         "application/json;charset=UTF-8"
       ],
       "date": [
-        "Thu, 08 Oct 2026 14:04:16 GMT"
+        "Thu, 08 Oct 2026 14:22:38 GMT"
       ],
       "expires": [
         "Thu, 01 Jan 1970 00:00:00 GMT"
       ],
       "gw-thread": [
-        "25047"
+        "974020"
       ],
       "gw-time": [
-        "1791468256530"
+        "1791469358395"
       ],
       "mconfig-bucket": [
         "999999"
@@ -56,22 +57,22 @@
         "nginx"
       ],
       "set-cookie": [
-        "NMTID=***; Max-Age=315360000; Expires=Sun, 05 Oct 2036 14:04:16 GMT; Path=/; Domain=.music.163.com"
+        "NMTID=***; Max-Age=315360000; Expires=Sun, 05 Oct 2036 14:22:38 GMT; Path=/; Domain=.music.163.com"
       ],
       "vary": [
         "Accept-Encoding"
       ],
       "x-cv": [
-        "1791468256544"
+        "1791469358403"
       ],
       "x-from-src": [
         "203.0.113.1"
       ],
       "x-traceid": [
-        "000001a11bd43d0c045a0a7b86780007"
+        "000001a11be50d37046c0ab0d41e0007"
       ],
       "x-traceid-v2": [
-        "78f18ac51e077ae7212dd782cb981011^1789887504688^-8003509097"
+        "36a5768c64a3047358d35fad94d49e84^1791444332021^-154222037"
       ],
       "x-via": [
         "MusicServer"

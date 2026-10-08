@@ -196,11 +196,12 @@ function toHttps(url) {
 function form(fields) {
   return Object.entries(fields).map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(String(v))}`).join("&");
 }
-async function post(url, body, context) {
+var MAINLAND_IP_HEADERS = { "X-Real-IP": "118.88.88.88" };
+async function post(url, body, context, extraHeaders) {
   const response = await fmp.http.request({
     url,
     method: "POST",
-    headers: API_HEADERS,
+    headers: { ...API_HEADERS, ...extraHeaders },
     body,
     idempotent: true
   });
@@ -279,7 +280,8 @@ async function resolveStream({ sourceId, formats, quality }) {
   const json = await post(
     `${INTERFACE}/eapi/song/enhance/player/url/v1`,
     form({ params: eapiParams(EAPI_PATH, payload) }),
-    "player"
+    "player",
+    MAINLAND_IP_HEADERS
   );
   const item = Array.isArray(json.data) ? json.data[0] : null;
   if (item === null || typeof item !== "object") throw error("NotFound", "player: no stream data");

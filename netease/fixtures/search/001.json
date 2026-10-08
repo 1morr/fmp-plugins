@@ -1,6 +1,6 @@
 {
   "meta": {
-    "recordedAt": "2026-10-08T14:04:13.821920Z"
+    "recordedAt": "2026-10-08T14:22:35.667036Z"
   },
   "request": {
     "method": "POST",
@@ -29,16 +29,16 @@
         "application/json;charset=UTF-8"
       ],
       "date": [
-        "Thu, 08 Oct 2026 14:04:16 GMT"
+        "Thu, 08 Oct 2026 14:22:38 GMT"
       ],
       "expires": [
         "Thu, 01 Jan 1970 00:00:00 GMT"
       ],
       "gw-thread": [
-        "548294"
+        "316376"
       ],
       "gw-time": [
-        "1791468256051"
+        "1791469357902"
       ],
       "mconfig-bucket": [
         "999999"
@@ -47,13 +47,13 @@
         "nginx"
       ],
       "set-cookie": [
-        "NMTID=***; Max-Age=315360000; Expires=Sun, 05 Oct 2036 14:04:16 GMT; Path=/; Domain=music.163.com"
+        "NMTID=***; Max-Age=315360000; Expires=Sun, 05 Oct 2036 14:22:38 GMT; Path=/; Domain=music.163.com"
       ],
       "vary": [
         "Accept-Encoding"
       ],
       "x-cv": [
-        "1791468256228"
+        "1791469358125"
       ],
       "x-from-src": [
         "203.0.113.1"
@@ -62,10 +62,10 @@
         "NML-L3"
       ],
       "x-traceid": [
-        "000001a11bd43b2d0f550a7bb0c40007"
+        "000001a11be50b4a01340ab0d6a20007"
       ],
       "x-traceid-v2": [
-        "30bbd29b9643a087e2ac36b074158017^1791444253052^-147701882"
+        "412cb54730104d8cd719b496b6c58eee^1791444859134^-151248027"
       ],
       "x-via": [
         "MusicServer"
@@ -2130,7 +2130,8 @@
             "mark": 17180131456
           },
           {
-            "no": 9,
+            "no": 6,
+            "rt": "600902000005317791",
             "copyright": 1,
             "fee": 1,
             "privilege": {
@@ -2145,7 +2146,7 @@
               "maxBrLevel": "lossless",
               "rightSource": 0,
               "maxbr": 999000,
-              "id": 400161915,
+              "id": 209663,
               "sp": 7,
               "payed": 0,
               "rscl": 0,
@@ -2192,50 +2193,50 @@
             "s_id": 0,
             "rtUrls": [],
             "resourceState": true,
-            "id": 400161915,
+            "id": 209663,
             "sq": {
-              "br": 927182,
+              "br": 929740,
               "fid": 0,
-              "size": 32143930,
-              "vd": -50124.0,
+              "size": 32237686,
+              "vd": -50109.0,
               "sr": 44100
             },
             "st": 0,
-            "cd": "01",
-            "publishTime": 1346947200000,
+            "cd": "2",
+            "publishTime": 1190131200000,
             "cf": "",
             "originCoverType": 0,
             "h": {
               "br": 320000,
               "fid": 0,
-              "size": 11096859,
-              "vd": -50134.0,
+              "size": 11096860,
+              "vd": -50123.0,
               "sr": 44100
             },
-            "mv": 0,
+            "mv": 185048,
             "al": {
-              "picUrl": "http://p1.music.126.net/***/109951165958812099.jpg",
-              "name": "J女神 影音典藏精选",
+              "picUrl": "http://p1.music.126.net/***/109951165958730017.jpg",
+              "name": "绝版公主 梦绮地精选",
               "tns": [],
-              "pic_str": "109951165958812099",
-              "id": 34429108,
-              "pic": 109951165958812099
+              "pic_str": "109951165958730017",
+              "id": 21326,
+              "pic": 109951165958730017
             },
             "l": {
               "br": 128000,
               "fid": 0,
-              "size": 4438769,
-              "vd": -46077.0,
+              "size": 4438770,
+              "vd": -45959.0,
               "sr": 44100
             },
             "m": {
               "br": 192000,
               "fid": 0,
-              "size": 6658132,
-              "vd": -47553.0,
+              "size": 6658133,
+              "vd": -47533.0,
               "sr": 44100
             },
-            "version": 27,
+            "version": 37,
             "cp": 7001,
             "alia": [],
             "djId": 0,
@@ -2268,152 +2269,8 @@
             ],
             "ftype": 0,
             "t": 0,
-            "v": 61,
+            "v": 71,
             "name": "海盗",
-            "mark": 17180139520
-          },
-          {
-            "no": 14,
-            "rt": "600902000005317941",
-            "copyright": 1,
-            "fee": 1,
-            "privilege": {
-              "flag": 260,
-              "code": 0,
-              "dlLevel": "none",
-              "subp": 1,
-              "fl": 0,
-              "fee": 0,
-              "dl": 0,
-              "plLevel": "none",
-              "maxBrLevel": "lossless",
-              "rightSource": 0,
-              "maxbr": 999000,
-              "id": 185776,
-              "sp": 7,
-              "payed": 0,
-              "rscl": 0,
-              "st": -100,
-              "chargeInfoList": [
-                {
-                  "rate": 128000,
-                  "chargeType": 1
-                },
-                {
-                  "rate": 192000,
-                  "chargeType": 1
-                },
-                {
-                  "rate": 320000,
-                  "chargeType": 1
-                },
-                {
-                  "rate": 999000,
-                  "chargeType": 1
-                }
-              ],
-              "freeTrialPrivilege": {
-                "userConsumable": false,
-                "resConsumable": true,
-                "cannotListenReason": 1
-              },
-              "downloadMaxbr": 999000,
-              "downloadMaxBrLevel": "lossless",
-              "cp": 0,
-              "preSell": false,
-              "playMaxBrLevel": "lossless",
-              "cs": false,
-              "toast": false,
-              "playMaxbr": 999000,
-              "flLevel": "none",
-              "pl": 0
-            },
-            "mst": 9,
-            "pst": 0,
-            "pop": 95.0,
-            "dt": 257572,
-            "rtype": 0,
-            "s_id": 0,
-            "rtUrls": [],
-            "resourceState": true,
-            "id": 185776,
-            "sq": {
-              "br": 990015,
-              "fid": 0,
-              "size": 31875167,
-              "vd": -55999.0,
-              "sr": 44100
-            },
-            "st": 0,
-            "cd": "1",
-            "publishTime": 1195142400000,
-            "cf": "",
-            "originCoverType": 1,
-            "h": {
-              "br": 320000,
-              "fid": 0,
-              "size": 10305872,
-              "vd": -55614.0,
-              "sr": 44100
-            },
-            "mv": 186031,
-            "al": {
-              "picUrl": "http://p1.music.126.net/***/109951171358446171.jpg",
-              "name": "我们都爱这个伦！",
-              "tns": [],
-              "pic_str": "109951171358446171",
-              "id": 18884,
-              "pic": 109951171358446171
-            },
-            "l": {
-              "br": 128000,
-              "fid": 0,
-              "size": 4122375,
-              "vd": -51446.0,
-              "sr": 44100
-            },
-            "m": {
-              "br": 192000,
-              "fid": 0,
-              "size": 6183541,
-              "vd": -53044.0,
-              "sr": 44100
-            },
-            "version": 679,
-            "cp": 7001,
-            "alia": [],
-            "djId": 0,
-            "single": 0,
-            "ar": [
-              {
-                "name": "蔡依林",
-                "tns": [],
-                "alias": [
-                  "Jolin Cai"
-                ],
-                "id": 7219,
-                "alia": [
-                  "Jolin Cai"
-                ]
-              },
-              {
-                "name": "周杰伦",
-                "tns": [],
-                "alias": [
-                  "Jay Chou",
-                  "周董"
-                ],
-                "id": 6452,
-                "alia": [
-                  "Jay Chou",
-                  "周董"
-                ]
-              }
-            ],
-            "ftype": 0,
-            "t": 0,
-            "v": 713,
-            "name": "骑士精神",
             "mark": 17179877376
           },
           {
@@ -2559,6 +2416,149 @@
             "v": 720,
             "name": "刀马旦",
             "mark": 17179877376
+          },
+          {
+            "no": 10,
+            "copyright": 1,
+            "fee": 1,
+            "privilege": {
+              "flag": 4,
+              "code": 0,
+              "dlLevel": "none",
+              "subp": 1,
+              "fl": 0,
+              "fee": 0,
+              "dl": 0,
+              "plLevel": "none",
+              "maxBrLevel": "lossless",
+              "rightSource": 0,
+              "maxbr": 999000,
+              "id": 400161918,
+              "sp": 7,
+              "payed": 0,
+              "rscl": 0,
+              "st": -100,
+              "chargeInfoList": [
+                {
+                  "rate": 128000,
+                  "chargeType": 1
+                },
+                {
+                  "rate": 192000,
+                  "chargeType": 1
+                },
+                {
+                  "rate": 320000,
+                  "chargeType": 1
+                },
+                {
+                  "rate": 999000,
+                  "chargeType": 1
+                }
+              ],
+              "freeTrialPrivilege": {
+                "userConsumable": false,
+                "resConsumable": true,
+                "cannotListenReason": 1
+              },
+              "downloadMaxbr": 999000,
+              "downloadMaxBrLevel": "lossless",
+              "cp": 0,
+              "preSell": false,
+              "playMaxBrLevel": "lossless",
+              "cs": false,
+              "toast": false,
+              "playMaxbr": 999000,
+              "flLevel": "none",
+              "pl": 0
+            },
+            "mst": 9,
+            "pst": 0,
+            "pop": 90.0,
+            "dt": 257574,
+            "rtype": 0,
+            "s_id": 0,
+            "rtUrls": [],
+            "resourceState": true,
+            "id": 400161918,
+            "sq": {
+              "br": 986881,
+              "fid": 0,
+              "size": 31774366,
+              "vd": -55611.0,
+              "sr": 44100
+            },
+            "st": 0,
+            "cd": "01",
+            "publishTime": 1346947200000,
+            "cf": "",
+            "originCoverType": 1,
+            "h": {
+              "br": 320000,
+              "fid": 0,
+              "size": 10305871,
+              "vd": -55599.0,
+              "sr": 44100
+            },
+            "mv": 0,
+            "al": {
+              "picUrl": "http://p1.music.126.net/***/109951165958812099.jpg",
+              "name": "J女神 影音典藏精选",
+              "tns": [],
+              "pic_str": "109951165958812099",
+              "id": 34429108,
+              "pic": 109951165958812099
+            },
+            "l": {
+              "br": 128000,
+              "fid": 0,
+              "size": 4122374,
+              "vd": -51573.0,
+              "sr": 44100
+            },
+            "m": {
+              "br": 192000,
+              "fid": 0,
+              "size": 6183540,
+              "vd": -53063.0,
+              "sr": 44100
+            },
+            "version": 25,
+            "cp": 7001,
+            "alia": [],
+            "djId": 0,
+            "single": 0,
+            "ar": [
+              {
+                "name": "蔡依林",
+                "tns": [],
+                "alias": [
+                  "Jolin Cai"
+                ],
+                "id": 7219,
+                "alia": [
+                  "Jolin Cai"
+                ]
+              },
+              {
+                "name": "周杰伦",
+                "tns": [],
+                "alias": [
+                  "Jay Chou",
+                  "周董"
+                ],
+                "id": 6452,
+                "alia": [
+                  "Jay Chou",
+                  "周董"
+                ]
+              }
+            ],
+            "ftype": 0,
+            "t": 0,
+            "v": 59,
+            "name": "骑士精神",
+            "mark": 17180139520
           },
           {
             "no": 8,
@@ -3026,12 +3026,12 @@
       "trp": {
         "rules": [
           "search_tab_song::210062::searchAlg$isGlobalQuality$1",
-          "search_tab_song::185776::searchAlg$isGlobalQuality$1",
           "search_tab_song::1888354230::searchAlg$isGlobalQuality$1",
           "search_tab_song::5257138::searchAlg$isGlobalQuality$1",
           "search_tab_song::255020::searchAlg$isGlobalQuality$1",
           "search_tab_song::509781655::searchAlg$isGlobalQuality$1",
           "search_tab_song::5257160::searchAlg$isGlobalQuality$1",
+          "search_tab_song::400161918::searchAlg$isGlobalQuality$1",
           "search_tab_song::210049::searchAlg$isGlobalQuality$1"
         ]
       }
