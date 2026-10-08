@@ -29,7 +29,7 @@
       "name": "網易雲音樂",
       "author": "FMP",
       "description": "搜尋網易雲音樂的歌曲並播放。",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "apiVersion": 1,
       "capabilities": [
         "search",
@@ -40,7 +40,7 @@
         "music.126.net"
       ],
       "url": "https://raw.githubusercontent.com/1morr/fmp-plugins/main/netease/netease.js",
-      "sha256": "98ec51a0e3ed404b82655e995b88358fbadc02a3d133fa91248100b89e7e27d8",
+      "sha256": "f4d7d38f525b540c37a32f96aaca3aed94aada8831fd2a9bb33bc1c450c2c8e6",
       "checksUrl": "https://raw.githubusercontent.com/1morr/fmp-plugins/main/netease/checks.json",
       "checksSha256": "c67ea6ad2e0607c143f315d94ef626a9031b27c98628a7d357c0c58a2b039f8a"
     }
