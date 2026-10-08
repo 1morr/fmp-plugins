@@ -1,0 +1,24 @@
+// search 以假的宿主 API 跑：X-Real-IP 只在取流送（README § X-Real-IP），搜尋不帶。
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+
+import { search } from '../src/plugin.js';
+
+test('the search request carries no X-Real-IP and is idempotent', async () => {
+  const requests = [];
+  globalThis.fmp = {
+    log: { debug() {}, info() {}, warn() {} },
+    http: {
+      async request(req) {
+        requests.push(req);
+        return { status: 200, headers: {}, body: JSON.stringify({ code: 200, result: { songs: [], songCount: 0 } }) };
+      },
+    },
+  };
+  const result = await search({ keyword: 'x', page: 1 });
+  assert.deepEqual(result, { items: [], hasMore: false });
+  assert.equal(requests.length, 1);
+  const names = Object.keys(requests[0].headers).map((n) => n.toLowerCase());
+  assert.ok(!names.includes('x-real-ip'), `headers: ${names.join(', ')}`);
+  assert.equal(requests[0].idempotent, true);
+});

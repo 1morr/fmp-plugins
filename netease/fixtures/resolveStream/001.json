@@ -1,0 +1,137 @@
+{
+  "meta": {
+    "recordedAt": "2026-10-08T14:22:35.946710Z"
+  },
+  "request": {
+    "method": "POST",
+    "url": "https://interface3.music.163.com/eapi/song/enhance/player/url/v1",
+    "headers": {
+      "accept": "application/json, text/plain, */*",
+      "content-length": "295",
+      "content-type": "application/x-www-form-urlencoded",
+      "origin": "https://music.163.com",
+      "referer": "https://music.163.com/",
+      "user-agent": "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Safari/537.36 Chrome/91.0.4472.164 NeteaseMusicDesktop/3.0.18.203152",
+      "x-real-ip": "203.0.113.1"
+    },
+    "body": "params=FA90B329E9614F79E79598F37DC2EDB487F00D1BC4C9B24CD57E6C318B9073569338432CD7D98D1A3626E997A2C53121CDC8E3282CDCC7A0AD381E663A5F2CEB02AC4DBA2598F07EFBB77FBE5C53603D485DB260FA577059C3E1CFBFB3B6E9C1AC64AB1597E1C2D54FD28846F716061311FEF73D7AECDA69A203CFAA8A4E28EBF9079749AE9ECDFBA6FED169217C91BC"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "access-control-allow-credentials": [
+        "true"
+      ],
+      "access-control-allow-origin": [
+        "https://music.163.com"
+      ],
+      "access-control-expose-headers": [
+        "Date,Content-Encoding,Vary,Server,Transfer-Encoding,Connection"
+      ],
+      "cache-control": [
+        "no-cache",
+        "no-store"
+      ],
+      "connection": [
+        "keep-alive"
+      ],
+      "content-type": [
+        "application/json;charset=UTF-8"
+      ],
+      "date": [
+        "Thu, 08 Oct 2026 14:22:38 GMT"
+      ],
+      "expires": [
+        "Thu, 01 Jan 1970 00:00:00 GMT"
+      ],
+      "gw-thread": [
+        "974020"
+      ],
+      "gw-time": [
+        "1791469358395"
+      ],
+      "mconfig-bucket": [
+        "999999"
+      ],
+      "server": [
+        "nginx"
+      ],
+      "set-cookie": [
+        "NMTID=***; Max-Age=315360000; Expires=Sun, 05 Oct 2036 14:22:38 GMT; Path=/; Domain=.music.163.com"
+      ],
+      "vary": [
+        "Accept-Encoding"
+      ],
+      "x-cv": [
+        "1791469358403"
+      ],
+      "x-from-src": [
+        "203.0.113.1"
+      ],
+      "x-traceid": [
+        "000001a11be50d37046c0ab0d41e0007"
+      ],
+      "x-traceid-v2": [
+        "36a5768c64a3047358d35fad94d49e84^1791444332021^-154222037"
+      ],
+      "x-via": [
+        "MusicServer"
+      ]
+    },
+    "jsonBody": {
+      "data": [
+        {
+          "id": 139774,
+          "url": "http://m701.music.126.net/***/***/***/***/***/***/***/***/***/aafb8f1b4a8781fa043237c294e9a7b9.mp3?cdntag=bWFyaz1vc193ZWIscXVhbGl0eV9leGhpZ2g",
+          "br": 320000,
+          "size": 8941485,
+          "md5": "aafb8f1b4a8781fa043237c294e9a7b9",
+          "code": 200,
+          "expi": 1200,
+          "type": "mp3",
+          "gain": 0.0,
+          "peak": 0.9008,
+          "closedGain": 0.0,
+          "closedPeak": 0.0,
+          "fee": 8,
+          "uf": null,
+          "payed": 0,
+          "flag": 6,
+          "canExtend": false,
+          "freeTrialInfo": null,
+          "level": "exhigh",
+          "encodeType": "mp3",
+          "channelLayout": null,
+          "freeTrialPrivilege": {
+            "resConsumable": false,
+            "userConsumable": false,
+            "listenType": null,
+            "cannotListenReason": null,
+            "playReason": null,
+            "freeLimitTagType": null
+          },
+          "freeTimeTrialPrivilege": {
+            "resConsumable": false,
+            "userConsumable": false,
+            "type": 0,
+            "remainTime": 0
+          },
+          "urlSource": 0,
+          "rightSource": 0,
+          "podcastCtrp": null,
+          "effectTypes": null,
+          "time": 223467,
+          "message": null,
+          "levelConfuse": null,
+          "musicId": "8928740506",
+          "accompany": null,
+          "sr": 48000,
+          "auEff": null,
+          "immerseType": null,
+          "beatType": 0
+        }
+      ],
+      "code": 200
+    }
+  }
+}
