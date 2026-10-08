@@ -2,7 +2,7 @@
 {
   "id": "bilibili",
   "name": "Bilibili",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "author": "FMP",
   "apiVersion": 1,
   "capabilities": ["search", "resolveStream"],
@@ -283,14 +283,24 @@ async function wbiKeys() {
 
 // ---------------------------------------------------------------- search
 
+const NAMED_ENTITIES = { quot: '"', amp: '&', lt: '<', gt: '>', apos: "'", nbsp: ' ' };
+
+/**
+ * 解 HTML 實體：命名的（上表）與數字的（`&#39;`、`&#x27;`）。單趟掃過，所以
+ * `&amp;lt;` 得到 `&lt;` 而不是 `<`；認不得或超出 Unicode 範圍的原樣留著。
+ * 匯出只為了單元測試（宿主只認能力名稱的匯出，其他名稱忽略）。
+ */
+export function decodeHtmlEntities(text) {
+  return String(text).replace(/&(#x[0-9a-f]+|#[0-9]+|[a-z]+);/gi, (match, body) => {
+    if (body[0] !== '#') return NAMED_ENTITIES[body.toLowerCase()] ?? match;
+    const code = body[1] === 'x' || body[1] === 'X' ? parseInt(body.slice(2), 16) : parseInt(body.slice(1), 10);
+    if (!(code > 0 && code <= 0x10ffff) || (code >= 0xd800 && code <= 0xdfff)) return match;
+    return String.fromCodePoint(code);
+  });
+}
+
 function cleanHtml(text) {
-  return String(text)
-    .replace(/<[^>]*>/g, '')
-    .replace(/&quot;/g, '"')
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&#39;/g, "'");
+  return decodeHtmlEntities(String(text).replace(/<[^>]*>/g, ''));
 }
 
 /** `m:ss` 或 `h:mm:ss` → 毫秒；讀不懂回 null。 */
@@ -301,13 +311,21 @@ function colonDurationMs(text) {
   return parts.reduce((total, part) => total * 60 + Number(part), 0) * 1000;
 }
 
-/** `//i0.hdslb.com/...` 補上 https；不是 hdslb.com 的 https 網址就不給。 */
-function artwork(pic) {
+/** hdslb 的縮圖後綴寬度（`原圖@160w`）；宿主 `pickArtwork` 依寬度挑。 */
+const ARTWORK_WIDTHS = [160, 480];
+
+/**
+ * `//i0.hdslb.com/...` 補上 https；不是 hdslb.com 的 https 網址就不給。
+ * 回傳縮圖（160、480 寬）加原圖（不標寬度）；網址已帶 `@` 後綴時只給它自己。
+ */
+export function artwork(pic) {
   if (typeof pic !== 'string' || pic === '') return [];
   let url = pic;
   if (url.startsWith('//')) url = `https:${url}`;
   else if (url.startsWith('http://')) url = `https://${url.slice('http://'.length)}`;
-  return isAllowedHttps(url, ['hdslb.com']) ? [{ url }] : [];
+  if (!isAllowedHttps(url, ['hdslb.com'])) return [];
+  if (url.includes('@')) return [{ url }];
+  return [...ARTWORK_WIDTHS.map((width) => ({ url: `${url}@${width}w`, width })), { url }];
 }
 
 export async function search({ keyword, page }) {

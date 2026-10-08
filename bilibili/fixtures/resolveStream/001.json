@@ -1,6 +1,6 @@
 {
   "meta": {
-    "recordedAt": "2026-10-06T15:15:00.345257Z"
+    "recordedAt": "2026-10-08T19:39:22.492841Z"
   },
   "request": {
     "method": "GET",
@@ -36,7 +36,7 @@
         "-101"
       ],
       "bili-trace-id": [
-        "01881070186ac510"
+        "2dd6f51b9f6ac7f1"
       ],
       "cache-control": [
         "no-cache"
@@ -48,16 +48,16 @@
         "application/json; charset=utf-8"
       ],
       "cpu_usage": [
-        "148"
+        "55"
       ],
       "cross-origin-resource-policy": [
         "cross-origin"
       ],
       "date": [
-        "Tue, 06 Oct 2026 15:15:05 GMT"
+        "Thu, 08 Oct 2026 19:39:25 GMT"
       ],
       "expires": [
-        "Tue, 06 Oct 2026 15:15:04 GMT"
+        "Thu, 08 Oct 2026 19:39:24 GMT"
       ],
       "vary": [
         "Origin"
@@ -66,10 +66,10 @@
         "***"
       ],
       "x-bili-trace-id": [
-        "11155e157ed183fe01881070186ac510"
+        "2f97a81250fa72e02dd6f51b9f6ac7f1"
       ],
       "x-cache-webcdn": [
-        "BYPASS from blzone08"
+        "BYPASS from blzone09"
       ]
     },
     "jsonBody": {

@@ -1,0 +1,8 @@
+{
+  "name": "fmp-plugin-bilibili",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test"
+  }
+}
