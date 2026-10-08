@@ -52,7 +52,7 @@
 
 ## 已知限制
 
-- 沒有登入：VIP 歌與匿名拿不到網址的歌播不了。
+- 沒有登入：VIP 歌與匿名拿不到網址的歌播不了。匿名時 VIP 歌（`fee` 1）連試聽片段都沒有（`code` -110、沒有 `freeTrialInfo`），`previewOnly` 只會在登入後出現，由 `test/resolve.test.js` 以手寫回應守。
 - 一個 `checks.json` 每個能力只有一條案例，所以契約測試只重播成功的 `search` 與 `resolveStream`；上表的錯誤對應由 `test/errors.test.js` 以網易實際給的欄位守（`npm test`）。
 - fixture 裡的 `NMTID` 等 Cookie 值已被 FMP 的遮蔽名單遮掉；錄製者的 IP 由錄製器換成文件用位址。
 
