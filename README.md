@@ -32,7 +32,7 @@ semver。`.js` 一有改動，manifest 的 `version` 就要比 `main` 上的高�
 
 ## 新增插件
 
-1. 建 `<id>/<id>.js`，標頭 manifest 的 `id` 等於目錄名，版本從 `1.0.0` 起。
+1. 建 `<id>/<id>.js`，標頭 manifest 的 `id` 等於目錄名，版本從 `1.0.0` 起；寫一句 `description`（≤ 200 字元），插件頁與 index 會顯示。
 2. 加 `checks.json`，錄 fixture（真實連線、只限不需要登入的案例）。
 3. `dart run tool/build_index.dart`，提交 `index.json`。
 4. 開 PR。CI 自動發現新目錄，不用改 workflow。
