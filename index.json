@@ -1,0 +1,48 @@
+{
+  "indexVersion": 1,
+  "plugins": [
+    {
+      "id": "bilibili",
+      "name": "Bilibili",
+      "author": "FMP",
+      "description": "",
+      "version": "1.0.0",
+      "apiVersion": 1,
+      "capabilities": [
+        "search",
+        "resolveStream"
+      ],
+      "allowedHosts": [
+        "api.bilibili.com",
+        "hdslb.com",
+        "bilivideo.com",
+        "bilivideo.cn",
+        "upos-hz-mirrorakam.akamaized.net"
+      ],
+      "url": "https://raw.githubusercontent.com/1morr/fmp-plugins/main/bilibili/bilibili.js",
+      "sha256": "5d5ad8f689de45592e45a47d6126f8b1103c6240e88aa4db2da3d492e53b0d29",
+      "checksUrl": "https://raw.githubusercontent.com/1morr/fmp-plugins/main/bilibili/checks.json",
+      "checksSha256": "bec52952cee0566e44c226e0ec6c5bf1c1b244da6317448d0c549cc5856548a5"
+    },
+    {
+      "id": "netease",
+      "name": "網易雲音樂",
+      "author": "FMP",
+      "description": "",
+      "version": "1.0.0",
+      "apiVersion": 1,
+      "capabilities": [
+        "search",
+        "resolveStream"
+      ],
+      "allowedHosts": [
+        "music.163.com",
+        "music.126.net"
+      ],
+      "url": "https://raw.githubusercontent.com/1morr/fmp-plugins/main/netease/netease.js",
+      "sha256": "9dbe8812a742bdf7803db031b473c59d213b58830bc57e825eebdf75f9fe4b38",
+      "checksUrl": "https://raw.githubusercontent.com/1morr/fmp-plugins/main/netease/checks.json",
+      "checksSha256": "c67ea6ad2e0607c143f315d94ef626a9031b27c98628a7d357c0c58a2b039f8a"
+    }
+  ]
+}
