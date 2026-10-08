@@ -43,6 +43,27 @@
       "sha256": "f4d7d38f525b540c37a32f96aaca3aed94aada8831fd2a9bb33bc1c450c2c8e6",
       "checksUrl": "https://raw.githubusercontent.com/1morr/fmp-plugins/main/netease/checks.json",
       "checksSha256": "c67ea6ad2e0607c143f315d94ef626a9031b27c98628a7d357c0c58a2b039f8a"
+    },
+    {
+      "id": "youtube",
+      "name": "YouTube",
+      "author": "FMP",
+      "description": "搜尋 YouTube 影片並播放其音訊。",
+      "version": "1.0.0",
+      "apiVersion": 1,
+      "capabilities": [
+        "search",
+        "resolveStream"
+      ],
+      "allowedHosts": [
+        "youtube.com",
+        "googlevideo.com",
+        "ytimg.com"
+      ],
+      "url": "https://raw.githubusercontent.com/1morr/fmp-plugins/main/youtube/youtube.js",
+      "sha256": "a9787ec2a7dcb43dc08f30c0a7ee626c3bb2a13a6f4dba9d5cf2ca7025203ed9",
+      "checksUrl": "https://raw.githubusercontent.com/1morr/fmp-plugins/main/youtube/checks.json",
+      "checksSha256": "d4fa5b29183ecb6935e9665275923e77d9cffa9864d8b3c4c62ea3245b21e741"
     }
   ]
 }
