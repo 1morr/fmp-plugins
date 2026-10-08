@@ -10,7 +10,7 @@
   - 音質：`high` → `exhigh`；`medium`、`low` → `standard`。不送 `lossless`（VIP 音質）。一個請求只回一個串流，所以只有一個候選。
   - 回應的 `type`（`mp3`、`flac`、`m4a`）對應宿主的容器與編碼（`mp3/mp3`、`flac/flac`、`mp4/aac`），不在 `formats` 裡就 `NotFound`。
   - 回應的 `freeTrialInfo` 不為空（只有試聽片段）時回 `previewOnly: true`，由宿主依「跳過試聽片段」處理。
-  - 網易回 `http://` 的串流網址，插件改成 `https://` 才交給宿主（CDN 兩者都接受；實機播放要確認）。
+  - 網易回 `http://` 的串流網址，插件改成 `https://` 才交給宿主（CDN 兩者都接受；2026-10-08 在 Android 與 Windows 實機播放 `m701`、`m801` 的 https 網址都正常）。
   - `expiresAt` 是收到回應的時間加上 API 回報的有效秒數 `expi`（約 1200 秒）：網址本身沒有期限參數，所以 `checks.json` 沒有 `expiresAtPattern`。
   - 候選的 header 只有 `Origin`、`Referer`、`User-Agent`，不帶 Cookie。
 
@@ -48,7 +48,7 @@
 | 取流，不帶 header | 200，`data[0].code` 404、`fee` 0、`flag` 257，沒有網址 |
 | 取流，帶 `X-Real-IP: 118.88.88.88` | 200，`data[0].code` 200，有網址，320 kbps mp3 |
 
-所以插件**只在取流的請求**送 `X-Real-IP`（網路出口在大陸以外時，有地區限制的歌要靠它）；搜尋不送。
+所以插件**只在取流的請求**送 `X-Real-IP`（網路出口在大陸以外時，有地區限制的歌要靠它）；搜尋不送（`test/resolve.test.js`、`test/search.test.js` 守）。
 
 ## 已知限制
 
@@ -62,7 +62,7 @@
 cd netease
 npm ci
 node build.mjs   # 輸出 netease.js（不壓縮，內容固定）
-npm test         # 錯誤對應表與 AES 的測試（node:test）
+npm test         # 錯誤對應表、AES、取流與搜尋請求的測試（node:test）
 ```
 
 用 esbuild 把 `src/` 打成單一檔，`netease.js` 與原始碼、`package-lock.json` 一起提交；index 只認這一個 `.js`。`manifest` 寫在 `build.mjs`。
