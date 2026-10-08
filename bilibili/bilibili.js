@@ -4,6 +4,7 @@
   "name": "Bilibili",
   "version": "1.0.0",
   "author": "FMP",
+  "description": "搜尋 Bilibili 影片並播放其音訊。",
   "apiVersion": 1,
   "capabilities": ["search", "resolveStream"],
   "allowedHosts": [
