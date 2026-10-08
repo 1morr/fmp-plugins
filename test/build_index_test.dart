@@ -69,6 +69,7 @@ void main() {
       'checksSha256',
     ]);
     expect(entry['id'], 'alpha');
+    expect(entry['description'], '');
     expect(entry['version'], '1.2.3');
     expect(entry['capabilities'], ['search']);
     expect(entry['allowedHosts'], ['example.com']);
@@ -85,6 +86,14 @@ void main() {
       entry['checksSha256'],
       sha256.convert(utf8.encode('{"checks":[]}')).toString(),
     );
+  });
+
+  test('carries the manifest description', () {
+    plugin('alpha', header({'description': 'A source'}));
+    expect(build([]), 0);
+    final entry =
+        (readIndex()['plugins']! as List).single as Map<String, Object?>;
+    expect(entry['description'], 'A source');
   });
 
   test('orders by id, skips directories without a matching js, is stable', () {
@@ -156,6 +165,10 @@ void main() {
     test(
       'missing field',
       () => expectFails(header({'allowedHosts': null}), '"allowedHosts"'),
+    );
+    test(
+      'description not a string',
+      () => expectFails(header({'description': 3}), '"description"'),
     );
   });
 }

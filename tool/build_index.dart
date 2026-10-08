@@ -55,6 +55,16 @@ String _string(Map<String, Object?> m, String key, String dir) {
   return value;
 }
 
+// manifest 的選填欄位：沒寫或 null 是空字串（上限由 FMP 的 manifest 解析檢查）。
+String _description(Map<String, Object?> m, String dir) {
+  final value = m['description'];
+  if (value == null) return '';
+  if (value is! String) {
+    throw IndexBuildError('$dir: header "description" must be a string');
+  }
+  return value;
+}
+
 List<String> _strings(Map<String, Object?> m, String key, String dir) {
   final value = m[key];
   if (value is! List || value.any((e) => e is! String)) {
@@ -98,8 +108,7 @@ String buildIndex(Directory root) {
       'id': id,
       'name': _string(header, 'name', dir),
       'author': _string(header, 'author', dir),
-      // manifest 沒有 description 欄位（欄位封閉），index 的欄位必填，先給空字串。
-      'description': '',
+      'description': _description(header, dir),
       'version': version,
       'apiVersion': apiVersion,
       'capabilities': _strings(header, 'capabilities', dir),
