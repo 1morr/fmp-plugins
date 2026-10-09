@@ -53,8 +53,8 @@ test('base64Encode matches Buffer for every remainder length', () => {
 });
 
 test('modPow matches a small known value and Fermat', () => {
-  assert.equal(modPow(BigInt(4), 13, BigInt(497)), BigInt(445)); // 教科書例：4^13 mod 497
-  assert.equal(modPow(BigInt(3), 100, BigInt(101)), BigInt(1));
+  assert.equal(modPow(4, 13, 497).toString(), '445'); // 教科書例：4^13 mod 497
+  assert.equal(modPow(3, 100, 101).toString(), '1');
 });
 
 test('rsaEncryptSecret matches node:crypto RSA_NO_PADDING', () => {
@@ -97,4 +97,38 @@ test('randomSecret is 16 base62 characters and differs between calls', () => {
 test('every weapiEncrypt call uses a fresh secret', () => {
   const data = { type: 1 };
   assert.notEqual(weapiEncrypt(data).encSecKey, weapiEncrypt(data).encSecKey);
+});
+
+// FMP 的 QuickJS（flutter_js 0.8.7）沒有 BigInt、TextEncoder、atob/btoa、crypto.getRandomValues
+// 這些全域；打包檔裡出現它們，載入或呼叫時才會在宿主端炸掉（契約重播之前看不出來）。
+test('the bundled netease.js uses no API the QuickJS runtime lacks', async () => {
+  const { readFileSync } = await import('node:fs');
+  const bundle = readFileSync(new URL('../netease.js', import.meta.url), 'utf8');
+  for (const token of ['BigInt', 'TextEncoder', 'TextDecoder', 'atob', 'btoa', 'getRandomValues', 'structuredClone']) {
+    assert.ok(!new RegExp(`\b${token}\b`).test(bundle), `${token} appears in netease.js`);
+  }
+  assert.ok(!/\b\d+n\b/.test(bundle), 'a BigInt literal appears in netease.js');
+});
+
+test('the bundled netease.js signs a QR request without BigInt', async () => {
+  const realBigInt = globalThis.BigInt;
+  const requests = [];
+  globalThis.fmp = {
+    log: { debug() {}, info() {}, warn() {} },
+    http: {
+      async request(req) {
+        requests.push(req);
+        return { status: 200, headers: {}, body: JSON.stringify({ code: 200, unikey: 'fake-unikey-0000' }) };
+      },
+    },
+  };
+  globalThis.BigInt = undefined; // 模擬沒有 BigInt 的執行環境
+  try {
+    const plugin = await import(`../netease.js?nobigint=${Date.now()}`);
+    const result = await plugin.loginQrStart();
+    assert.equal(result.token, 'fake-unikey-0000');
+    assert.match(requests[0].body, /^params=[^&]+&encSecKey=[0-9a-f]{256}$/);
+  } finally {
+    globalThis.BigInt = realBigInt;
+  }
 });

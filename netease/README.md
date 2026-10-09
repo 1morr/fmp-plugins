@@ -26,7 +26,7 @@ manifest 宣告 `login: { methods: ['qr'] }`（網易的 `MUSIC_U` 有效期長�
 
 - 存的 cookie（只看名稱）：`MUSIC_U`、`__csrf`（沒有就不放）。沒有 `extra`。
 - 用到的網域：只有 `music.163.com`，不需要新增。
-- QR 兩個請求都是 weapi：JSON 經雙層 AES-128-CBC（固定金鑰、隨機 16 字元金鑰）加 RSA（無 padding）封裝隨機金鑰，`params`、`encSecKey` 以 form 送出；每次輪詢重新加密。程式在 `src/weapi.js`，AES-CBC 與 base64 在 `src/aes.js`，RSA 用 `BigInt`。隨機金鑰用 `Math.random`：它只保護公開 QR 流程的請求內容，不是憑證。
+- QR 兩個請求都是 weapi：JSON 經雙層 AES-128-CBC（固定金鑰、隨機 16 字元金鑰）加 RSA（無 padding）封裝隨機金鑰，`params`、`encSecKey` 以 form 送出；每次輪詢重新加密。程式在 `src/weapi.js`，AES-CBC 與 base64 在 `src/aes.js`，RSA 的大整數運算用 `bn.js`（MIT，固定 5.2.5，esbuild 打包進 `netease.js`）：FMP 的 QuickJS 沒有 `BigInt`，所以不用它。打包檔不得出現 `BigInt`、`TextEncoder`、`atob`、`btoa`、`getRandomValues`（`test/weapi.test.js` 守）。隨機金鑰用 `Math.random`：它只保護公開 QR 流程的請求內容，不是憑證。
 - QR 兩個請求固定帶舊專案的匿名 `Cookie`（`os=pc; osver=…; appver=2.7.1.198277; channel=netease; __csrf=; MUSIC_U=`，`MUSIC_U`、`__csrf` 是空的），不帶 `X-Real-IP`。
 - `search`、`resolveStream` 的請求標 `auth: 'userPreference'`：使用者開著「以登入身分瀏覽與播放」時宿主才帶憑證（ADR 0012）；`os=pc`、`deviceId=fmp` 還沒有加進這兩個請求。
 - `803` 卻沒有 `MUSIC_U` 時回 `ParseError`（舊專案當成過期）；不認得的 `code` 照下方錯誤對應（`UnexpectedError`），不當成「還在等」。
@@ -84,7 +84,7 @@ node build.mjs   # 輸出 netease.js（不壓縮，內容固定）
 npm test         # 錯誤對應表、AES／weapi、登入流程、取流與搜尋請求的測試（node:test）
 ```
 
-用 esbuild 把 `src/` 打成單一檔，`netease.js` 與原始碼、`package-lock.json` 一起提交；index 只認這一個 `.js`。`manifest` 寫在 `build.mjs`。
+用 esbuild 把 `src/` 與 `bn.js` 打成單一檔，`netease.js` 與原始碼、`package-lock.json` 一起提交；index 只認這一個 `.js`。`manifest` 寫在 `build.mjs`。
 
 ## 契約測試與錄製
 

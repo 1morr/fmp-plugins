@@ -23,9 +23,12 @@ const result = await build({
   bundle: true,
   format: 'esm',
   platform: 'neutral',
+  mainFields: ['main'],
   target: 'es2020',
   minify: false,
   legalComments: 'none',
+  // bn.js 試著 require('buffer')（失敗會接住）；QuickJS 沒有它，換成空模組。
+  alias: { buffer: './src/empty-buffer.cjs' },
   write: false,
   logLevel: 'warning',
 });
