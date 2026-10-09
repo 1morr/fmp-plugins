@@ -28,7 +28,7 @@
       "profile": {
         "userId": 1000001,
         "nickname": "fake-user",
-        "avatarUrl": "http://p1.music.126.net/fake-avatar-0000/0000.jpg"
+        "avatarUrl": "http://p1.music.126.net/***/0000.jpg"
       }
     }
   }
