@@ -3,7 +3,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { loginQrPoll, loginQrStart, loginVerify, parseSetCookies, qrCredentials, verifyCookie } from '../bilibili.js';
+import { loginQrPoll, loginQrStart, loginVerify, parseSetCookies, qrCredentials, verifyCookie } from '../src/plugin.js';
 
 function fakeHost(responses) {
   const requests = [];
@@ -248,7 +248,7 @@ test('loginVerify: other failures keep their usual category', async () => {
 
 test('-111 is AuthRequired in the shared business mapping (a search with bad credentials)', async () => {
   const requests = fakeHost([ok({ code: -111, message: 'csrf' })]);
-  const { search } = await import('../bilibili.js');
+  const { search } = await import('../src/plugin.js');
   await rejects(search({ keyword: 'x', page: 1 }), 'AuthRequired');
   assert.equal(requests[0].auth, 'userPreference');
 });
