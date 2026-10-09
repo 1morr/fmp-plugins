@@ -160,14 +160,29 @@ function fallbackOrder(sortedDesc, quality) {
   return [...sortedDesc.slice(chosen), ...sortedDesc.slice(0, chosen).reverse()];
 }
 
+/**
+ * 一個 client 的 player 回應（已解析）。與 getBasicInfo 送的 body 相同，但 getBasicInfo 在
+ * playabilityStatus 為 ERROR（影片不存在、已刪除）時直接拋例外，錯誤對應表就走不到 NotFound。
+ */
+function playerResponse(yt, videoId, client) {
+  return yt.actions.execute('/player', {
+    videoId,
+    racyCheckOk: true,
+    contentCheckOk: true,
+    playbackContext: { contentPlaybackContext: { vis: 0, splay: false, lactMilliseconds: '-1' } },
+    client,
+    parse: true,
+  });
+}
+
 /** 依序試每個 client，回傳第一個有音訊的；都沒有就丟第一個非 OK 的 playability 對應的錯誤。 */
 async function audioFormats(yt, sourceId) {
   let firstFailure = null;
   for (const client of CLIENTS) {
-    const info = await yt.getBasicInfo(sourceId, { client });
+    const info = await playerResponse(yt, sourceId, client);
     const ps = info.playability_status || {};
     if (ps.status !== 'OK') {
-      fmp.log.debug('client not playable', { client, status: ps.status });
+      fmp.log.debug('client not playable', { client, status: ps.status, reason: ps.reason || null });
       if (!firstFailure) firstFailure = playabilityError(ps.status, ps.reason);
       continue;
     }
