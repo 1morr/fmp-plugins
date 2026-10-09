@@ -3,7 +3,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { responseCodeError, statusError, streamUnavailableError } from '../src/errors.js';
+import { credentialsRejected, responseCodeError, statusError, streamUnavailableError } from '../src/errors.js';
 
 test('top-level -460 is verification', () => {
   assert.equal(responseCodeError(-460, '網絡太擁擠', 'player').fmpError, 'VerificationRequired');
@@ -44,4 +44,24 @@ for (const [item, fmpError, reason] of stream) {
 
 test('flag & 4 alone is not a vip marker', () => {
   assert.notEqual(streamUnavailableError({ code: 404, fee: 0, flag: 4 }, 'player').reason, 'membership');
+});
+
+// ---------------------------------------------------------------- 憑證無效的判定
+
+test('credentialsRejected: 301 counts only when credentials were attached', () => {
+  assert.equal(credentialsRejected({ code: 301 }, true), true);
+  assert.equal(credentialsRejected({ code: 301 }, false), false);
+  assert.equal(credentialsRejected({ code: 301 }, undefined), false);
+});
+
+test('credentialsRejected: risk, success and other codes are never invalidity', () => {
+  for (const code of [200, 0, -460, 400, 404, 405, 500, 800, 803, '301']) {
+    assert.equal(credentialsRejected({ code }, true), false, `code ${code}`);
+    assert.equal(credentialsRejected({ code }, false), false, `code ${code}`);
+  }
+  // 取流項目裡的 301／404（匿名也會出現）是 data[0].code，不是頂層。
+  assert.equal(credentialsRejected({ code: 200, data: [{ code: 301 }] }, true), false);
+  for (const body of [null, undefined, 'x', 5, [], {}]) {
+    assert.equal(credentialsRejected(body, true), false, JSON.stringify(body));
+  }
 });

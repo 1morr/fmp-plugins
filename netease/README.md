@@ -18,7 +18,7 @@
 
 ## 登入（QR）
 
-manifest 宣告 `login: { methods: ['qr'] }`（網易的 `MUSIC_U` 有效期長，沒有刷新）。
+manifest 宣告 `login: { methods: ['qr'] }`（網易的 `MUSIC_U` 有效期長，沒有刷新，不匯出 `loginRefresh`）。
 
 1. `loginQrStart`：`POST music.163.com/weapi/login/qrcode/unikey`，回應的 `unikey` 是 token，QR 碼內容是 `https://music.163.com/login?codekey=<unikey>`。
 2. `loginQrPoll(token)`：`POST music.163.com/weapi/login/qrcode/client/login`，狀態在頂層 `code`：`801` 等待、`802` 已掃描、`800` 過期、`803` 成功。成功時 `MUSIC_U`、`__csrf` 取自回應的 `Set-Cookie`；沒有 `MUSIC_U` 時退到 body 的 `cookie` 字串。
@@ -33,13 +33,25 @@ manifest 宣告 `login: { methods: ['qr'] }`（網易的 `MUSIC_U` 有效期長�
 - `loginVerify`：頂層 `code` 301、或 200 卻沒有 `profile`、或沒有 `MUSIC_U` → `CredentialInvalid`；其他照下方錯誤對應。
 - 輪詢逾時、連續錯誤幾次放棄，都是宿主端的事。
 
+## 憑證無效的判定
+
+宿主對 `credentialsAttached` 為 `true`（這次請求真的帶了憑證）的回應才容許「憑證無效」；判定集中在 `credentialsRejected(json, credentialsAttached)`（`src/errors.js`，`test/errors.test.js`、`test/search.test.js` 守）：
+
+| 回應 | `credentialsAttached` | 結果 |
+|---|---|---|
+| 頂層 `code` 301（未登入；cookie 名稱 `MUSIC_U`） | `true` | `CredentialInvalid` |
+| 同一個 body | `false`（匿名） | 照下方〈錯誤對應〉：`AuthRequired` |
+| `-460`（風控）、HTTP 460／462／5xx、其他碼 | 任何 | 照下方〈錯誤對應〉，不是憑證無效 |
+
+只看頂層 `code`。取流項目（`data[0]`）的 `code` 301 與「404 且 `fee` 0」仍是 `AuthRequired`：後者匿名請求也會出現，不能當憑證無效。`loginVerify` 自己組 `Cookie`、標 `auth: 'never'`（`credentialsAttached` 一定是 `false`），直接依 `code` 301 判定。
+
 ## 錯誤對應
 
 | 條件 | FMP 錯誤 |
 |---|---|
 | HTTP 460、462，或回應的 `code` 為 `-460` | `VerificationRequired` |
 | HTTP 5xx | `NetworkError` |
-| 回應的 `code` 為 301，或串流項目的 `code` 為 301 | `AuthRequired` |
+| 回應的 `code` 為 301（回應帶了憑證時改為 `CredentialInvalid`），或串流項目的 `code` 為 301 | `AuthRequired` |
 | 串流項目沒有網址，`fee` 為 1 或 4（VIP、數位專輯） | `Unavailable`（`membership`） |
 | 串流項目沒有網址，`code` 為 `-110` 或 `flag & 256`（版權、地區） | `Unavailable`（`copyright`） |
 | 串流項目沒有網址，`code` 為 404 且 `fee` 為 0 | `AuthRequired`（匿名請求；登入後可播，舊專案 #87） |

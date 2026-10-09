@@ -23,3 +23,25 @@ test('the search request carries no X-Real-IP and is idempotent', async () => {
   assert.equal(requests[0].idempotent, true);
   assert.equal(requests[0].auth, 'userPreference');
 });
+
+function hostReturning(response) {
+  globalThis.fmp = {
+    log: { debug() {}, info() {}, warn() {} },
+    http: { request: async () => ({ headers: {}, ...response }) },
+  };
+}
+
+test('a top-level 301 is CredentialInvalid with credentials attached, AuthRequired without', async () => {
+  const body = JSON.stringify({ code: 301, message: 'not logged in' });
+  hostReturning({ status: 200, body, credentialsAttached: true });
+  await assert.rejects(search({ keyword: 'x', page: 1 }), (e) => e.fmpError === 'CredentialInvalid');
+  hostReturning({ status: 200, body, credentialsAttached: false });
+  await assert.rejects(search({ keyword: 'x', page: 1 }), (e) => e.fmpError === 'AuthRequired');
+});
+
+test('risk and network failures stay what they were even with credentials attached', async () => {
+  hostReturning({ status: 200, body: JSON.stringify({ code: -460 }), credentialsAttached: true });
+  await assert.rejects(search({ keyword: 'x', page: 1 }), (e) => e.fmpError === 'VerificationRequired');
+  hostReturning({ status: 503, body: '', credentialsAttached: true });
+  await assert.rejects(search({ keyword: 'x', page: 1 }), (e) => e.fmpError === 'NetworkError');
+});
