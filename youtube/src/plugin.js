@@ -3,6 +3,7 @@
 import { HeadersShim, RequestShim, ResponseShim, fetchShim } from './shims.js';
 import { Innertube, Platform, Log } from 'youtubei.js/web';
 import { error, playabilityError } from './errors.js';
+import { CLIENTS } from './clients.js';
 
 // ---------------------------------------------------------------- platform
 // Cache over fmp.storage (values are ArrayBuffers; storage takes strings).
@@ -51,10 +52,6 @@ Platform.load({
 Log.setLevel(Log.Level.ERROR);
 
 // ---------------------------------------------------------------- session
-// Since 2026-08-26 token-free ANDROID_VR googlevideo URLs are capped at ~60 s of
-// media (403 after that, and 403 on open-ended Range). VISIONOS returns full-length
-// plain URLs without PO token (verified 2026-09-30). IOS as fallback.
-const CLIENTS = ['VISIONOS', 'IOS'];
 let innertubePromise = null;
 const now = () => Date.now();
 

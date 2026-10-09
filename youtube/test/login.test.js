@@ -36,6 +36,7 @@ beforeEach(() => {
   globalThis.fmp = {
     http: { request: async (r) => { requests.push(r); return respond(r); } },
     credentials: { get: async () => ({ cookies: COOKIES }) },
+    log: { warn: () => {} },
   };
 });
 
