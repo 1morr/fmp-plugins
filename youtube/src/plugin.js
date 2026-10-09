@@ -219,3 +219,6 @@ export async function resolveStream({ sourceId, formats, quality }) {
   fmp.log.debug('resolved', { client, candidates: candidates.length, ms: now() - t0 });
   return { candidates };
 }
+
+// ---------------------------------------------------------------- login
+export { loginVerify } from './login.js';

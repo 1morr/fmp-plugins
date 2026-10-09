@@ -8,6 +8,7 @@ import 'core-js/actual/url-search-params';
 import 'core-js/actual/atob';
 import 'core-js/actual/btoa';
 import 'core-js/actual/structured-clone';
+import { hostRequest } from './host_request.js';
 
 const g = globalThis;
 
@@ -168,7 +169,7 @@ async function fetchShim(input, init = {}) {
   }
   // innertube 的 POST 都是查詢（語意冪等），標 idempotent 讓宿主在暫時失敗時重試（ADR 0028）。
   const idempotent = req.method === 'POST' && req.url.includes('/youtubei/') ? true : null;
-  const res = await fmp.http.request({ url: req.url, method: req.method, headers, body: body == null ? null : body, idempotent });
+  const res = await hostRequest({ url: req.url, method: req.method, headers, body: body == null ? null : body, idempotent });
   const h = new HeadersShim();
   for (const k of Object.keys(res.headers)) for (const v of res.headers[k]) h.append(k, v);
   return new ResponseShim(res.body, { status: res.status, headers: h, url: res.url });

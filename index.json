@@ -53,17 +53,20 @@
       "apiVersion": 1,
       "capabilities": [
         "search",
-        "resolveStream"
+        "resolveStream",
+        "login"
       ],
       "allowedHosts": [
         "youtube.com",
         "googlevideo.com",
-        "ytimg.com"
+        "ytimg.com",
+        "ggpht.com",
+        "accounts.google.com"
       ],
       "url": "https://raw.githubusercontent.com/1morr/fmp-plugins/main/youtube/youtube.js",
-      "sha256": "a9787ec2a7dcb43dc08f30c0a7ee626c3bb2a13a6f4dba9d5cf2ca7025203ed9",
+      "sha256": "6a3dde8c09c8f8a37ef98e6ca94dcfa34030a53b8b1fd8799fd1e25ae4a4bead",
       "checksUrl": "https://raw.githubusercontent.com/1morr/fmp-plugins/main/youtube/checks.json",
-      "checksSha256": "d4fa5b29183ecb6935e9665275923e77d9cffa9864d8b3c4c62ea3245b21e741"
+      "checksSha256": "b1e4cdf07d5c2d0a6c1ea5acd8775ea1449dedac956a16b9de1ac371c606ecdd"
     }
   ]
 }

@@ -10,8 +10,18 @@ const manifest = {
   author: 'FMP',
   description: '搜尋 YouTube 影片並播放其音訊。',
   apiVersion: 1,
-  capabilities: ['search', 'resolveStream'],
-  allowedHosts: ['youtube.com', 'googlevideo.com', 'ytimg.com'],
+  capabilities: ['search', 'resolveStream', 'login'],
+  // accounts.google.com：登入頁（webView.url）；ggpht.com：帳號頭像。
+  allowedHosts: ['youtube.com', 'googlevideo.com', 'ytimg.com', 'ggpht.com', 'accounts.google.com'],
+  login: {
+    methods: ['webView', 'cookie'],
+    webView: {
+      url: 'https://accounts.google.com/ServiceLogin?service=youtube&continue=https://www.youtube.com/',
+      cookieHosts: ['https://www.youtube.com'],
+      doneCookies: ['SAPISID', '__Secure-1PSID', '__Secure-3PSID'],
+    },
+    automationRisk: true,
+  },
 };
 
 const result = await build({

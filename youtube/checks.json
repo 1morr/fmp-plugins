@@ -21,5 +21,16 @@
       "nonEmpty": ["url", "container", "codec", "bitrate", "expiresAt"]
     },
     "expiresAtPattern": "[?&]expire=(\\d+)"
+  },
+  "login": {
+    "input": {
+      "cookies": {
+        "SAPISID": "fake-sapisid",
+        "__Secure-1PSID": "fake-1psid",
+        "__Secure-3PSID": "fake-3psid"
+      }
+    },
+    "expect": { "minItems": 1, "nonEmpty": ["userId", "displayName", "avatar"] },
+    "requiresLogin": true
   }
 }

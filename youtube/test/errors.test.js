@@ -27,3 +27,17 @@ for (const [status, reason, fmpError, expectedReason] of cases) {
     assert.match(e.message, new RegExp(`^playability ${status}`));
   });
 }
+
+import { credentialInvalidError } from '../src/errors.js';
+
+test('credentialInvalidError: only a 401 on a request that carried credentials', () => {
+  assert.equal(credentialInvalidError(401, true).fmpError, 'CredentialInvalid');
+  // 沒帶憑證的 401 是匿名請求被拒，不判定。
+  assert.equal(credentialInvalidError(401, false), null);
+  assert.equal(credentialInvalidError(401, undefined), null);
+  // 403（風控、地區）與 429（宿主轉成 RateLimited）維持原樣，帶不帶憑證都一樣。
+  for (const status of [200, 403, 429, 500]) {
+    assert.equal(credentialInvalidError(status, true), null, String(status));
+    assert.equal(credentialInvalidError(status, false), null, String(status));
+  }
+});

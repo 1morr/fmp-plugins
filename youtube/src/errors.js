@@ -24,3 +24,16 @@ export function playabilityError(status, reason) {
   if (status === 'ERROR') return error('NotFound', detail);
   return error('UnexpectedError', detail);
 }
+
+/**
+ * 「憑證無效」判定表（design §6.5）：只在宿主說這次請求真的帶了憑證
+ * （HttpResponse.credentialsAttached 為 true）的回應上成立；沒帶憑證的 401 是匿名請求被拒，
+ * 不是憑證失效，回 null 交給原本的處理。YouTube 的判定只有 HTTP 401：
+ * 403（風控、地區）與 429（宿主轉成 RateLimited）都不算。
+ */
+export function credentialInvalidError(status, credentialsAttached) {
+  if (status === 401 && credentialsAttached === true) {
+    return error('CredentialInvalid', 'HTTP 401 on a request with credentials');
+  }
+  return null;
+}
