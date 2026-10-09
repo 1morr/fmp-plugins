@@ -3705,7 +3705,6 @@ async function loginVerify(credentials) {
   if (avatar.length > 0) account.avatar = avatar;
   return account;
 }
-var REFRESH_INVALID_CODES = [...CREDENTIAL_INVALID_CODES, 86095];
 function refreshCsrfOf(html) {
   const match = /<div\s+id="1-name"\s*>(.*?)<\/div>/.exec(typeof html === "string" ? html : "");
   const value = match ? match[1].trim() : "";
@@ -3719,7 +3718,7 @@ function refreshRequest(method, url, cookie, form) {
 function refreshData(response, context) {
   const json = parseJson(response, context);
   if (json === null || typeof json !== "object") throw error("ParseError", `${context}: not an object`);
-  if (REFRESH_INVALID_CODES.includes(json.code)) {
+  if (CREDENTIAL_INVALID_CODES.includes(json.code)) {
     throw error("CredentialInvalid", `${context}: code ${json.code} ${json.message || ""}`.trim());
   }
   return checkCode(json, context);
@@ -3761,18 +3760,21 @@ async function loginRefresh(credentials) {
     const value = jar[name] || cookies[name];
     if (typeof value === "string" && value !== "") merged[name] = value;
   }
-  const confirm = await refreshRequest(
-    "POST",
-    `${PASSPORT}/x/passport-login/web/confirm/refresh`,
-    verifyCookie({ cookies: merged }),
-    query({ csrf: merged.bili_jct, refresh_token: oldToken })
-  );
-  if (confirm.status !== 200) throw statusError(confirm.status, "refresh confirm");
   try {
-    const code = JSON.parse(confirm.body).code;
-    if (code !== 0) fmp.log.warn("refresh confirm returned a non-zero code", { code });
+    const confirm = await refreshRequest(
+      "POST",
+      `${PASSPORT}/x/passport-login/web/confirm/refresh`,
+      verifyCookie({ cookies: merged }),
+      query({ csrf: merged.bili_jct, refresh_token: oldToken })
+    );
+    if (confirm.status !== 200) {
+      fmp.log.warn("refresh confirm failed", { status: confirm.status });
+    } else {
+      const code = JSON.parse(confirm.body).code;
+      if (code !== 0) fmp.log.warn("refresh confirm returned a non-zero code", { code });
+    }
   } catch (e) {
-    fmp.log.warn("refresh confirm: unreadable response");
+    fmp.log.warn("refresh confirm failed", { error: e && e.fmpError || "unreadable response" });
   }
   return { cookies: merged, extra: { refresh_token: refreshedData.refresh_token } };
 }

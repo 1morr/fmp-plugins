@@ -120,7 +120,7 @@ test('the bundled bilibili.js loads and builds a correspondPath without BigInt',
           ? '<div id="1-name">fake-refresh-csrf-0000</div>'
           : req.url.includes('cookie/info')
             ? JSON.stringify({ code: 0, data: { refresh: true, timestamp: 1700000000000 } })
-            : JSON.stringify({ code: 86095, message: 'fake' });
+            : JSON.stringify({ code: -111, message: 'fake' });
         return { status: 200, headers: {}, body };
       },
     },

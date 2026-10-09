@@ -622,8 +622,10 @@ export async function loginVerify(credentials) {
 
 // ---------------------------------------------------------------- login (refresh)
 
-/** cookie/refresh 與 confirm/refresh 另有的「憑證壞了」：86095 是 refresh_csrf 錯或 refresh_token 與 cookie 對不上。 */
-const REFRESH_INVALID_CODES = [...CREDENTIAL_INVALID_CODES, 86095];
+// cookie/refresh 的 86095（記載是 refresh_csrf 錯或 refresh_token 與 cookie 對不上）刻意不算憑證無效：
+// 意義沒對真實端點驗證過，而且走到第 4 步代表第 1 步的 cookie 還被接受，標失效會讓還能用的登入
+// 被要求重新登入。它落到 businessError 的 UnexpectedError（宿主記 failed、帳號照用）；cookie 真的
+// 壞了時，帶憑證的請求會拿到 -101，宿主再刷新一次就在第 1 步判定。
 
 /** correspond 頁 HTML 裡的 refresh_csrf（舊專案 _extractRefreshCsrf）；沒有回 null。匯出只為了單元測試。 */
 export function refreshCsrfOf(html) {
@@ -639,11 +641,11 @@ function refreshRequest(method, url, cookie, form) {
   return fmp.http.request({ url, method, headers, body: form, auth: 'never' });
 }
 
-/** 刷新用的 JSON 回應：憑證壞了的碼 → CredentialInvalid，其他非 0 的碼照業務碼對應。 */
+/** 刷新用的 JSON 回應：-101、-111 → CredentialInvalid，其他非 0 的碼照業務碼對應。 */
 function refreshData(response, context) {
   const json = parseJson(response, context);
   if (json === null || typeof json !== 'object') throw error('ParseError', `${context}: not an object`);
-  if (REFRESH_INVALID_CODES.includes(json.code)) {
+  if (CREDENTIAL_INVALID_CODES.includes(json.code)) {
     throw error('CredentialInvalid', `${context}: code ${json.code} ${json.message || ''}`.trim());
   }
   return checkCode(json, context);
@@ -651,11 +653,12 @@ function refreshData(response, context) {
 
 /**
  * 刷新憑證（舊專案 refreshCredentials 的 5 步）。不需要刷新回 null；成功回新憑證；憑證本身壞了
- * （未登入、csrf 對不上、需要刷新卻沒有 refresh_token）拋 CredentialInvalid；網路、HTTP、風控、
- * 格式問題照既有對應拋，不當成憑證無效，宿主保留舊憑證下次再試。
+ * （未登入、csrf 對不上、需要刷新卻沒有 refresh_token）拋 CredentialInvalid；第 4 步之前的網路、
+ * HTTP、風控、格式問題照既有對應拋，不當成憑證無效，宿主保留舊憑證下次再試。
  *
- * 第 5 步 confirm 會讓舊 refresh_token 作廢，而宿主要等這個函式回傳才寫入新憑證：兩者之間
- * 寫入失敗就丟了登入（design 已知窗口，README 有寫）。confirm 之前失敗則舊憑證仍有效。
+ * 第 4 步成功後新憑證已經發出、舊 refresh_token 已經用掉，所以第 5 步 confirm 不論成敗都回傳
+ * 新憑證（舊專案先存新憑證再 confirm、confirm 失敗不影響）。宿主要等這個函式回傳才寫入：寫入
+ * 失敗就丟了登入（README 的已知窗口）。
  */
 export async function loginRefresh(credentials) {
   const cookies = (credentials && credentials.cookies) || {};
@@ -707,19 +710,23 @@ export async function loginRefresh(credentials) {
     if (typeof value === 'string' && value !== '') merged[name] = value;
   }
 
-  // 5. 確認：新 cookie 加舊 refresh_token。舊專案不看回應的 code，這裡同樣只記一筆 warning。
-  const confirm = await refreshRequest(
-    'POST',
-    `${PASSPORT}/x/passport-login/web/confirm/refresh`,
-    verifyCookie({ cookies: merged }),
-    query({ csrf: merged.bili_jct, refresh_token: oldToken }),
-  );
-  if (confirm.status !== 200) throw statusError(confirm.status, 'refresh confirm');
+  // 5. 確認：新 cookie 加舊 refresh_token。失敗（傳輸錯誤、HTTP、非 0 的 code）只記一筆
+  // warning，照樣回傳新憑證（見函式說明）。
   try {
-    const code = JSON.parse(confirm.body).code;
-    if (code !== 0) fmp.log.warn('refresh confirm returned a non-zero code', { code });
+    const confirm = await refreshRequest(
+      'POST',
+      `${PASSPORT}/x/passport-login/web/confirm/refresh`,
+      verifyCookie({ cookies: merged }),
+      query({ csrf: merged.bili_jct, refresh_token: oldToken }),
+    );
+    if (confirm.status !== 200) {
+      fmp.log.warn('refresh confirm failed', { status: confirm.status });
+    } else {
+      const code = JSON.parse(confirm.body).code;
+      if (code !== 0) fmp.log.warn('refresh confirm returned a non-zero code', { code });
+    }
   } catch (e) {
-    fmp.log.warn('refresh confirm: unreadable response');
+    fmp.log.warn('refresh confirm failed', { error: (e && e.fmpError) || 'unreadable response' });
   }
   return { cookies: merged, extra: { refresh_token: refreshedData.refresh_token } };
 }

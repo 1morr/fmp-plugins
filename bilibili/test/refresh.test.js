@@ -174,10 +174,18 @@ test('loginRefresh runs the 5 steps and returns the new credentials', async () =
 test('credentials the server says are bad throw CredentialInvalid at any step', async () => {
   routedHost({ [INFO]: json({ code: -101, message: 'not logged in' }) });
   await rejects(loginRefresh(OLD), 'CredentialInvalid');
-  for (const code of [-101, -111, 86095]) {
+  for (const code of [-101, -111]) {
     routedHost({ [INFO]: needsRefresh, [CORRESPOND]: page, [REFRESH]: json({ code, message: 'bad' }) });
     await rejects(loginRefresh(OLD), 'CredentialInvalid');
   }
+});
+
+// 86095 的意義沒對真實端點驗證過，而且走到第 4 步代表第 1 步的 cookie 還被接受：標失效會讓
+// 還能用的登入被要求重新登入。保守處理成一般失敗，宿主記 failed、帳號照用；cookie 真的壞了時
+// 帶憑證的請求會拿到 -101，再走一次刷新就在第 1 步判定。
+test('86095 from the refresh step is not CredentialInvalid', async () => {
+  routedHost({ [INFO]: needsRefresh, [CORRESPOND]: page, [REFRESH]: json({ code: 86095, message: 'bad' }) });
+  await rejects(loginRefresh(OLD), 'UnexpectedError');
 });
 
 test('credentials that cannot be refreshed throw CredentialInvalid without further requests', async () => {
@@ -209,8 +217,6 @@ test('network, HTTP, risk and format failures are not CredentialInvalid', async 
     // 200 但沒有新 refresh_token，或沒有 Set-Cookie
     [{ [INFO]: needsRefresh, [CORRESPOND]: page, [REFRESH]: json({ code: 0, data: {} }, refreshed.headers) }, 'ParseError'],
     [{ [INFO]: needsRefresh, [CORRESPOND]: page, [REFRESH]: json({ code: 0, data: { refresh_token: 'fake-refresh-new' } }) }, 'ParseError'],
-    // confirm 的 HTTP 失敗：舊憑證還沒作廢，交給宿主保留舊的
-    [{ [INFO]: needsRefresh, [CORRESPOND]: page, [REFRESH]: refreshed, [CONFIRM]: { status: 502, headers: {}, body: '' } }, 'NetworkError'],
   ];
   for (const [routes, expected] of cases) {
     routedHost(routes);
@@ -225,6 +231,22 @@ test('a transport error from the host propagates unchanged', async () => {
     },
   });
   await rejects(loginRefresh(OLD), 'NetworkError');
+});
+
+// 第 4 步成功後伺服器已發出新憑證、舊 refresh_token 已用掉：confirm 失敗時丟掉新憑證，下次
+// 以舊 refresh_token 刷新只會被拒。照舊專案（先存新憑證再 confirm、confirm 失敗不影響），回傳新的。
+test('a failed confirm still returns the new credentials', async () => {
+  for (const confirm of [
+    { status: 502, headers: {}, body: '' },
+    () => {
+      throw { fmpError: 'NetworkError', message: 'offline' };
+    },
+  ]) {
+    routedHost({ [INFO]: needsRefresh, [CORRESPOND]: page, [REFRESH]: refreshed, [CONFIRM]: confirm });
+    const result = await loginRefresh(OLD);
+    assert.equal(result.cookies.SESSDATA, 'fake-sessdata-new');
+    assert.equal(result.extra.refresh_token, 'fake-refresh-new');
+  }
 });
 
 test('a non-zero confirm code does not fail the refresh (legacy ignores it)', async () => {

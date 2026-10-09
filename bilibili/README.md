@@ -35,14 +35,14 @@ manifest 宣告 `login: { methods: ['qr'], refresh: 'onStartup' }`。流程由�
 2. 用寫死的 1024-bit 公鑰對 `refresh_<data.timestamp>` 做 RSA-OAEP（SHA-256），輸出小寫 hex（`correspondPath`）。
 3. `GET www.bilibili.com/correspond/1/<correspondPath>`（HTML），取 `<div id="1-name">…</div>` 的內容為 `refresh_csrf`。
 4. `POST …/cookie/refresh`（form：`csrf` = `bili_jct`、`refresh_csrf`、`source=main_web`、舊 `refresh_token`）：新 cookie 取自回應的 `Set-Cookie`（沒給的名稱沿用舊值），新 `refresh_token` 取自 `data.refresh_token`。
-5. `POST …/confirm/refresh`（form：新 `bili_jct`、**舊** `refresh_token`；`Cookie` 用新的）。回應的 `code` 不看（舊專案同樣），非 0 只寫一筆 warning。
+5. `POST …/confirm/refresh`（form：新 `bili_jct`、**舊** `refresh_token`；`Cookie` 用新的）。失敗（傳輸錯誤、HTTP 非 200、非 0 的 `code`）只寫一筆 warning，照樣回傳新憑證：第 4 步已發出新憑證、用掉舊 `refresh_token`，丟掉新的只會讓下次刷新被拒（舊專案先存新憑證再 confirm，同樣不看 confirm 的結果）。
 
 回傳 `{cookies, extra: {refresh_token}}`（新值），由宿主寫入。
 
 - 用到的網域：`passport.bilibili.com`、`www.bilibili.com`（correspond 頁，這次新增）。
 - QuickJS 沒有 `BigInt`、`TextEncoder`、WebCrypto，宿主的 `sha256` 又只吃字串，所以 SHA-256、MGF1、OAEP 是純 JS（`src/oaep.js`），RSA 的大整數運算用 `bn.js`（MIT，固定 5.2.5，esbuild 打包進 `bilibili.js`）。OAEP 的 32 位元組種子用 `Math.random`（QuickJS 沒有 `getRandomValues`）：它只讓同一個明文每次的密文不同，明文是 `refresh_<時間戳>`，不是機密。
-- **已知的原子性窗口**：第 5 步 confirm 讓舊 `refresh_token` 作廢，而宿主要等 `loginRefresh` 回傳才寫入新憑證（design 的順序）。confirm 成功到宿主寫入完成之間若寫入失敗，舊憑證已失效、新憑證沒落地，要重新登入。confirm 之前的任何失敗，舊憑證仍有效，宿主保留它下次再試。舊專案是先寫入再 confirm，沒有這個窗口。
-- 失敗的分類：憑證本身壞了 → `CredentialInvalid`：任一步的頂層 `code` 為 `-101`（未登入）、`-111`（csrf 驗證失敗）、`86095`（`refresh_csrf` 錯或 `refresh_token` 與 cookie 對不上），或需要刷新卻沒有 `refresh_token`／`bili_jct`／`SESSDATA`。其他一律照下方〈錯誤對應〉，**不會**變成 `CredentialInvalid`：HTTP 非 200（含 correspond 頁的 404）、風控碼、不是 JSON、correspond 頁沒有 `refresh_csrf`、refresh 回應缺新 `refresh_token` 或 `SESSDATA`／`bili_jct`（`ParseError`）、傳輸錯誤。
+- **已知的原子性窗口**：宿主要等 `loginRefresh` 回傳才寫入新憑證（design 的順序）。第 4 步成功到宿主寫入完成之間若寫入失敗，新憑證沒落地、舊 `refresh_token` 已用掉，要重新登入。第 4 步之前的任何失敗，舊憑證仍有效，宿主保留它下次再試。舊專案是先寫入再 confirm，沒有這個窗口。
+- 失敗的分類：憑證本身壞了 → `CredentialInvalid`：任一步的頂層 `code` 為 `-101`（未登入）、`-111`（csrf 驗證失敗），或需要刷新卻沒有 `refresh_token`／`bili_jct`／`SESSDATA`。其他一律照下方〈錯誤對應〉，**不會**變成 `CredentialInvalid`：HTTP 非 200（含 correspond 頁的 404）、風控碼、不是 JSON、correspond 頁沒有 `refresh_csrf`、refresh 回應缺新 `refresh_token` 或 `SESSDATA`／`bili_jct`（`ParseError`）、傳輸錯誤。第 4 步的 `86095`（記載是 `refresh_csrf` 錯或 `refresh_token` 與 cookie 對不上）刻意當 `UnexpectedError`：意義沒驗證過，而且第 1 步剛接受了這組 cookie，標失效會要求還能用的登入重新登入；cookie 真的壞了時，帶憑證的請求拿到 `-101` 會再觸發一次刷新，在第 1 步判定。
 - 沒有對真實端點驗證過：流程、碼表與 `86095` 的意義來自舊專案與 bilibili-API-collect 的記載，這個 repo 的測試只用假回應。
 
 ## 憑證無效的判定
