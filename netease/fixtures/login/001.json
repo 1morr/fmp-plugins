@@ -1,0 +1,35 @@
+{
+  "meta": {
+    "edited": "Hand-written with fake credentials and a fake account: loginVerify needs a login, which recording cannot do from the command line. The response body has the shape of the real account/get response (code, account.id, profile.userId, nickname, avatarUrl)."
+  },
+  "request": {
+    "method": "GET",
+    "url": "https://music.163.com/api/nuser/account/get",
+    "headers": {
+      "accept": "application/json, text/plain, */*",
+      "cookie": "***",
+      "origin": "https://music.163.com",
+      "referer": "https://music.163.com/",
+      "user-agent": "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Safari/537.36 Chrome/91.0.4472.164 NeteaseMusicDesktop/3.0.18.203152"
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": [
+        "application/json;charset=UTF-8"
+      ]
+    },
+    "jsonBody": {
+      "code": 200,
+      "account": {
+        "id": 1000001
+      },
+      "profile": {
+        "userId": 1000001,
+        "nickname": "fake-user",
+        "avatarUrl": "http://p1.music.126.net/fake-avatar-0000/0000.jpg"
+      }
+    }
+  }
+}

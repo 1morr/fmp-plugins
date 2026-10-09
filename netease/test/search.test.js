@@ -21,4 +21,5 @@ test('the search request carries no X-Real-IP and is idempotent', async () => {
   const names = Object.keys(requests[0].headers).map((n) => n.toLowerCase());
   assert.ok(!names.includes('x-real-ip'), `headers: ${names.join(', ')}`);
   assert.equal(requests[0].idempotent, true);
+  assert.equal(requests[0].auth, 'userPreference');
 });
