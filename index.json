@@ -6,7 +6,7 @@
       "name": "Bilibili",
       "author": "FMP",
       "description": "搜尋 Bilibili 影片並播放其音訊，可用 QR 碼登入。",
-      "version": "1.1.0",
+      "version": "1.2.0",
       "apiVersion": 1,
       "capabilities": [
         "search",
@@ -16,13 +16,14 @@
       "allowedHosts": [
         "api.bilibili.com",
         "passport.bilibili.com",
+        "www.bilibili.com",
         "hdslb.com",
         "bilivideo.com",
         "bilivideo.cn",
         "upos-hz-mirrorakam.akamaized.net"
       ],
       "url": "https://raw.githubusercontent.com/1morr/fmp-plugins/main/bilibili/bilibili.js",
-      "sha256": "a9575ad902abcfed8f35488d3915d4ccf54193bcbf23ac98262a5c1b32fec062",
+      "sha256": "2cca2b0846fb734b2120badd9f80b46cbce57e3de4783835d046544cdb96c6f0",
       "checksUrl": "https://raw.githubusercontent.com/1morr/fmp-plugins/main/bilibili/checks.json",
       "checksSha256": "70bea66f744cf44d21d0fd3490578deed1b9840248cc06affcdd05c12cce6503"
     },
@@ -31,7 +32,7 @@
       "name": "網易雲音樂",
       "author": "FMP",
       "description": "搜尋網易雲音樂的歌曲並播放，可用 QR 碼登入。",
-      "version": "1.1.0",
+      "version": "1.2.0",
       "apiVersion": 1,
       "capabilities": [
         "search",
@@ -43,7 +44,7 @@
         "music.126.net"
       ],
       "url": "https://raw.githubusercontent.com/1morr/fmp-plugins/main/netease/netease.js",
-      "sha256": "62d0b02b8b6367f54c2c361f50cdefba7e24c2205fdaf998fae91538ae2e2bbb",
+      "sha256": "314e4108fef0d1fc16531e6976269bf97193df2d31501d30723e4d6e9b984d6f",
       "checksUrl": "https://raw.githubusercontent.com/1morr/fmp-plugins/main/netease/checks.json",
       "checksSha256": "cda3c989d1c9f4f32c26ca0af44258bfee6bdfcbcace7ac5ad6d68bb54652ed4"
     }
