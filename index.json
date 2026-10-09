@@ -64,7 +64,7 @@
         "accounts.google.com"
       ],
       "url": "https://raw.githubusercontent.com/1morr/fmp-plugins/main/youtube/youtube.js",
-      "sha256": "6a3dde8c09c8f8a37ef98e6ca94dcfa34030a53b8b1fd8799fd1e25ae4a4bead",
+      "sha256": "0952bfe45322d64f77b9d13a28f70603f094b646b4e44669a4a04c2d2d8a0fc0",
       "checksUrl": "https://raw.githubusercontent.com/1morr/fmp-plugins/main/youtube/checks.json",
       "checksSha256": "b1e4cdf07d5c2d0a6c1ea5acd8775ea1449dedac956a16b9de1ac371c606ecdd"
     }

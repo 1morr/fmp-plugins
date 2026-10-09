@@ -121,3 +121,17 @@ test('hostRequest: no credentials means no authHeaders; 401 invalidates only whe
   const res = await hostRequest({ url: SEARCH, method: 'POST', headers: {}, body: '{}', idempotent: true });
   assert.equal(res.status, 401);
 });
+
+test('parseAccountMenu reads the signed-in header (activeAccountHeaderRenderer)', () => {
+  const json = {
+    actions: [{ openPopupAction: { popup: { multiPageMenuRenderer: { header: { activeAccountHeaderRenderer: {
+      accountName: { simpleText: 'Fake User' },
+      accountPhoto: { thumbnails: [{ url: 'https://yt3.ggpht.com/fake=s88', width: 88 }] },
+      channelHandle: { simpleText: '@fakeuser' },
+    } } } } } }],
+  };
+  const account = parseAccountMenu(json);
+  assert.equal(account.displayName, 'Fake User');
+  assert.equal(account.userId, '@fakeuser');
+  assert.equal(account.avatar.length, 1);
+});

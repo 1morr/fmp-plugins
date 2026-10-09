@@ -35,9 +35,14 @@ function accountItems(node, found = [], depth = 0) {
     for (const item of node) accountItems(item, found, depth + 1);
     return found;
   }
+  // 登入狀態的選單把目前帳號放在 header 的 activeAccountHeaderRenderer（欄位與 accountItem 同名）；
+  // accountItem 只出現在帳號切換清單。
+  if (node.activeAccountHeaderRenderer && typeof node.activeAccountHeaderRenderer === 'object') {
+    found.push({ ...node.activeAccountHeaderRenderer, isSelected: true });
+  }
   if (node.accountItem && typeof node.accountItem === 'object') found.push(node.accountItem);
   for (const key of Object.keys(node)) {
-    if (key !== 'accountItem') accountItems(node[key], found, depth + 1);
+    if (key !== 'accountItem' && key !== 'activeAccountHeaderRenderer') accountItems(node[key], found, depth + 1);
   }
   return found;
 }
@@ -51,6 +56,16 @@ function userIdOf(item, name) {
     if (id) return id;
   }
   return text(item.channelHandle) || name;
+}
+
+/** 回應裡出現的 renderer 名稱（只有鍵名、沒有值），讓「找不到帳號」的錯誤看得出回應長什麼樣。 */
+function rendererKeys(node, found = new Set(), depth = 0) {
+  if (depth > 12 || node == null || typeof node !== 'object' || found.size >= 12) return found;
+  for (const [key, value] of Object.entries(node)) {
+    if (/Renderer$/.test(key)) found.add(key);
+    rendererKeys(value, found, depth + 1);
+  }
+  return found;
 }
 
 /** account_menu 的 JSON → {userId, displayName, avatar}；沒有帳號項就是 null（回的是登出狀態）。 */
@@ -100,6 +115,9 @@ export async function loginVerify(credentials) {
   }
   // 登出狀態的回應沒有帳號項（舊版 checkAccountStatus 同樣把「沒有使用者資料」視為無效）。
   const account = parseAccountMenu(json);
-  if (!account) throw error('CredentialInvalid', 'account_menu has no signed-in account');
+  if (!account) {
+    const keys = [...rendererKeys(json)].join(', ') || 'none';
+    throw error('CredentialInvalid', `account_menu has no signed-in account (renderers: ${keys})`);
+  }
   return account;
 }
