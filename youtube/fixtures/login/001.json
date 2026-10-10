@@ -1,0 +1,74 @@
+{
+  "meta": {
+    "edited": "hand-written: loginVerify needs a signed-in account, so the response is shaped like account/account_menu with fake values"
+  },
+  "request": {
+    "method": "POST",
+    "url": "https://www.youtube.com/youtubei/v1/account/account_menu?prettyPrint=false",
+    "headers": {
+      "authorization": "***",
+      "content-type": "application/json",
+      "cookie": "***",
+      "origin": "https://www.youtube.com",
+      "referer": "https://www.youtube.com/",
+      "x-origin": "https://www.youtube.com"
+    },
+    "body": "{\"context\":{\"client\":{\"clientName\":\"WEB\",\"clientVersion\":\"2.20260128.05.00\",\"hl\":\"en\",\"gl\":\"US\"}}}"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": [
+        "application/json; charset=UTF-8"
+      ]
+    },
+    "jsonBody": {
+      "responseContext": {},
+      "actions": [
+        {
+          "openPopupAction": {
+            "popup": {
+              "multiPageMenuRenderer": {
+                "sections": [
+                  {
+                    "accountSectionListRenderer": {
+                      "contents": [
+                        {
+                          "accountItemSectionRenderer": {
+                            "contents": [
+                              {
+                                "accountItem": {
+                                  "accountName": {
+                                    "simpleText": "Fake User"
+                                  },
+                                  "accountPhoto": {
+                                    "thumbnails": [
+                                      {
+                                        "url": "https://yt4.ggpht.com/fake-photo=s48-c-k-c0x00ffffff-no-rj",
+                                        "width": 48,
+                                        "height": 48
+                                      }
+                                    ]
+                                  },
+                                  "isSelected": true,
+                                  "hasChannel": true,
+                                  "channelHandle": {
+                                    "simpleText": "@fake-user"
+                                  }
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

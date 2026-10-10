@@ -1,0 +1,14 @@
+{
+  "name": "fmp-plugin-youtube",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "core-js": "3.50.0",
+    "esbuild": "0.28.2",
+    "youtubei.js": "18.1.0"
+  }
+}
