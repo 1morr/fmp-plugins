@@ -6,7 +6,7 @@ import { writeFileSync, statSync } from 'node:fs';
 const manifest = {
   id: 'bilibili',
   name: 'Bilibili',
-  version: '1.2.0',
+  version: '1.2.1',
   author: 'FMP',
   description: '搜尋 Bilibili 影片並播放其音訊，可用 QR 碼登入。',
   apiVersion: 1,

@@ -2,6 +2,7 @@
 // 重寫：search 與 resolveStream（依「以登入身分瀏覽與播放」帶憑證，沒有就匿名），加上 QR 登入
 //（login，舊專案 bilibili_account_service.dart），以及啟動時刷新憑證（loginRefresh）。
 
+import { CREDENTIAL_INVALID_CODES, businessError, credentialsRejected, error } from './errors.js';
 import { correspondPath } from './oaep.js';
 
 const API = 'https://api.bilibili.com';
@@ -45,56 +46,6 @@ const QN_DEFAULT = 0;
 const QN_HIGH = 120;
 
 // ---------------------------------------------------------------- 錯誤
-
-// 風控碼：一律限流，由上層退避（舊專案 BilibiliApiException.riskControlCodes）。
-const RISK_CONTROL_CODES = [-352, -412, -509, -799];
-
-function error(fmpError, message, extra) {
-  return { fmpError, message, ...extra };
-}
-
-/** 業務錯誤碼 → 結構化錯誤。 */
-function businessError(code, message, context) {
-  const detail = `${context}: code ${code} ${message || ''}`.trim();
-  if (RISK_CONTROL_CODES.includes(code)) return error('RateLimited', detail);
-  switch (code) {
-    case -101: // 未登入
-    case -111: // csrf 驗證失敗（憑證的 bili_jct 與 SESSDATA 對不上）
-    case -403: // 權限不足
-      return error('AuthRequired', detail);
-    case -404: // 啥都木有
-    case 62002: // 稿件不可見
-    case 62004: // 稿件審核中
-    case 62012: // 僅 UP 主自己可見
-      return error('NotFound', detail);
-    case -10403: // 地區限制
-      return error('Unavailable', detail, { reason: 'region' });
-    case 87007: // 充電專屬
-    case 87008:
-      return error('Unavailable', detail, { reason: 'membership' });
-    case -503: // 服務調用超時
-      return error('NetworkError', detail);
-    default:
-      return error('UnexpectedError', detail);
-  }
-}
-
-/** 憑證無效的業務碼（舊專案 bilibili_auth_interceptor.dart 的 _isAuthError）。 */
-const CREDENTIAL_INVALID_CODES = [-101, -111];
-
-/**
- * 這個 JSON 回應表示憑證已經失效嗎？只有 [credentialsAttached] 為 true（宿主真的帶了憑證）且
- * 頂層 `code` 是 -101（未登入）或 -111（csrf 驗證失敗）才算。匿名請求的 -101 只是沒登入
- * （例如 nav 取 WBI key），風控碼、限流與網路錯誤也都不是憑證無效。匯出只為了單元測試。
- */
-export function credentialsRejected(json, credentialsAttached) {
-  return (
-    credentialsAttached === true &&
-    json !== null &&
-    typeof json === 'object' &&
-    CREDENTIAL_INVALID_CODES.includes(json.code)
-  );
-}
 
 /** HTTP 狀態碼 → 結構化錯誤；429 宿主已經轉成 RateLimited。 */
 function statusError(status, context) {

@@ -2,7 +2,7 @@
 {
   "id": "bilibili",
   "name": "Bilibili",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "author": "FMP",
   "description": "搜尋 Bilibili 影片並播放其音訊，可用 QR 碼登入。",
   "apiVersion": 1,
@@ -2993,6 +2993,46 @@ var require_bn = __commonJS({
   }
 });
 
+// src/errors.js
+var RISK_CONTROL_CODES = [-352, -412, -509, -799];
+function error(fmpError, message, extra) {
+  return { fmpError, message, ...extra };
+}
+function businessError(code, message, context) {
+  const detail = `${context}: code ${code} ${message || ""}`.trim();
+  if (RISK_CONTROL_CODES.includes(code)) return error("RateLimited", detail);
+  switch (code) {
+    case -101:
+    // 未登入
+    case -111:
+    // csrf 驗證失敗（憑證的 bili_jct 與 SESSDATA 對不上）
+    case -403:
+      return error("AuthRequired", detail);
+    case -404:
+    // 啥都木有
+    case 62002:
+    // 稿件不可見
+    case 62004:
+    // 稿件審核中
+    case 62012:
+      return error("NotFound", detail);
+    case -10403:
+      return error("Unavailable", detail, { reason: "region" });
+    case 87007:
+    // 充電專屬
+    case 87008:
+      return error("Unavailable", detail, { reason: "membership" });
+    case -503:
+      return error("NetworkError", detail);
+    default:
+      return error("UnexpectedError", detail);
+  }
+}
+var CREDENTIAL_INVALID_CODES = [-101, -111];
+function credentialsRejected(json, credentialsAttached) {
+  return credentialsAttached === true && json !== null && typeof json === "object" && CREDENTIAL_INVALID_CODES.includes(json.code);
+}
+
 // src/oaep.js
 var import_bn = __toESM(require_bn(), 1);
 var RSA_MODULUS_HEX = "cb81dd8e02470656da04dd38544446e2a3412051cfe9adc6a330a5ef90228509684960970b91c3360ca29c49e1690ff8fa068cb9dfc6179d1e9585cb9424e847db1ef59f33e37dd4dca8ccfb7631ee9b4a92640d00c8204300152a0ab7cd802889d3445aec69918fe6022b534912e7b095be3424dad1ba81145e969b533181f1";
@@ -3213,44 +3253,6 @@ var FNVAL_DASH = 16;
 var FNVAL_DURL = 0;
 var QN_DEFAULT = 0;
 var QN_HIGH = 120;
-var RISK_CONTROL_CODES = [-352, -412, -509, -799];
-function error(fmpError, message, extra) {
-  return { fmpError, message, ...extra };
-}
-function businessError(code, message, context) {
-  const detail = `${context}: code ${code} ${message || ""}`.trim();
-  if (RISK_CONTROL_CODES.includes(code)) return error("RateLimited", detail);
-  switch (code) {
-    case -101:
-    // 未登入
-    case -111:
-    // csrf 驗證失敗（憑證的 bili_jct 與 SESSDATA 對不上）
-    case -403:
-      return error("AuthRequired", detail);
-    case -404:
-    // 啥都木有
-    case 62002:
-    // 稿件不可見
-    case 62004:
-    // 稿件審核中
-    case 62012:
-      return error("NotFound", detail);
-    case -10403:
-      return error("Unavailable", detail, { reason: "region" });
-    case 87007:
-    // 充電專屬
-    case 87008:
-      return error("Unavailable", detail, { reason: "membership" });
-    case -503:
-      return error("NetworkError", detail);
-    default:
-      return error("UnexpectedError", detail);
-  }
-}
-var CREDENTIAL_INVALID_CODES = [-101, -111];
-function credentialsRejected(json, credentialsAttached) {
-  return credentialsAttached === true && json !== null && typeof json === "object" && CREDENTIAL_INVALID_CODES.includes(json.code);
-}
 function statusError(status, context) {
   const detail = `${context}: HTTP ${status}`;
   if (status === 412) return error("RateLimited", detail);
@@ -3780,7 +3782,6 @@ async function loginRefresh(credentials) {
 }
 export {
   artwork,
-  credentialsRejected,
   decodeHtmlEntities,
   loginQrPoll,
   loginQrStart,
