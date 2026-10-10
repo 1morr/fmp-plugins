@@ -119,3 +119,39 @@ export function hexUpper(bytes) {
   for (const b of bytes) out += (b < 16 ? '0' : '') + b.toString(16);
   return out.toUpperCase();
 }
+
+/** AES-128-CBC + PKCS7，回傳密文位元組。key、iv 都是 16 位元組。 */
+export function aes128CbcEncrypt(key, iv, data) {
+  if (key.length !== 16) throw new Error('AES-128 key must be 16 bytes');
+  if (iv.length !== 16) throw new Error('CBC iv must be 16 bytes');
+  const rk = expandKey(key);
+  const pad = 16 - (data.length % 16);
+  const padded = new Uint8Array(data.length + pad);
+  padded.set(data);
+  padded.fill(pad, data.length);
+  const out = new Uint8Array(padded.length);
+  let previous = iv;
+  const block = new Uint8Array(16);
+  for (let i = 0; i < padded.length; i += 16) {
+    for (let j = 0; j < 16; j++) block[j] = padded[i + j] ^ previous[j];
+    previous = encryptBlock(rk, block);
+    out.set(previous, i);
+  }
+  return out;
+}
+
+const BASE64 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+
+/** 位元組 → base64（標準字母表、帶 `=` 補位；QuickJS 沒有 btoa）。 */
+export function base64Encode(bytes) {
+  let out = '';
+  for (let i = 0; i < bytes.length; i += 3) {
+    const b0 = bytes[i];
+    const b1 = i + 1 < bytes.length ? bytes[i + 1] : 0;
+    const b2 = i + 2 < bytes.length ? bytes[i + 2] : 0;
+    out += BASE64[b0 >> 2] + BASE64[((b0 & 3) << 4) | (b1 >> 4)];
+    out += i + 1 < bytes.length ? BASE64[((b1 & 15) << 2) | (b2 >> 6)] : '=';
+    out += i + 2 < bytes.length ? BASE64[b2 & 63] : '=';
+  }
+  return out;
+}

@@ -2,18 +2,20 @@
 {
   "id": "bilibili",
   "name": "Bilibili",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "author": "FMP",
-  "description": "搜尋 Bilibili 影片並播放其音訊。",
+  "description": "搜尋 Bilibili 影片並播放其音訊，可用 QR 碼登入。",
   "apiVersion": 1,
-  "capabilities": ["search", "resolveStream"],
+  "capabilities": ["search", "resolveStream", "login"],
   "allowedHosts": [
     "api.bilibili.com",
+    "passport.bilibili.com",
     "hdslb.com",
     "bilivideo.com",
     "bilivideo.cn",
     "upos-hz-mirrorakam.akamaized.net"
   ],
+  "login": { "methods": ["qr"] },
   "rateLimit": { "maxConcurrentRequests": 2, "minRequestIntervalMs": 300 },
   "redaction": {
     "headerNames": [
@@ -33,14 +35,17 @@
       "w_rid",
       "wts",
       "hdnts",
-      "ip_region"
+      "ip_region",
+      "refresh_token",
+      "qrcode_key"
     ]
   }
 }
 ==/FMP Plugin== */
 
-// B 站音源（匿名）。行為以 FMP 舊專案 lib/data/sources/bilibili_source.dart 為規格，
-// 用宿主 API v1 重寫：search 與 resolveStream，不登入。
+// B 站音源。行為以 FMP 舊專案 lib/data/sources/bilibili_source.dart 為規格，用宿主 API v1
+// 重寫：search 與 resolveStream（依「以登入身分瀏覽與播放」帶憑證，沒有就匿名），加上 QR 登入
+//（login，舊專案 bilibili_account_service.dart）。
 
 const API = 'https://api.bilibili.com';
 
@@ -97,6 +102,7 @@ function businessError(code, message, context) {
   if (RISK_CONTROL_CODES.includes(code)) return error('RateLimited', detail);
   switch (code) {
     case -101: // 未登入
+    case -111: // csrf 驗證失敗（憑證的 bili_jct 與 SESSDATA 對不上）
     case -403: // 權限不足
       return error('AuthRequired', detail);
     case -404: // 啥都木有
@@ -512,4 +518,124 @@ export async function resolveStream({ sourceId, cid, formats, quality }) {
   if (candidates.length > 0) return { candidates };
   if (lastError !== null) throw lastError;
   throw error('NotFound', `playurl: no stream in a requested format for ${sourceId}:${resolvedCid}`);
+}
+
+// ---------------------------------------------------------------- login (QR)
+
+const PASSPORT = 'https://passport.bilibili.com';
+
+/** 憑證的 cookie（舊專案 BilibiliCredentials.toCookieString 的四個名稱）。 */
+const CREDENTIAL_COOKIES = ['SESSDATA', 'bili_jct', 'DedeUserID', 'DedeUserID__ckMd5'];
+const REQUIRED_COOKIES = ['SESSDATA', 'bili_jct', 'DedeUserID'];
+
+/** 輪詢回應 `data.code`（舊專案 bilibili_account_service.dart）。 */
+const QR_WAITING = 86101;
+const QR_SCANNED = 86090;
+const QR_EXPIRED = 86038;
+const QR_DONE = 0;
+
+/**
+ * 多筆 `Set-Cookie` → 名稱對值：取第一個 `;` 之前、第一個 `=` 切開、不解碼；同名取最後一個非空
+ * 的值。匯出只為了單元測試。
+ */
+export function parseSetCookies(headerValues) {
+  const out = {};
+  for (const line of Array.isArray(headerValues) ? headerValues : []) {
+    if (typeof line !== 'string') continue;
+    const pair = line.split(';')[0];
+    const equals = pair.indexOf('=');
+    if (equals <= 0) continue;
+    const value = pair.slice(equals + 1).trim();
+    if (value !== '') out[pair.slice(0, equals).trim()] = value;
+  }
+  return out;
+}
+
+/** 登入用的請求：不帶匿名 cookie、不讓宿主注入憑證（auth: never）。 */
+async function loginGet(url, headers, context) {
+  const response = await fmp.http.request({
+    url,
+    headers: { ...API_HEADERS, ...headers },
+    auth: 'never',
+  });
+  return { json: parseJson(response, context), response };
+}
+
+export async function loginQrStart() {
+  const { json } = await loginGet(
+    `${PASSPORT}/x/passport-login/web/qrcode/generate`,
+    {},
+    'qr generate',
+  );
+  const data = checkCode(json, 'qr generate');
+  if (typeof data.url !== 'string' || data.url === '' || typeof data.qrcode_key !== 'string' || data.qrcode_key === '') {
+    throw error('ParseError', 'qr generate: no url or qrcode_key');
+  }
+  return { qrText: data.url, token: data.qrcode_key };
+}
+
+/** 輪詢成功（data.code 0）時的憑證：cookie 來自回應的 Set-Cookie，refresh_token 來自 body。 */
+export function qrCredentials(setCookies, data) {
+  const jar = parseSetCookies(setCookies);
+  const missing = REQUIRED_COOKIES.filter((name) => !jar[name]);
+  if (missing.length > 0) {
+    throw error('ParseError', `qr poll: code 0 but Set-Cookie lacks ${missing.join(', ')}`);
+  }
+  const cookies = {};
+  for (const name of CREDENTIAL_COOKIES) if (jar[name]) cookies[name] = jar[name];
+  const credentials = { cookies };
+  if (typeof data.refresh_token === 'string' && data.refresh_token !== '') {
+    credentials.extra = { refresh_token: data.refresh_token };
+  }
+  return credentials;
+}
+
+export async function loginQrPoll(token) {
+  const { json, response } = await loginGet(
+    `${PASSPORT}/x/passport-login/web/qrcode/poll?${query({ qrcode_key: token })}`,
+    {},
+    'qr poll',
+  );
+  // 狀態碼在 data.code，頂層 code 是 0；不認得的 data.code 照業務碼處理，不當成還在等。
+  const data = checkCode(json, 'qr poll');
+  switch (data.code) {
+    case QR_WAITING:
+      return { status: 'waiting' };
+    case QR_SCANNED:
+      return { status: 'scanned' };
+    case QR_EXPIRED:
+      return { status: 'expired' };
+    case QR_DONE:
+      return { status: 'done', credentials: qrCredentials((response.headers || {})['set-cookie'], data) };
+    default:
+      throw businessError(data.code, data.message, 'qr poll');
+  }
+}
+
+/** verify 的 Cookie header：只放憑證的四個名稱，沒有匿名 buvid（舊專案同樣）。 */
+export function verifyCookie(credentials) {
+  const cookies = (credentials && credentials.cookies) || {};
+  if (typeof cookies.SESSDATA !== 'string' || cookies.SESSDATA === '') {
+    throw error('CredentialInvalid', 'verify: credentials have no SESSDATA');
+  }
+  return CREDENTIAL_COOKIES.filter((name) => typeof cookies[name] === 'string' && cookies[name] !== '')
+    .map((name) => `${name}=${cookies[name]}`)
+    .join('; ');
+}
+
+export async function loginVerify(credentials) {
+  const cookie = verifyCookie(credentials);
+  const { json } = await loginGet(`${API}/x/web-interface/nav`, { Cookie: cookie }, 'verify');
+  if (json !== null && typeof json === 'object' && (json.code === -101 || json.code === -111)) {
+    throw error('CredentialInvalid', `verify: code ${json.code} ${json.message || ''}`.trim());
+  }
+  const data = checkCode(json, 'verify');
+  if (data.mid === undefined || data.mid === null || data.mid === '') {
+    throw error('ParseError', 'verify: no mid');
+  }
+  const name = typeof data.uname === 'string' ? data.uname : '';
+  const account = { userId: String(data.mid), displayName: name === '' ? String(data.mid) : name };
+  const avatar = artwork(data.face);
+  if (avatar.length > 0) account.avatar = avatar;
+  return account;
 }

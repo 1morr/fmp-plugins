@@ -25,7 +25,7 @@ concurrency:
 
 env:
   # 契約執行器所在的 FMP commit（完整 SHA）。FMP 的宿主 API 變了，就開 PR 改它。
-  FMP_REF: fcb52d28236f36f924950a98dc2947b625d1aa11
+  FMP_REF: 6284dde8f54d25a27dfcbacfa871cd53d216f6ab
   # 跟 FMP 自己的 app CI 同一版。
   FLUTTER_VERSION: '3.47.5'
   DART_VERSION: '3.13.4'

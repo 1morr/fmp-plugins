@@ -1,8 +1,10 @@
-// 網易雲音源（匿名）。行為以 FMP 舊專案 lib/data/sources/netease_source.dart 為規格，
-// 用宿主 API v1 重寫：search 與 resolveStream，不登入。
+// 網易雲音源。行為以 FMP 舊專案 lib/data/sources/netease_source.dart 為規格，用宿主 API v1
+// 重寫：search、resolveStream，加上 QR 登入（login，舊專案 netease_account_service.dart）。
 
 import { aes128EcbEncrypt, hexUpper, utf8Bytes } from './aes.js';
 import { error, responseCodeError, statusError, streamUnavailableError } from './errors.js';
+import { accountOf, qrCredentials, qrStatusOf, verifyCookie } from './login.js';
+import { weapiEncrypt } from './weapi.js';
 
 const MUSIC = 'https://music.163.com';
 const INTERFACE = 'https://interface3.music.163.com';
@@ -73,6 +75,7 @@ async function post(url, body, context, extraHeaders) {
     method: 'POST',
     headers: { ...API_HEADERS, ...extraHeaders },
     body,
+    auth: 'userPreference', // ADR 0012：搜尋與取流依「以登入身分瀏覽與播放」帶憑證
     idempotent: true,
   });
   if (response.status !== 200) throw statusError(response.status, context);
@@ -188,4 +191,95 @@ export async function resolveStream({ sourceId, formats, quality }) {
   const result = { candidates: [candidate] };
   if (item.freeTrialInfo !== null && item.freeTrialInfo !== undefined) result.previewOnly = true;
   return result;
+}
+
+// ---------------------------------------------------------------- login (QR)
+
+// 舊專案 QR 請求固定帶的匿名 Cookie（偽裝 Windows 客戶端；值都是公開常量，
+// `MUSIC_U`、`__csrf` 是空的）。netease_account_service.dart。
+const QR_COOKIE =
+  'os=pc; osver=Microsoft-Windows-10-Professional-build-10586-64bit; ' +
+  'appver=2.7.1.198277; channel=netease; __csrf=; MUSIC_U=';
+
+const QR_LOGIN_URL = `${MUSIC}/login?codekey=`;
+
+/**
+ * weapi 請求，回 `{json, headers}`。和 post() 不同：業務碼（800–803 是狀態不是錯誤）留給呼叫端
+ * 判斷，回應 header 也交回（要讀 Set-Cookie）。HTTP 非 200 與不是 JSON 照舊拋。
+ */
+async function weapiPost(path, data, context, idempotent) {
+  const { params, encSecKey } = weapiEncrypt(data);
+  const response = await fmp.http.request({
+    url: `${MUSIC}/weapi/${path}?csrf_token=`,
+    method: 'POST',
+    headers: { ...API_HEADERS, Cookie: QR_COOKIE },
+    body: form({ params, encSecKey }),
+    auth: 'never',
+    idempotent,
+  });
+  if (response.status !== 200) throw statusError(response.status, context);
+  let json;
+  try {
+    json = JSON.parse(response.body);
+  } catch (e) {
+    throw error('ParseError', `${context}: not JSON`);
+  }
+  if (json === null || typeof json !== 'object') throw error('ParseError', `${context}: not an object`);
+  return { json, headers: response.headers || {} };
+}
+
+export async function loginQrStart() {
+  const { json } = await weapiPost('login/qrcode/unikey', { type: 1 }, 'qr start', true);
+  if (json.code !== 200) throw responseCodeError(json.code, json.message || json.msg, 'qr start');
+  if (typeof json.unikey !== 'string' || json.unikey === '') {
+    throw error('ParseError', 'qr start: no unikey');
+  }
+  return { qrText: `${QR_LOGIN_URL}${json.unikey}`, token: json.unikey };
+}
+
+export async function loginQrPoll(token) {
+  // 不重試：803 的回應只有這一次帶 cookie。
+  const { json, headers } = await weapiPost(
+    'login/qrcode/client/login',
+    { type: 1, key: token },
+    'qr poll',
+    false,
+  );
+  const status = qrStatusOf(json.code);
+  if (status === null) throw responseCodeError(json.code, json.message || json.msg, 'qr poll');
+  if (status !== 'done') return { status };
+  return { status, credentials: qrCredentials(headers['set-cookie'], json.cookie) };
+}
+
+/** 用傳入的憑證自己組 Cookie、不讓宿主注入（auth: never）。 */
+async function accountRequest(method, path, cookie) {
+  return fmp.http.request({
+    url: `${MUSIC}${path}`,
+    method,
+    headers: {
+      Referer: API_HEADERS.Referer,
+      Origin: API_HEADERS.Origin,
+      Accept: API_HEADERS.Accept,
+      'User-Agent': API_HEADERS['User-Agent'],
+      Cookie: cookie,
+    },
+    auth: 'never',
+  });
+}
+
+export async function loginVerify(credentials) {
+  const cookie = verifyCookie(credentials);
+  let response = await accountRequest('GET', '/api/nuser/account/get', cookie);
+  // 舊專案 GET 失敗就改打 POST /api/w/nuser/account/get。
+  if (response.status !== 200) {
+    response = await accountRequest('POST', '/api/w/nuser/account/get', cookie);
+  }
+  if (response.status !== 200) throw statusError(response.status, 'verify');
+  let json;
+  try {
+    json = JSON.parse(response.body);
+  } catch (e) {
+    throw error('ParseError', 'verify: not JSON');
+  }
+  return accountOf(json, responseCodeError, artwork);
 }

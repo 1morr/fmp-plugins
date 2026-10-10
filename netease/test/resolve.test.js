@@ -43,4 +43,5 @@ test('the stream request carries X-Real-IP and is idempotent', async () => {
   assert.equal(requests.length, 1);
   assert.equal(requests[0].headers['X-Real-IP'], '118.88.88.88');
   assert.equal(requests[0].idempotent, true);
+  assert.equal(requests[0].auth, 'userPreference');
 });
