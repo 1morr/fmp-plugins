@@ -7,6 +7,7 @@
     "test": "node --test"
   },
   "dependencies": {
+    "bn.js": "5.2.5",
     "esbuild": "0.28.2"
   }
 }

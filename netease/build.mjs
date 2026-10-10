@@ -6,13 +6,16 @@ import { writeFileSync, statSync } from 'node:fs';
 const manifest = {
   id: 'netease',
   name: '網易雲音樂',
-  version: '1.0.1',
+  version: '1.2.0',
   author: 'FMP',
-  description: '搜尋網易雲音樂的歌曲並播放。',
+  description: '搜尋網易雲音樂的歌曲並播放，可用 QR 碼登入。',
   apiVersion: 1,
-  capabilities: ['search', 'resolveStream'],
+  capabilities: ['search', 'resolveStream', 'login'],
   allowedHosts: ['music.163.com', 'music.126.net'],
+  login: { methods: ['qr'] },
   rateLimit: { maxConcurrentRequests: 2, minRequestIntervalMs: 300 },
+  // 宿主的名單沒有 QR 登入用的這兩個鍵（unikey 是掃碼用的一次性金鑰，encSecKey 是 weapi 的 RSA 封裝）。
+  redaction: { keyNames: ['unikey', 'encSecKey'] },
 };
 
 const result = await build({
@@ -20,9 +23,12 @@ const result = await build({
   bundle: true,
   format: 'esm',
   platform: 'neutral',
+  mainFields: ['main'],
   target: 'es2020',
   minify: false,
   legalComments: 'none',
+  // bn.js 試著 require('buffer')（失敗會接住）；QuickJS 沒有它，換成空模組。
+  alias: { buffer: './src/empty-buffer.cjs' },
   write: false,
   logLevel: 'warning',
 });
