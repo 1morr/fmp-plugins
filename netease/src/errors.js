@@ -20,6 +20,15 @@ export function statusError(status, context) {
   return error('UnexpectedError', detail);
 }
 
+/**
+ * 這個 JSON 回應表示憑證已經失效嗎？只有 [credentialsAttached] 為 true（宿主真的帶了憑證）且
+ * 頂層 `code` 是 301（未登入）才算。匿名請求的 301 只是沒登入；-460（風控）、其他碼、
+ * 取流項目裡的 `code` 都不是憑證無效（匿名取流的 404、fee 0 也不是）。
+ */
+export function credentialsRejected(json, credentialsAttached) {
+  return credentialsAttached === true && json !== null && typeof json === 'object' && json.code === 301;
+}
+
 /** 回應頂層的 `code` 不是 200（或 0）。 */
 export function responseCodeError(code, message, context) {
   const detail = `${context}: code ${code} ${message || ''}`.trim();

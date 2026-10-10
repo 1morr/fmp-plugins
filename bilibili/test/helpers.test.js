@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { artwork, decodeHtmlEntities } from '../bilibili.js';
+import { artwork, decodeHtmlEntities } from '../src/plugin.js';
 
 test('decodes named entities', () => {
   assert.equal(decodeHtmlEntities('&quot;a&quot; &amp; &lt;b&gt; &apos;'), '"a" & <b> \'');

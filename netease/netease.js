@@ -2,7 +2,7 @@
 {
   "id": "netease",
   "name": "網易雲音樂",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "author": "FMP",
   "description": "搜尋網易雲音樂的歌曲並播放，可用 QR 碼登入。",
   "apiVersion": 1,
@@ -3122,6 +3122,9 @@ function statusError(status, context) {
   if (status >= 500) return error("NetworkError", detail);
   return error("UnexpectedError", detail);
 }
+function credentialsRejected(json, credentialsAttached) {
+  return credentialsAttached === true && json !== null && typeof json === "object" && json.code === 301;
+}
 function responseCodeError(code, message, context) {
   const detail = `${context}: code ${code} ${message || ""}`.trim();
   if (code === -460) return error("VerificationRequired", detail);
@@ -3314,6 +3317,9 @@ async function post(url, body, context, extraHeaders) {
     throw error("ParseError", `${context}: not JSON`);
   }
   if (json === null || typeof json !== "object") throw error("ParseError", `${context}: not an object`);
+  if (credentialsRejected(json, response.credentialsAttached)) {
+    throw error("CredentialInvalid", `${context}: code 301 ${json.message || json.msg || ""}`.trim());
+  }
   if (typeof json.code === "number" && json.code !== 200 && json.code !== 0) {
     throw responseCodeError(json.code, json.message || json.msg, context);
   }

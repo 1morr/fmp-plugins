@@ -3,6 +3,11 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "build": "node build.mjs",
     "test": "node --test"
+  },
+  "dependencies": {
+    "bn.js": "5.2.5",
+    "esbuild": "0.28.2"
   }
 }

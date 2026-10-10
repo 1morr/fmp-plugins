@@ -6,7 +6,7 @@ import { writeFileSync, statSync } from 'node:fs';
 const manifest = {
   id: 'netease',
   name: '網易雲音樂',
-  version: '1.1.0',
+  version: '1.2.0',
   author: 'FMP',
   description: '搜尋網易雲音樂的歌曲並播放，可用 QR 碼登入。',
   apiVersion: 1,

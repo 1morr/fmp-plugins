@@ -2,7 +2,7 @@
 // 重寫：search、resolveStream，加上 QR 登入（login，舊專案 netease_account_service.dart）。
 
 import { aes128EcbEncrypt, hexUpper, utf8Bytes } from './aes.js';
-import { error, responseCodeError, statusError, streamUnavailableError } from './errors.js';
+import { credentialsRejected, error, responseCodeError, statusError, streamUnavailableError } from './errors.js';
 import { accountOf, qrCredentials, qrStatusOf, verifyCookie } from './login.js';
 import { weapiEncrypt } from './weapi.js';
 
@@ -86,6 +86,10 @@ async function post(url, body, context, extraHeaders) {
     throw error('ParseError', `${context}: not JSON`);
   }
   if (json === null || typeof json !== 'object') throw error('ParseError', `${context}: not an object`);
+  // 憑證無效只在「這次請求真的帶了憑證」的回應上成立（design §6.5）。
+  if (credentialsRejected(json, response.credentialsAttached)) {
+    throw error('CredentialInvalid', `${context}: code 301 ${json.message || json.msg || ''}`.trim());
+  }
   if (typeof json.code === 'number' && json.code !== 200 && json.code !== 0) {
     throw responseCodeError(json.code, json.message || json.msg, context);
   }
