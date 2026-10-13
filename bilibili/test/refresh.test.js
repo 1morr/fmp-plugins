@@ -3,7 +3,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { credentialsRejected, loginRefresh, refreshCsrfOf, search } from '../src/plugin.js';
+import { credentialsRejected } from '../src/errors.js';
+import { loginRefresh, refreshCsrfOf, search } from '../src/plugin.js';
 
 // ---------------------------------------------------------------- 憑證無效的判定
 
