@@ -5,6 +5,7 @@ import { Innertube, Platform, Log } from 'youtubei.js/web';
 import { error, playabilityError } from './errors.js';
 import { CLIENTS } from './clients.js';
 import { mixRequest, parseMixResponse } from './mix.js';
+import { trackDetailRequest, parseTrackDetail } from './track_detail.js';
 import { isAllowedHttps } from './urls.js';
 
 // ---------------------------------------------------------------- platform
@@ -234,6 +235,18 @@ export async function mix(input) {
   const { title, tracks, cursor } = parseMixResponse(res.data, { lastVideoId });
   fmp.log.debug('mix batch', { count: tracks.length, hasCursor: cursor !== null, ms: now() - t0 });
   return { mixId, title: title || 'Mix', tracks, cursor };
+}
+
+// ---------------------------------------------------------------- trackDetail
+export async function trackDetail(input) {
+  const body = trackDetailRequest(input || {});
+  const yt = await innertube();
+  const t0 = now();
+  // 和 mix 一樣讀原始 JSON；WEB client，與 search 同樣標 userPreference。
+  const res = await yt.actions.execute('/next', { ...body, parse: false });
+  const detail = parseTrackDetail(res.data);
+  fmp.log.debug('track detail', { fields: Object.keys(detail).length, ms: now() - t0 });
+  return detail;
 }
 
 // ---------------------------------------------------------------- login
