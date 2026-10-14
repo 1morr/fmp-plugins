@@ -13,6 +13,10 @@
   - 網易回 `http://` 的串流網址，插件改成 `https://` 才交給宿主（CDN 兩者都接受；2026-10-08 在 Android 與 Windows 實機播放 `m701`、`m801` 的 https 網址都正常）。
   - `expiresAt` 是收到回應的時間加上 API 回報的有效秒數 `expi`（約 1200 秒）：網址本身沒有期限參數，所以 `checks.json` 沒有 `expiresAtPattern`。
   - 候選的 header 只有 `Origin`、`Referer`、`User-Agent`，不帶 Cookie。
+- `trackDetail`：歌曲詳細，`POST music.163.com/api/v3/song/detail`（明文 form，`c=[{"id":<sourceId>}]`，舊專案 `_getSongDetail` 同一個端點），**一個請求**；與 `search` 一樣標 `auth: 'userPreference'`、`idempotent: true`，不帶 `X-Real-IP`，錯誤對應同上。
+  - 只給回應真的有的欄位：`album`（`songs[0].al.name`，沒有時讀 `album.name`，去頭尾空白，空的不給）、`publishedAt`（`songs[0].publishTime`，已是 epoch 毫秒；多數歌是 `0`，`0`、負數或缺就不給）。
+  - **沒有** `description`、`stats`、`uploaderAvatar`：這個端點沒有簡介與統計，`ar[]` 也沒有歌手頭像。舊專案的歌手頭像（`api/artist/head/info/get`）、專輯發行日（`api/v1/album/<id>`，歌曲本身沒有 `publishTime` 時的備援）、留言數與熱門評論都是另外的請求，為了維持一個請求沒有取（熱門評論本來就不做，design §16 第 13 條）。要補頭像或備援發行日時各加一個請求，`music.126.net` 已在 `allowedHosts`。
+  - `sourceId` 不是純數字（或大到轉成數字會失真，超過 2^53）→ `ParseError`，不發請求（`resolveStream` 對同樣的輸入回 `NotFound`，是它原本的行為）；回應沒有歌（`songs` 空或缺）→ `NotFound`；`songs[0]` 不是物件 → `ParseError`。
 
 - `login`：QR 碼登入，見下方〈登入〉。
 
@@ -84,7 +88,7 @@ manifest 宣告 `login: { methods: ['qr'] }`（網易的 `MUSIC_U` 有效期長�
 ## 已知限制
 
 - 不登入時 VIP 歌與匿名拿不到網址的歌播不了。匿名時 VIP 歌（`fee` 1）連試聽片段都沒有（`code` -110、沒有 `freeTrialInfo`），`previewOnly` 只會在登入後出現（登入後的取流行為還沒有實測），由 `test/resolve.test.js` 以手寫回應守。
-- 一個 `checks.json` 每個能力只有一條案例，所以契約測試只重播成功的 `search`、`resolveStream` 與（手寫 fixture 的）`login`；上表的錯誤對應由 `test/errors.test.js` 以網易實際給的欄位守（`npm test`）。
+- 一個 `checks.json` 每個能力只有一條案例，所以契約測試只重播成功的 `search`、`resolveStream`、`trackDetail` 與（手寫 fixture 的）`login`；上表的錯誤對應由 `test/errors.test.js` 以網易實際給的欄位守（`npm test`）。
 - fixture 裡的 `NMTID` 等 Cookie 值已被 FMP 的遮蔽名單遮掉；錄製者的 IP 由錄製器換成文件用位址。
 
 ## 打包
@@ -93,14 +97,14 @@ manifest 宣告 `login: { methods: ['qr'] }`（網易的 `MUSIC_U` 有效期長�
 cd netease
 npm ci
 node build.mjs   # 輸出 netease.js（不壓縮，內容固定）
-npm test         # 錯誤對應表、AES／weapi、登入流程、取流與搜尋請求的測試（node:test）
+npm test         # 錯誤對應表、AES／weapi、登入流程、取流、搜尋與 trackDetail 的測試（node:test）
 ```
 
 用 esbuild 把 `src/` 與 `bn.js` 打成單一檔，`netease.js` 與原始碼、`package-lock.json` 一起提交；index 只認這一個 `.js`。`manifest` 寫在 `build.mjs`。
 
 ## 契約測試與錄製
 
-指令見 repo 根目錄的 `README.md`。錄製會真的連網易：搜尋與取流各 1 個請求，共 2 個。`login` 的案例標 `requiresLogin`，命令列錄製略過；它的 fixture（`fixtures/login/001.json`）是手寫的（`meta.edited`），憑證與帳號都是假的，body 的形狀照 account/get 的真實回應。
+指令見 repo 根目錄的 `README.md`。錄製會真的連網易：搜尋、取流與 `trackDetail`（案例的 `sourceId` 是 `139774`，與 `resolveStream` 相同）各 1 個請求，共 3 個。`login` 的案例標 `requiresLogin`，命令列錄製略過；它的 fixture（`fixtures/login/001.json`）是手寫的（`meta.edited`），憑證與帳號都是假的，body 的形狀照 account/get 的真實回應。
 
 ## 測試向量
 

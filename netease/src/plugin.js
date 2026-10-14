@@ -197,6 +197,35 @@ export async function resolveStream({ sourceId, formats, quality }) {
   return result;
 }
 
+// ---------------------------------------------------------------- trackDetail
+
+/**
+ * 歌曲詳細：`POST music.163.com/api/v3/song/detail`（明文 form，`c=[{"id":N}]`，舊專案 `_getSongDetail`
+ * 同一個端點），一個請求。只給回應真的有的欄位：`album`（`al.name`）與 `publishedAt`（歌曲的
+ * `publishTime`，已經是 epoch 毫秒；多數歌是 0，0 或缺就不給）。這個端點沒有簡介、歌手頭像、統計：
+ * 舊專案的頭像（`artist/head/info/get`）、專輯發行日（`album`）、留言數都是另外的請求，M3 不取。
+ */
+export async function trackDetail({ sourceId }) {
+  // 超過 2^53 的 id 轉成 Number 會失真，查到的會是別首歌。
+  if (typeof sourceId !== 'string' || !/^\d+$/.test(sourceId) || !Number.isSafeInteger(Number(sourceId))) {
+    throw error('ParseError', `detail: bad song id ${sourceId}`);
+  }
+  const json = await post(
+    `${MUSIC}/api/v3/song/detail`,
+    form({ c: JSON.stringify([{ id: Number(sourceId) }]) }),
+    'detail',
+  );
+  const song = Array.isArray(json.songs) ? json.songs[0] : null;
+  if (song === null || song === undefined) throw error('NotFound', `detail: no song ${sourceId}`);
+  if (typeof song !== 'object') throw error('ParseError', 'detail: song is not an object');
+  const detail = {};
+  const album = song.al || song.album;
+  const name = album && typeof album.name === 'string' ? album.name.trim() : '';
+  if (name !== '') detail.album = name;
+  if (Number.isSafeInteger(song.publishTime) && song.publishTime > 0) detail.publishedAt = song.publishTime;
+  return detail;
+}
+
 // ---------------------------------------------------------------- login (QR)
 
 // 舊專案 QR 請求固定帶的匿名 Cookie（偽裝 Windows 客戶端；值都是公開常量，

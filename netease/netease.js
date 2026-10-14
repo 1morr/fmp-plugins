@@ -2,13 +2,14 @@
 {
   "id": "netease",
   "name": "網易雲音樂",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "author": "FMP",
   "description": "搜尋網易雲音樂的歌曲並播放，可用 QR 碼登入。",
   "apiVersion": 1,
   "capabilities": [
     "search",
     "resolveStream",
+    "trackDetail",
     "login"
   ],
   "allowedHosts": [
@@ -3405,6 +3406,25 @@ async function resolveStream({ sourceId, formats, quality }) {
   if (item.freeTrialInfo !== null && item.freeTrialInfo !== void 0) result.previewOnly = true;
   return result;
 }
+async function trackDetail({ sourceId }) {
+  if (typeof sourceId !== "string" || !/^\d+$/.test(sourceId) || !Number.isSafeInteger(Number(sourceId))) {
+    throw error("ParseError", `detail: bad song id ${sourceId}`);
+  }
+  const json = await post(
+    `${MUSIC}/api/v3/song/detail`,
+    form({ c: JSON.stringify([{ id: Number(sourceId) }]) }),
+    "detail"
+  );
+  const song = Array.isArray(json.songs) ? json.songs[0] : null;
+  if (song === null || song === void 0) throw error("NotFound", `detail: no song ${sourceId}`);
+  if (typeof song !== "object") throw error("ParseError", "detail: song is not an object");
+  const detail = {};
+  const album = song.al || song.album;
+  const name = album && typeof album.name === "string" ? album.name.trim() : "";
+  if (name !== "") detail.album = name;
+  if (Number.isSafeInteger(song.publishTime) && song.publishTime > 0) detail.publishedAt = song.publishTime;
+  return detail;
+}
 var QR_COOKIE = "os=pc; osver=Microsoft-Windows-10-Professional-build-10586-64bit; appver=2.7.1.198277; channel=netease; __csrf=; MUSIC_U=";
 var QR_LOGIN_URL = `${MUSIC}/login?codekey=`;
 async function weapiPost(path, data, context, idempotent) {
@@ -3481,5 +3501,6 @@ export {
   loginQrStart,
   loginVerify,
   resolveStream,
-  search
+  search,
+  trackDetail
 };
