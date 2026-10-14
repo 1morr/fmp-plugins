@@ -5,16 +5,18 @@
       "id": "bilibili",
       "name": "Bilibili",
       "author": "FMP",
-      "description": "搜尋 Bilibili 影片並播放其音訊，可用 QR 碼登入。",
-      "version": "1.2.1",
+      "description": "搜尋 Bilibili 影片並播放其音訊，也能搜尋與收聽直播間，可用 QR 碼登入。",
+      "version": "1.3.0",
       "apiVersion": 1,
       "capabilities": [
         "search",
         "resolveStream",
+        "live",
         "login"
       ],
       "allowedHosts": [
         "api.bilibili.com",
+        "api.live.bilibili.com",
         "passport.bilibili.com",
         "www.bilibili.com",
         "hdslb.com",
@@ -23,9 +25,9 @@
         "upos-hz-mirrorakam.akamaized.net"
       ],
       "url": "https://raw.githubusercontent.com/1morr/fmp-plugins/main/bilibili/bilibili.js",
-      "sha256": "7daec58c052602f2c549856dd2d4e9abb84c1ed66f112033333bbafc32f7bda7",
+      "sha256": "581dbb76c9abd38b25a86c77f4a31b29dc404e70e41d37abd3da66bba974e5e0",
       "checksUrl": "https://raw.githubusercontent.com/1morr/fmp-plugins/main/bilibili/checks.json",
-      "checksSha256": "70bea66f744cf44d21d0fd3490578deed1b9840248cc06affcdd05c12cce6503"
+      "checksSha256": "5f78d0253add14feff120072d05dc1955f97181e416445dcce6f2b6e94441604"
     },
     {
       "id": "netease",

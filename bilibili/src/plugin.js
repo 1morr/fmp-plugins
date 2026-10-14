@@ -451,6 +451,246 @@ export async function resolveStream({ sourceId, cid, formats, quality }) {
   throw error('NotFound', `playurl: no stream in a requested format for ${sourceId}:${resolvedCid}`);
 }
 
+// ---------------------------------------------------------------- live
+
+// 行為以舊專案 bilibili_live_client.dart 為規格。直播 API 在 api.live.bilibili.com，Referer 是
+// live.bilibili.com（舊專案 SourceHttpPolicy.bilibiliLiveHeaders）；請求一律 userPreference（get）。
+const LIVE_API = 'https://api.live.bilibili.com';
+const LIVE_REFERER = 'https://live.bilibili.com/';
+const LIVE_API_HEADERS = { ...API_HEADERS, Referer: LIVE_REFERER, Origin: 'https://live.bilibili.com' };
+const LIVE_MEDIA_HEADERS = { ...MEDIA_HEADERS, Referer: LIVE_REFERER };
+const LIVE_QN = 80;
+
+/**
+ * 舊專案 parseLiveUrl 的規則：`live.bilibili.com/<數字>` 或 `/h5/<數字>`，後面是結尾、`/`、`?`、`#` 或空白。
+ * 前面不准是 `/`（舊專案准）：`https://evil.example/live.bilibili.com/1` 的網域不是 B 站。
+ */
+const LIVE_URL = /(^|[^\w./-])(?:https?:\/\/)?live\.bilibili\.com\/(?:h5\/)?(\d+)(?=$|[/?#\s])/i;
+
+/** 不連網：短號到長號的對應留給 liveStatus、resolveLive（它們各自問 room_init）。 */
+export function liveRoomFromUrl({ url }) {
+  const match = LIVE_URL.exec(typeof url === 'string' ? url : '');
+  return match ? { roomId: match[2] } : null;
+}
+
+function checkRoomId(roomId) {
+  if (typeof roomId !== 'string' || !/^\d+$/.test(roomId)) {
+    throw error('NotFound', `live: invalid room id ${JSON.stringify(roomId)}`);
+  }
+  return roomId;
+}
+
+/** room_init：短號 → 真實房號。 */
+async function realRoomId(roomId) {
+  const json = await get(
+    `${LIVE_API}/room/v1/Room/room_init?${query({ id: checkRoomId(roomId) })}`,
+    LIVE_API_HEADERS,
+    'room_init',
+  );
+  const data = checkCode(json, 'room_init');
+  const real = data.room_id;
+  if (!(Number.isSafeInteger(real) && real > 0) && !(typeof real === 'string' && /^[1-9]\d*$/.test(real))) {
+    throw error('ParseError', 'room_init: no room_id');
+  }
+  return String(real);
+}
+
+function nonNegativeInt(value) {
+  const n = typeof value === 'string' && /^\d+$/.test(value) ? Number(value) : value;
+  return Number.isSafeInteger(n) && n >= 0 ? n : null;
+}
+
+/** live_status：1 開播中；0 未開播、2 輪播（d.ts 只有兩種）→ offline。其他值（含缺）是格式錯誤。 */
+function liveStatusOf(code, context) {
+  if (code === 1) return 'live';
+  if (code === 0 || code === 2) return 'offline';
+  throw error('ParseError', `${context}: unknown live_status ${JSON.stringify(code)}`);
+}
+
+/** 宿主拒收空白標題（整頁一起拒），所以空的標題同 search 換成 `Unknown`；不是字串是格式錯誤。 */
+function roomTitle(raw, context) {
+  if (typeof raw !== 'string') throw error('ParseError', `${context}: no title`);
+  const title = cleanHtml(raw).trim();
+  return title === '' ? 'Unknown' : title;
+}
+
+/** 去掉 `<em>` 與實體後不空就是名字，否則 null。 */
+function personName(raw) {
+  if (typeof raw !== 'string') return null;
+  const name = cleanHtml(raw).trim();
+  return name === '' ? null : name;
+}
+
+function isRecord(value) {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+async function anchorName(real) {
+  try {
+    const data = checkCode(
+      await get(
+        `${LIVE_API}/live_user/v1/UserInfo/get_anchor_in_room?${query({ roomid: real })}`,
+        LIVE_API_HEADERS,
+        'get_anchor_in_room',
+      ),
+      'get_anchor_in_room',
+    );
+    const info = data.info;
+    if (info !== null && typeof info === 'object' && typeof info.uname === 'string' && info.uname !== '') {
+      return info.uname;
+    }
+    fmp.log.warn('get_anchor_in_room: no uname', { room: real });
+  } catch (e) {
+    fmp.log.warn('get_anchor_in_room failed', { room: real, error: (e && e.fmpError) || 'unreadable response' });
+  }
+  return null;
+}
+
+/** D10：任何查詢失敗都拋錯，絕不回 offline。 */
+export async function liveStatus({ roomId }) {
+  const real = await realRoomId(roomId);
+  const info = checkCode(
+    await get(`${LIVE_API}/room/v1/Room/get_info?${query({ room_id: real })}`, LIVE_API_HEADERS, 'get_info'),
+    'get_info',
+  );
+  const title = roomTitle(info.title, 'get_info');
+  const status = liveStatusOf(info.live_status, 'get_info');
+  // hostName 在契約裡是選填：主播名查不到不影響狀態，只記 warn（title、status 仍是 D10）。
+  const hostName = await anchorName(real);
+  return {
+    // room_init 給的真實房號（舊專案取 get_info 的 room_id，查的就是它，兩者相同）。
+    roomId: real,
+    title,
+    hostName,
+    artwork: artwork(info.user_cover || info.keyframe),
+    status,
+    online: nonNegativeInt(info.online),
+  };
+}
+
+/**
+ * 舊專案 searchRooms 的語意：「開播中」搜直播間（live_room），「全部／未開播」搜主播名
+ * （bili_user，再補房間狀態）。舊專案補狀態是每位主播一個 get_info；這裡改成整頁一次
+ * get_status_info_by_uids（GET、重複的 `uids[]`），避免 N+1。
+ */
+export async function liveSearch({ keyword, page, status }) {
+  return status === 'live' ? liveRoomSearch(keyword, page) : liveAnchorSearch(keyword, page, status);
+}
+
+function searchParams(keyword, page, searchType) {
+  return query({ keyword, search_type: searchType, page, page_size: SEARCH_PAGE_SIZE });
+}
+
+async function liveRoomSearch(keyword, page) {
+  const json = await get(
+    `${API}/x/web-interface/search/type?${searchParams(keyword, page, 'live_room')}`,
+    SEARCH_HEADERS,
+    'live search',
+  );
+  const data = checkCode(json, 'live search');
+  const results = Array.isArray(data.result) ? data.result : [];
+  const numResults = typeof data.numResults === 'number' ? data.numResults : 0;
+  const items = [];
+  for (const item of results) {
+    if (!isRecord(item)) continue;
+    const id = nonNegativeInt(item.roomid);
+    if (id === null || id === 0) continue;
+    items.push({
+      roomId: String(id),
+      title: roomTitle(item.title || '', 'live search'),
+      hostName: personName(item.uname),
+      artwork: artwork(item.user_cover),
+      status: 'live',
+      online: nonNegativeInt(item.online),
+    });
+  }
+  fmp.log.debug('live search results', { count: items.length, total: numResults });
+  return { items, hasMore: page * SEARCH_PAGE_SIZE < numResults };
+}
+
+async function liveAnchorSearch(keyword, page, status) {
+  const json = await get(
+    `${API}/x/web-interface/search/type?${searchParams(keyword, page, 'bili_user')}`,
+    SEARCH_HEADERS,
+    'live user search',
+  );
+  const data = checkCode(json, 'live user search');
+  const results = Array.isArray(data.result) ? data.result : [];
+  const numResults = typeof data.numResults === 'number' ? data.numResults : 0;
+  const hasMore = page * SEARCH_PAGE_SIZE < numResults;
+  const anchors = [];
+  for (const item of results) {
+    if (!isRecord(item)) continue;
+    const mid = nonNegativeInt(item.mid);
+    const room = nonNegativeInt(item.room_id);
+    if (mid === null || mid === 0 || room === null || room === 0) continue;
+    anchors.push({ mid, name: personName(item.uname) });
+  }
+  if (anchors.length === 0) return { items: [], hasMore };
+
+  // 整頁一次：GET …/get_status_info_by_uids?uids%5B%5D=1&uids%5B%5D=2（`uids[]` 編碼過；宿主的
+  // Uri.parse 本來就會這樣送）。失敗就整個拋，不回部分結果。
+  const context = 'get_status_info_by_uids';
+  const uids = anchors.map((a) => `${encodeURIComponent('uids[]')}=${a.mid}`).join('&');
+  const batch = checkCode(
+    await get(`${LIVE_API}/room/v1/Room/get_status_info_by_uids?${uids}`, LIVE_API_HEADERS, context),
+    context,
+  );
+  // data 以 uid 字串為鍵（真實回應確認過）。問了 uid 卻回陣列（PHP 的空 map 是 `[]`）或一個都對不上，
+  // 是形狀變了，不能當成「沒有結果」。
+  if (!isRecord(batch) || !anchors.some((a) => isRecord(batch[String(a.mid)]))) {
+    throw error('ParseError', `${context}: data is not keyed by the requested uids`);
+  }
+  const items = [];
+  for (const anchor of anchors) {
+    const entry = batch[String(anchor.mid)];
+    if (!isRecord(entry)) {
+      fmp.log.debug('live search: uid missing from status batch', { uid: anchor.mid });
+      continue;
+    }
+    const roomId = nonNegativeInt(entry.room_id);
+    const uid = entry.uid === undefined ? anchor.mid : nonNegativeInt(entry.uid);
+    if (roomId === null || roomId === 0 || uid !== anchor.mid) {
+      throw error('ParseError', `${context}: bad entry for uid ${anchor.mid}`);
+    }
+    const title = roomTitle(entry.title, context);
+    const roomStatus = liveStatusOf(entry.live_status, context);
+    if (status === 'offline' && roomStatus !== 'offline') continue;
+    items.push({
+      roomId: String(roomId),
+      title,
+      hostName: anchor.name || personName(entry.uname),
+      artwork: artwork(entry.cover_from_user || entry.keyframe),
+      status: roomStatus,
+      online: nonNegativeInt(entry.online),
+    });
+  }
+  fmp.log.debug('live anchor search results', { count: items.length, total: numResults });
+  return { items, hasMore };
+}
+
+export async function resolveLive({ roomId }) {
+  const real = await realRoomId(roomId);
+  const params = { cid: real, platform: 'web', quality: 2, qn: LIVE_QN };
+  const data = checkCode(
+    await get(`${LIVE_API}/room/v1/Room/playUrl?${query(params)}`, LIVE_API_HEADERS, 'live playUrl'),
+    'live playUrl',
+  );
+  // 只取第一段（舊專案 _firstDurlUrl）；它的備用網址排在後面。
+  const first = Array.isArray(data.durl) ? data.durl[0] : null;
+  if (first === null || typeof first !== 'object' || typeof first.url !== 'string' || first.url === '') {
+    throw error('NotFound', `live playUrl: no durl for room ${real}`);
+  }
+  const dropped = [];
+  const urls = [first.url, ...(Array.isArray(first.backup_url) ? first.backup_url : [])];
+  const candidates = candidatesFor(urls, {}, dropped).map((c) => ({ ...c, headers: { ...LIVE_MEDIA_HEADERS } }));
+  if (dropped.length > 0) fmp.log.warn('dropped live stream URLs outside allowedHosts', { hosts: dropped });
+  if (candidates.length === 0) {
+    throw error('Unavailable', `live playUrl: no stream URL inside allowedHosts for room ${real}`);
+  }
+  return { candidates };
+}
+
 // ---------------------------------------------------------------- login (QR)
 
 const PASSPORT = 'https://passport.bilibili.com';
