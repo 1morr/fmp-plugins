@@ -58,7 +58,7 @@
       "name": "YouTube",
       "author": "FMP",
       "description": "搜尋 YouTube 影片並播放其音訊。",
-      "version": "1.2.0",
+      "version": "1.2.1",
       "apiVersion": 1,
       "capabilities": [
         "search",
@@ -75,7 +75,7 @@
         "accounts.google.com"
       ],
       "url": "https://raw.githubusercontent.com/1morr/fmp-plugins/main/youtube/youtube.js",
-      "sha256": "825ecdc50d9f54f1f02f5a65a1384e70330390809e155ce6dea6e2c3b5e4b131",
+      "sha256": "35322895dffe7e9488d06b307774a244598683a6afe0c777c637375958f7adc6",
       "checksUrl": "https://raw.githubusercontent.com/1morr/fmp-plugins/main/youtube/checks.json",
       "checksSha256": "a52e23388b236e5ac63f0c7ef29c81440a9ff8bea198ad716ba1f493467b4a3b"
     }

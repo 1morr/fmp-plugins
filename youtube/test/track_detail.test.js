@@ -160,6 +160,14 @@ test('parseTrackDetail: a live stream has no view stat (watching now is not view
   assert.equal(parseTrackDetail(live).stats, undefined);
 });
 
+test('parseTrackDetail: the shown view text wins over an originalViewCount of "0"', () => {
+  // 2026-10 實機：jRIXk_uz_QI 的回應是 originalViewCount "0"、顯示 "636,300 views"。
+  const response = nextResponse({
+    primary: { viewCount: { videoViewCountRenderer: { originalViewCount: '0', viewCount: { simpleText: '636,300 views' } } } },
+  });
+  assert.deepEqual(parseTrackDetail(response).stats, [{ kind: 'view', count: 636300 }]);
+});
+
 test('parseTrackDetail: a liked video counts the liked total the user sees', () => {
   const entity = {
     likeCountIfLikedNumber: '11', likeCountIfIndifferentNumber: '10',

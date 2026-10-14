@@ -61,11 +61,11 @@ function viewCount(primary) {
   const r = primary.viewCount && primary.viewCount.videoViewCountRenderer;
   // 直播中顯示的是「正在觀看」的人數（"1,234 watching now"），不是觀看次數。
   if (!r || r.isLive === true) return null;
-  const original = count(r.originalViewCount);
-  if (original !== null) return original;
+  // 顯示文字優先：有些影片的 originalViewCount 是 "0"，顯示文字才是真的次數（2026-10 實機看到）。
   const shown = r.viewCount && r.viewCount.simpleText;
   const m = typeof shown === 'string' ? /^([\d,]+) views?$/.exec(shown) : null;
-  return m ? count(m[1]) : null;
+  if (m) return count(m[1]);
+  return count(r.originalViewCount);
 }
 
 function likeCount(primary) {
