@@ -1,0 +1,223 @@
+{
+  "meta": {
+    "recordedAt": "2026-10-14T14:48:32.258970Z"
+  },
+  "request": {
+    "method": "GET",
+    "url": "https://api.bilibili.com/x/player/pagelist?bvid=BV1YmHx6QEV6",
+    "headers": {
+      "accept": "application/json, text/plain, */*",
+      "cookie": "***",
+      "origin": "https://www.bilibili.com",
+      "referer": "https://www.bilibili.com/",
+      "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "access-control-allow-credentials": [
+        "true"
+      ],
+      "access-control-allow-headers": [
+        "origin,no-cache,x-requested-with,if-modified-since,pragma,last-modified,cache-control,expires,content-type,access-control-allow-credentials,dnt,x-customheader,keep-alive,user-agent,x-cache-webcdn,x-bilibili-key-real-ip,x-backend-bili-real-ip,x-risk-header,x-event-traceid"
+      ],
+      "access-control-allow-methods": [
+        "GET,POST,PUT,DELETE"
+      ],
+      "access-control-allow-origin": [
+        "https://www.bilibili.com"
+      ],
+      "access-control-expose-headers": [
+        "x-bili-gaia-vvoucher,x-bili-trace-id,x-bili-gaia-param"
+      ],
+      "bili-status-code": [
+        "0"
+      ],
+      "bili-trace-id": [
+        "49c72870336acf96"
+      ],
+      "cache-control": [
+        "no-cache"
+      ],
+      "connection": [
+        "keep-alive"
+      ],
+      "content-type": [
+        "application/json; charset=utf-8"
+      ],
+      "cpu_usage": [
+        "278"
+      ],
+      "cross-origin-resource-policy": [
+        "cross-origin"
+      ],
+      "date": [
+        "Wed, 14 Oct 2026 14:48:34 GMT"
+      ],
+      "expires": [
+        "Wed, 14 Oct 2026 14:48:33 GMT"
+      ],
+      "vary": [
+        "Origin"
+      ],
+      "x-bili-trace-id": [
+        "12b683ba9c262cb849c72870336acf96"
+      ],
+      "x-cache-webcdn": [
+        "BYPASS from blzone09"
+      ]
+    },
+    "jsonBody": {
+      "code": 0,
+      "message": "OK",
+      "ttl": 1,
+      "data": [
+        {
+          "cid": 42488760246,
+          "page": 1,
+          "from": "vupload",
+          "part": "01",
+          "duration": 4635,
+          "vid": "",
+          "weblink": "",
+          "dimension": {
+            "width": 1920,
+            "height": 1080,
+            "rotate": 0
+          },
+          "first_frame": "http://i1.hdslb.com/bfs/storyff/_0000289urpm2yl1lo2tda8lmsw1c21b_firsti.jpg",
+          "ctime": 1791208222
+        },
+        {
+          "cid": 42516349014,
+          "page": 2,
+          "from": "vupload",
+          "part": "02",
+          "duration": 4497,
+          "vid": "",
+          "weblink": "",
+          "dimension": {
+            "width": 1920,
+            "height": 1080,
+            "rotate": 0
+          },
+          "first_frame": "http://i2.hdslb.com/bfs/storyff/_0000389zgd8v3awmq2fhe6tujrsqdab_firsti.jpg",
+          "ctime": 1791294308
+        },
+        {
+          "cid": 42544332945,
+          "page": 3,
+          "from": "vupload",
+          "part": "03",
+          "duration": 4459,
+          "vid": "",
+          "weblink": "",
+          "dimension": {
+            "width": 1920,
+            "height": 1080,
+            "rotate": 0
+          },
+          "first_frame": "http://i1.hdslb.com/bfs/storyff/_00002nre0ik53oik92adwhgxvmqhnsb_firsti.jpg",
+          "ctime": 1791380528
+        },
+        {
+          "cid": 42571400335,
+          "page": 4,
+          "from": "vupload",
+          "part": "04",
+          "duration": 4453,
+          "vid": "",
+          "weblink": "",
+          "dimension": {
+            "width": 1920,
+            "height": 1080,
+            "rotate": 0
+          },
+          "first_frame": "http://i1.hdslb.com/bfs/storyff/_00002988jddeici292j0gzfrahg1hob_firsti.jpg",
+          "ctime": 1791466995
+        },
+        {
+          "cid": 42599845505,
+          "page": 5,
+          "from": "vupload",
+          "part": "05",
+          "duration": 4407,
+          "vid": "",
+          "weblink": "",
+          "dimension": {
+            "width": 1920,
+            "height": 1080,
+            "rotate": 0
+          },
+          "first_frame": "http://i2.hdslb.com/bfs/storyff/_00002ewwpn3dvygse2dsmaa3uy7k4wb_firsti.jpg",
+          "ctime": 1791553283
+        },
+        {
+          "cid": 42684582638,
+          "page": 6,
+          "from": "vupload",
+          "part": "06",
+          "duration": 4450,
+          "vid": "",
+          "weblink": "",
+          "dimension": {
+            "width": 1920,
+            "height": 1080,
+            "rotate": 0
+          },
+          "first_frame": "http://i2.hdslb.com/bfs/storyff/_00000dm71iunvm10q2iiub96udecxbb_firsti.jpg",
+          "ctime": 1791812604
+        },
+        {
+          "cid": 42713482313,
+          "page": 7,
+          "from": "vupload",
+          "part": "07",
+          "duration": 4493,
+          "vid": "",
+          "weblink": "",
+          "dimension": {
+            "width": 1920,
+            "height": 1080,
+            "rotate": 0
+          },
+          "first_frame": "http://i2.hdslb.com/bfs/storyff/_00000tol73yu0sd3c25b8npwu5jx51b_firsti.jpg",
+          "ctime": 1791899032
+        },
+        {
+          "cid": 42741531482,
+          "page": 8,
+          "from": "vupload",
+          "part": "08",
+          "duration": 4446,
+          "vid": "",
+          "weblink": "",
+          "dimension": {
+            "width": 1920,
+            "height": 1080,
+            "rotate": 0
+          },
+          "first_frame": "http://i1.hdslb.com/bfs/storyff/_00000872pnp4xc4ku22md7u71fdhkxb_firsti.jpg",
+          "ctime": 1791985207
+        },
+        {
+          "cid": 42488825990,
+          "page": 9,
+          "from": "vupload",
+          "part": "更新",
+          "duration": 3611,
+          "vid": "",
+          "weblink": "",
+          "dimension": {
+            "width": 1920,
+            "height": 1080,
+            "rotate": 0
+          },
+          "first_frame": "http://i0.hdslb.com/bfs/storyff/_00003l7v385vmsgxv271w00b50e7qxb_firsti.jpg",
+          "ctime": 1791208222
+        }
+      ]
+    }
+  }
+}
