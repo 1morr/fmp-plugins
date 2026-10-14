@@ -1,0 +1,102 @@
+{
+  "meta": {
+    "recordedAt": "2026-10-14T07:13:30.685260Z"
+  },
+  "request": {
+    "method": "GET",
+    "url": "https://api.live.bilibili.com/room/v1/Room/room_init?id=1",
+    "headers": {
+      "accept": "application/json, text/plain, */*",
+      "cookie": "***",
+      "origin": "https://live.bilibili.com",
+      "referer": "https://live.bilibili.com/",
+      "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "access-control-allow-credentials": [
+        "true"
+      ],
+      "access-control-allow-headers": [
+        "origin,no-cache,x-requested-with,if-modified-since,pragma,last-modified,cache-control,expires,content-type,access-control-allow-credentials,dnt,x-customheader,keep-alive,user-agent,x-cache-webcdn,x-bilibili-key-real-ip,x-backend-bili-real-ip,x-risk-header,x-event-traceid"
+      ],
+      "access-control-allow-methods": [
+        "GET,POST,PUT,DELETE,PATCH"
+      ],
+      "access-control-allow-origin": [
+        "https://live.bilibili.com"
+      ],
+      "access-control-expose-headers": [
+        "x-bili-gaia-vvoucher,x-bili-trace-id,x-bili-gaia-param"
+      ],
+      "bili-status-code": [
+        "0"
+      ],
+      "bili-trace-id": [
+        "47bf8b5f8c6d0a083203edba556acf2b:18de53f4b5803cec:6441f9fb7f66deaf:0"
+      ],
+      "cache-control": [
+        "no-cache"
+      ],
+      "connection": [
+        "keep-alive"
+      ],
+      "content-type": [
+        "application/json"
+      ],
+      "cross-origin-resource-policy": [
+        "cross-origin"
+      ],
+      "date": [
+        "Wed, 14 Oct 2026 07:13:32 GMT"
+      ],
+      "expires": [
+        "Wed, 14 Oct 2026 07:13:31 GMT"
+      ],
+      "server": [
+        "swoole-http-server"
+      ],
+      "set-cookie": [
+        "LIVE_BUVID=***; expires=Fri, 31-Dec-2038 23:59:59 GMT; path=/; domain=.bilibili.com"
+      ],
+      "vary": [
+        "Origin",
+        "Accept-Encoding,Origin"
+      ],
+      "x-bili-trace-id": [
+        "47bf8b5f8c6d0a083203edba556acf2b:18de53f4b5803cec:6441f9fb7f66deaf:0"
+      ],
+      "x-cache-webcdn": [
+        "BYPASS from blzone09"
+      ],
+      "x-envoy-upstream-service-time": [
+        "3"
+      ]
+    },
+    "jsonBody": {
+      "code": 0,
+      "msg": "ok",
+      "message": "ok",
+      "data": {
+        "room_id": 5440,
+        "short_id": 1,
+        "uid": 9617619,
+        "need_p2p": 0,
+        "is_hidden": false,
+        "is_locked": false,
+        "is_portrait": false,
+        "live_status": 2,
+        "hidden_till": 0,
+        "lock_till": 0,
+        "encrypted": false,
+        "pwd_verified": false,
+        "live_time": -62170012800,
+        "room_shield": 1,
+        "is_sp": 0,
+        "special_type": 0
+      }
+    }
+  }
+}

@@ -1,0 +1,175 @@
+{
+  "meta": {
+    "recordedAt": "2026-10-14T07:13:30.958833Z"
+  },
+  "request": {
+    "method": "GET",
+    "url": "https://api.live.bilibili.com/room/v1/Room/get_info?room_id=5440",
+    "headers": {
+      "accept": "application/json, text/plain, */*",
+      "cookie": "***",
+      "origin": "https://live.bilibili.com",
+      "referer": "https://live.bilibili.com/",
+      "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "access-control-allow-credentials": [
+        "true"
+      ],
+      "access-control-allow-headers": [
+        "origin,no-cache,x-requested-with,if-modified-since,pragma,last-modified,cache-control,expires,content-type,access-control-allow-credentials,dnt,x-customheader,keep-alive,user-agent,x-cache-webcdn,x-bilibili-key-real-ip,x-backend-bili-real-ip,x-risk-header,x-event-traceid"
+      ],
+      "access-control-allow-methods": [
+        "GET,POST,PUT,DELETE,PATCH"
+      ],
+      "access-control-allow-origin": [
+        "https://live.bilibili.com"
+      ],
+      "access-control-expose-headers": [
+        "x-bili-gaia-vvoucher,x-bili-trace-id,x-bili-gaia-param"
+      ],
+      "bili-status-code": [
+        "0"
+      ],
+      "bili-trace-id": [
+        "6a28bd60a91eca93286684c9dc6acf2b:18de53f4c4630e62:cf1f0bf00313996:0"
+      ],
+      "cache-control": [
+        "no-cache"
+      ],
+      "connection": [
+        "keep-alive"
+      ],
+      "content-type": [
+        "application/json"
+      ],
+      "cross-origin-resource-policy": [
+        "cross-origin"
+      ],
+      "date": [
+        "Wed, 14 Oct 2026 07:13:32 GMT"
+      ],
+      "expires": [
+        "Wed, 14 Oct 2026 07:13:31 GMT"
+      ],
+      "server": [
+        "swoole-http-server"
+      ],
+      "set-cookie": [
+        "LIVE_BUVID=***; expires=Fri, 31-Dec-2038 23:59:59 GMT; path=/; domain=.bilibili.com"
+      ],
+      "vary": [
+        "Origin",
+        "Accept-Encoding,Origin"
+      ],
+      "x-bili-trace-id": [
+        "6a28bd60a91eca93286684c9dc6acf2b:18de53f4c4630e62:cf1f0bf00313996:0"
+      ],
+      "x-cache-webcdn": [
+        "BYPASS from blzone09"
+      ],
+      "x-envoy-upstream-service-time": [
+        "11"
+      ]
+    },
+    "jsonBody": {
+      "code": 0,
+      "msg": "ok",
+      "message": "ok",
+      "data": {
+        "uid": 9617619,
+        "room_id": 5440,
+        "short_id": 1,
+        "attention": 20275561,
+        "online": 0,
+        "is_portrait": false,
+        "description": "<div></div><div><div><p>考研秋招，今夜充乐！</p><p>四位充乐侠已就位，AI助教全程高能辅助。</p><p>@榕榕Lisa榕 辅导员、@小王Albert、@啊吗粽、@GenJi是真想教会你、@我是瑞斯拜</p><p>不管你是考研党、秋招党，还是两边都在看，今晚这场充乐联盟，都有一席之地。</p><p>《我在B站上大学》考研秋招充乐联盟，带上你的问题，只管来！</p></div></div>",
+        "live_status": 2,
+        "area_id": 1062,
+        "parent_area_id": 11,
+        "parent_area_name": "知识",
+        "old_area_id": 6,
+        "background": "",
+        "title": "我在B站上大学考研秋招开课啦！",
+        "user_cover": "https://i0.hdslb.com/bfs/live/f9c05b4d3a64bf05f0c1c2bb8799b8c3cca361f7.jpg",
+        "keyframe": "",
+        "is_strict_room": false,
+        "live_time": "0000-00-00 00:00:00",
+        "tags": "知识,科学,科普,考研,大学,招聘,秋招",
+        "is_anchor": 0,
+        "room_silent_type": "",
+        "room_silent_level": 1,
+        "room_silent_second": 0,
+        "area_name": "AI应用·机器人",
+        "pendants": "",
+        "area_pendants": "",
+        "hot_words": [
+          "2333333",
+          "喂，妖妖零吗",
+          "红红火火恍恍惚惚",
+          "FFFFFFFFFF",
+          "Yooooooo",
+          "啪啪啪啪啪",
+          "666666666",
+          "老司机带带我",
+          "你为什么这么熟练啊",
+          "gg",
+          "prprpr",
+          "向大佬低头",
+          "请大家注意弹幕礼仪哦！",
+          "还有这种操作！",
+          "囍",
+          "打call",
+          "你气不气？",
+          "队友呢？"
+        ],
+        "hot_words_status": 0,
+        "verify": "",
+        "new_pendants": {
+          "frame": {
+            "name": "",
+            "value": "",
+            "position": 0,
+            "desc": "",
+            "area": 0,
+            "area_old": 0,
+            "bg_color": "",
+            "bg_pic": "",
+            "use_old_area": false
+          },
+          "badge": {
+            "name": "v_company",
+            "position": 3,
+            "value": "",
+            "desc": "哔哩哔哩直播官方账号"
+          },
+          "mobile_frame": {
+            "name": "",
+            "value": "",
+            "position": 0,
+            "desc": "",
+            "area": 0,
+            "area_old": 0,
+            "bg_color": "",
+            "bg_pic": "",
+            "use_old_area": false
+          },
+          "mobile_badge": null
+        },
+        "up_session": "",
+        "pk_status": 0,
+        "pk_id": 0,
+        "battle_id": 0,
+        "allow_change_area_time": 0,
+        "allow_upload_cover_time": 0,
+        "studio_info": {
+          "status": 0,
+          "master_list": []
+        }
+      }
+    }
+  }
+}
