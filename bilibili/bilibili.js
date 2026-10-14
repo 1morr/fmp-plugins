@@ -2,7 +2,7 @@
 {
   "id": "bilibili",
   "name": "Bilibili",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "author": "FMP",
   "description": "搜尋 Bilibili 影片並播放其音訊，也能搜尋與收聽直播間，可用 QR 碼登入。",
   "apiVersion": 1,
@@ -10,6 +10,7 @@
     "search",
     "resolveStream",
     "multiPart",
+    "trackDetail",
     "live",
     "login"
   ],
@@ -3562,11 +3563,14 @@ function candidatesFor(urls, fields, dropped) {
   }
   return out;
 }
-async function cidOf(bvid) {
+async function viewData(bvid) {
   const keys = await wbiKeys();
   const signed = wbiSign({ bvid }, keys, Math.round(Date.now() / 1e3), fmp.crypto.md5);
   const json = await get(`${API}/x/web-interface/wbi/view?${signed}`, API_HEADERS, "view");
-  const data = checkCode(json, "view");
+  return checkCode(json, "view");
+}
+async function cidOf(bvid) {
+  const data = await viewData(bvid);
   if (typeof data.cid !== "number") throw error("ParseError", "view: no cid");
   return data.cid;
 }
@@ -3642,6 +3646,39 @@ async function resolveStream({ sourceId, cid, formats, quality }) {
   if (candidates.length > 0) return { candidates };
   if (lastError !== null) throw lastError;
   throw error("NotFound", `playurl: no stream in a requested format for ${sourceId}:${resolvedCid}`);
+}
+var STAT_KINDS = [
+  ["view", "view"],
+  ["like", "like"],
+  ["favorite", "favorite"],
+  ["reply", "comment"],
+  ["share", "share"],
+  ["danmaku", "danmaku"],
+  ["coin", "coin"]
+];
+async function trackDetail({ sourceId, cid }) {
+  if (typeof sourceId !== "string" || !BVID_PATTERN.test(sourceId)) {
+    throw error("ParseError", "view: invalid bvid");
+  }
+  if (cid !== void 0 && cid !== null && !(Number.isInteger(cid) && cid > 0)) {
+    throw error("ParseError", "view: invalid cid");
+  }
+  const data = await viewData(sourceId);
+  const detail = {};
+  if (typeof data.desc === "string" && !["", "-"].includes(data.desc.trim())) detail.description = data.desc.trim();
+  if (Number.isInteger(data.pubdate) && data.pubdate > 0) detail.publishedAt = data.pubdate * 1e3;
+  const avatar = artwork(data.owner && data.owner.face);
+  if (avatar.length > 0) detail.uploaderAvatar = avatar;
+  const stat = data.stat;
+  if (stat !== null && typeof stat === "object") {
+    const stats = [];
+    for (const [field, kind] of STAT_KINDS) {
+      const count = stat[field];
+      if (Number.isInteger(count) && count >= 0) stats.push({ kind, count });
+    }
+    if (stats.length > 0) detail.stats = stats;
+  }
+  return detail;
 }
 var LIVE_API = "https://api.live.bilibili.com";
 var LIVE_REFERER = "https://live.bilibili.com/";
@@ -4026,5 +4063,6 @@ export {
   resolveLive,
   resolveStream,
   search,
+  trackDetail,
   verifyCookie
 };

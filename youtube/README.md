@@ -17,6 +17,12 @@ YouTube 音源，匿名可用，也可以登入。以 [YouTube.js](https://githu
   - 曲目欄位同 `search`（只收有長度的影片，直播與首播略過，縮圖只留 `ytimg.com`），一批內以 `sourceId` 去重；跨批去重由宿主做。`title` 取回應的播放清單標題，沒有就是 `Mix`（宿主只在 `mixId` 換了才換標題）。
   - 錯誤：開始時影片沒有 Mix 或第一批一首都不能播 → `NotFound`；續取的回應沒有播放清單不算錯，回空的一批與 `cursor: null`，讓宿主換種子（丟錯的話 cursor 停在原地，宿主不會換種子，Mix 就停了）。輸入不合法（`sourceId` 不是 11 碼、`mixId` 不是 `RD` 開頭、`cursor` 不是 `v1:` 格式）→ `ParseError`，不發請求；回應形狀不對也是 `ParseError`。HTTP 4xx 同 `search`，YouTube.js 丟例外，由宿主轉成 `UnexpectedError`。
   - 2026-10 實機（匿名）：25 首的 Mix 跳到第 24 首，以 `v1:…:24` 續取回 24 首新的、`mixId` 不變、cursor 前進到 `:48`，共 2 個 `/next`。
+- `trackDetail`：影片詳細，POST innertube `/next`（WEB client，`{videoId, racyCheckOk, contentCheckOk}`，不帶 `playlistId`）並讀原始 JSON，**一個請求**（`src/track_detail.js`）。不用 `getInfo`：它是 `/player` 加 `/next` 兩個請求，而 `/player` 沒有頭像與按讚數，`/next` 本來就帶簡介、日期、頭像、觀看與按讚數；`fixtures/mix/003.json` 就是一份真實的 WEB `/next` 回應，欄位路徑照它定。請求與 `search` 一樣標 `idempotent: true` 與 `auth: 'userPreference'`（WEB client 收 cookie），錯誤對應也相同。
+  - `description`：`videoSecondaryInfoRenderer.attributedDescription.content`，沒有時用 `description.runs`，去頭尾空白，空的不給。
+  - `uploaderAvatar`：`videoOwnerRenderer.thumbnail.thumbnails`，只留 `https` 且在 `ggpht.com`、`ytimg.com` 的（`allowedHosts` 不變，`yt3.ggpht.com` 在 `ggpht.com` 之下）。
+  - `stats`：`view`（`videoViewCountRenderer.originalViewCount`，沒有時讀 `1,234 views` 這種完整數字；直播中（`isLive`）顯示的是正在觀看人數，不給）與 `like`（`likeCountEntity.likeCountIfIndifferentNumber`，沒有時讀 `expandedLikeCountIfIndifferent` 的完整數字；登入且按過讚（`likeStatusEntity.likeStatus` 是 `LIKE`）時改讀 `IfLiked` 那一組，與 YouTube 顯示的相同）。縮寫（`19M`）、`No views`、按讚數被隱藏都略過，不補 0。**沒有 `comment`**：回應裡的留言數只有縮寫（`2.4M`）；`share`、`favorite`、`danmaku`、`coin` YouTube 沒有。
+  - `publishedAt`：回應只有 `dateText` 的英文日期（`Oct 25, 2009`，也接 `Premiered …`、`Streamed live on …`），沒有時刻與時區，所以取當天 UTC 正午，只精確到日（宿主以本機時區顯示：取零點的話 UTC 以西會顯示成前一天，正午在 UTC−12 到 UTC+11 都是同一天）；格式不認得或不是真的日期（`Feb 31`）就不給。`hl` 不是插件指定的：YouTube.js 建 session 時以 `Accept-Language: en-US` 取 `sw.js_data`，YouTube 回 `hl` `en`（fixture 裡是 `en`、`gl` 是錄製地的 `TW`），session 存進 storage 沿用；哪天回了別的語言，日期格式認不得，`publishedAt` 就不給，不會給錯的日期。ISO 時間在 `/player` 的 `microformat`，要多一個請求，沒採用。
+  - 輸入：`sourceId` 不是 11 碼 → `ParseError`，不發請求；`cid` 不參與。回應沒有 `contents` → `ParseError`；有 `contents` 卻沒有任何影片資訊 renderer → `NotFound`（影片不存在或已刪除的實際回應形狀**沒有實測**，是依 `mix` 同類判斷推的）。
 
 ## 錯誤對應
 
@@ -47,7 +53,7 @@ HTTP 429 與傳輸錯誤由 FMP 的網路層轉成 `RateLimited`、`NetworkError
 
 - 年齡限制與會員影片播不了，登入也一樣：player 請求不帶憑證（見「登入」）。匿名身分被要求驗證時只會回 `VerificationRequired`。
 - 哪個 client 能用由 YouTube 決定，`VISIONOS` 也可能被加上同樣的限制。換 client 只要改 `src/clients.js` 的 `CLIENTS` 並重新打包，不必發新版 App；新 client 收不收 cookie 要對 `COOKIELESS_CLIENT_NAMES`。
-- 一個 `checks.json` 每個能力只有一條案例，所以契約測試只重播成功的 `search`、`resolveStream`、`mix` 與 `login`；上表的錯誤對應由 `test/errors.test.js` 以 YouTube 實際給的 `playabilityStatus` 文字守（`npm test`）。player 請求不用 YouTube.js 的 `getBasicInfo`：它遇到 `ERROR` 直接拋例外，走不到 `NotFound`；`test/resolve.test.js` 以錄好的 fixture 跑整條 `resolveStream` 守這點；`test/mix.test.js` 以手寫與錄好的（`fixtures/mix/003.json`）`/next` 回應跑整條 `mix`（測試裡用 esbuild 在記憶體打包 `src/`）。
+- 一個 `checks.json` 每個能力只有一條案例，所以契約測試只重播成功的 `search`、`resolveStream`、`mix`、`trackDetail` 與 `login`；上表的錯誤對應由 `test/errors.test.js` 以 YouTube 實際給的 `playabilityStatus` 文字守（`npm test`）。player 請求不用 YouTube.js 的 `getBasicInfo`：它遇到 `ERROR` 直接拋例外，走不到 `NotFound`；`test/resolve.test.js` 以錄好的 fixture 跑整條 `resolveStream` 守這點；`test/mix.test.js` 以手寫與錄好的（`fixtures/mix/003.json`）`/next` 回應跑整條 `mix`；`test/track_detail.test.js` 以同一份錄好的 `/next` 加手寫變體跑整條 `trackDetail`（欄位對應、省略、直播與按過讚的計數、日期的時區、輸入驗證、錯誤、`idempotent` 與 `auth`）（測試裡用 esbuild 在記憶體打包 `src/`）。
 - fixture 裡有匿名的 `visitorData` 與 `x-goog-visitor-id`（YouTube 發的匿名識別，不是憑證）。
 - 錄製者的公網 IP 會出現在 `sw.js_data` 回應、請求 body 的 `remoteHost`、`hlsManifestUrl` 路徑的 `/ip/…/`：FMP 的錄製器把 fixture 裡的 IP 一律換成文件用位址，掃描也會擋（FMP `app/test/plugins/contract/ip_scrub.dart`）。`hlsManifestUrl` 路徑式的 `/sig/…/`、`/lsig/…/` 遮蔽名單遮不到，現有 fixture 已手動換成 `***`（已過期、重播只比對方法與網址）；重錄後要再換一次。
 
@@ -76,6 +82,6 @@ npm test         # 錯誤對應表的測試（node:test）
 
 ## 契約測試與錄製
 
-指令見 repo 根目錄的 `README.md`。錄製會真的連 YouTube：每個案例各發 3 個請求（`sw.js_data`、`config`，再來 `search`、`player` 或 `next`），共 9 個。
+指令見 repo 根目錄的 `README.md`。錄製會真的連 YouTube：每個案例各發 3 個請求（`sw.js_data`、`config`，再來 `search`、`player` 或 `next`），共 12 個（`search`、`resolveStream`、`mix`、`trackDetail`；`trackDetail` 的第三個是 `next`，案例的 `sourceId` 是 `dQw4w9WgXcQ`，與 `resolveStream`、`mix` 相同）。
 
 `login` 案例（`fixtures/login/001.json`）是手寫的，不錄：輸入是假憑證，回應照 `account_menu` 的形狀寫成已遮蔽的形式，錄製模式略過它。
