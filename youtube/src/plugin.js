@@ -4,6 +4,8 @@ import { HeadersShim, RequestShim, ResponseShim, fetchShim } from './shims.js';
 import { Innertube, Platform, Log } from 'youtubei.js/web';
 import { error, playabilityError } from './errors.js';
 import { CLIENTS } from './clients.js';
+import { mixRequest, parseMixResponse } from './mix.js';
+import { isAllowedHttps } from './urls.js';
 
 // ---------------------------------------------------------------- platform
 // Cache over fmp.storage (values are ArrayBuffers; storage takes strings).
@@ -121,16 +123,6 @@ export async function search({ keyword, page }) {
 }
 
 // ---------------------------------------------------------------- resolveStream
-function hostOf(url) {
-  const match = /^https:\/\/([^/?#:]+)(?::\d+)?(?:[/?#]|$)/i.exec(String(url));
-  return match ? match[1].toLowerCase() : null;
-}
-
-function isAllowedHttps(url, domains) {
-  const host = hostOf(url);
-  return host !== null && domains.some((d) => host === d || host.endsWith(`.${d}`));
-}
-
 // 宿主只收 allowedHosts 內的串流網址，不在內的整個回傳值會被拒收。
 const MEDIA_HOSTS = ['googlevideo.com'];
 
@@ -230,6 +222,18 @@ export async function resolveStream({ sourceId, formats, quality }) {
   if (candidates.length === 0) throw error('NotFound', 'no playable audio format for this platform');
   fmp.log.debug('resolved', { client, candidates: candidates.length, ms: now() - t0 });
   return { candidates };
+}
+
+// ---------------------------------------------------------------- mix
+export async function mix(input) {
+  const { mixId, lastVideoId, body } = mixRequest(input);
+  const yt = await innertube();
+  const t0 = now();
+  // parse: false 取原始 JSON（見 mix.js）。innertube 的 POST 經 shim 標 idempotent，認證由 hostRequest 依 client 掛。
+  const res = await yt.actions.execute('/next', { ...body, parse: false });
+  const { title, tracks, cursor } = parseMixResponse(res.data, { lastVideoId });
+  fmp.log.debug('mix batch', { count: tracks.length, hasCursor: cursor !== null, ms: now() - t0 });
+  return { mixId, title: title || 'Mix', tracks, cursor };
 }
 
 // ---------------------------------------------------------------- login
