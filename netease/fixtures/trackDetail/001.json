@@ -1,0 +1,252 @@
+{
+  "meta": {
+    "recordedAt": "2026-10-14T16:13:31.586908Z"
+  },
+  "request": {
+    "method": "POST",
+    "url": "https://music.163.com/api/v3/song/detail",
+    "headers": {
+      "accept": "application/json, text/plain, */*",
+      "content-length": "31",
+      "content-type": "application/x-www-form-urlencoded",
+      "origin": "https://music.163.com",
+      "referer": "https://music.163.com/",
+      "user-agent": "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Safari/537.36 Chrome/91.0.4472.164 NeteaseMusicDesktop/3.0.18.203152"
+    },
+    "body": "c=%5B%7B%22id%22%3A139774%7D%5D"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "cache-control": [
+        "no-cache",
+        "no-store"
+      ],
+      "connection": [
+        "keep-alive"
+      ],
+      "content-type": [
+        "application/json;charset=UTF-8"
+      ],
+      "date": [
+        "Wed, 14 Oct 2026 16:13:31 GMT"
+      ],
+      "expires": [
+        "Thu, 01 Jan 1970 00:00:00 GMT"
+      ],
+      "gw-thread": [
+        "-931475"
+      ],
+      "gw-time": [
+        "1791994411657"
+      ],
+      "mconfig-bucket": [
+        "999999"
+      ],
+      "server": [
+        "nginx"
+      ],
+      "set-cookie": [
+        "NMTID=***; Max-Age=315360000; Expires=Sat, 11 Oct 2036 16:13:31 GMT; Path=/; Domain=music.163.com"
+      ],
+      "vary": [
+        "Accept-Encoding"
+      ],
+      "x-cv": [
+        "1791994411675"
+      ],
+      "x-from-src": [
+        "203.0.113.1"
+      ],
+      "x-traceid": [
+        "000001a13b30ba8602d00a7b868a0007"
+      ],
+      "x-traceid-v2": [
+        "12a6a92ff489c86a1af4acbb336ebc0c^1790043140021^-9725780892"
+      ],
+      "x-via": [
+        "MusicServer"
+      ]
+    },
+    "jsonBody": {
+      "songs": [
+        {
+          "name": "The truth that you leave",
+          "mainTitle": null,
+          "additionalTitle": null,
+          "id": 139774,
+          "pst": 0,
+          "t": 0,
+          "ar": [
+            {
+              "id": 4726,
+              "name": "Pianoboy高至豪",
+              "tns": [],
+              "alias": []
+            }
+          ],
+          "alia": [],
+          "pop": 100.0,
+          "st": 0,
+          "rt": "",
+          "fee": 8,
+          "v": 249,
+          "crbt": null,
+          "cf": "",
+          "al": {
+            "id": 13934,
+            "name": "The truth that you leave",
+            "picUrl": "https://p1.music.126.net/***/102254581395289.jpg",
+            "tns": [],
+            "pic": 102254581395289
+          },
+          "dt": 223467,
+          "h": {
+            "br": 320000,
+            "fid": 0,
+            "size": 8941485,
+            "vd": -27591.0,
+            "sr": 48000
+          },
+          "m": {
+            "br": 192000,
+            "fid": 0,
+            "size": 5364909,
+            "vd": -24980.0,
+            "sr": 48000
+          },
+          "l": {
+            "br": 128000,
+            "fid": 0,
+            "size": 3576621,
+            "vd": -23244.0,
+            "sr": 48000
+          },
+          "sq": {
+            "br": 757488,
+            "fid": 0,
+            "size": 21159314,
+            "vd": -27635.0,
+            "sr": 48000
+          },
+          "hr": {
+            "br": 2564069,
+            "fid": 0,
+            "size": 71623423,
+            "vd": -27835.0,
+            "sr": 96000
+          },
+          "a": null,
+          "cd": "1",
+          "no": 1,
+          "rtUrl": null,
+          "ftype": 0,
+          "rtUrls": [],
+          "djId": 0,
+          "copyright": 2,
+          "s_id": 0,
+          "mark": 17716879424,
+          "originCoverType": 1,
+          "originSongSimpleData": null,
+          "tagPicList": null,
+          "resourceState": true,
+          "version": 215,
+          "songJumpInfo": null,
+          "entertainmentTags": null,
+          "awardTags": null,
+          "displayTags": null,
+          "artistClassics": false,
+          "markTags": [],
+          "songFeature": null,
+          "single": 0,
+          "noCopyrightRcmd": null,
+          "mv": 5337006,
+          "rtype": 0,
+          "rurl": null,
+          "mst": 9,
+          "cp": 0,
+          "publishTime": 1126108800000,
+          "tns": [
+            "你离开的事实"
+          ]
+        }
+      ],
+      "privileges": [
+        {
+          "id": 139774,
+          "fee": 8,
+          "payed": 0,
+          "st": 0,
+          "pl": 320000,
+          "dl": 0,
+          "sp": 7,
+          "cp": 1,
+          "subp": 1,
+          "cs": false,
+          "maxbr": 999000,
+          "fl": 320000,
+          "toast": false,
+          "flag": 6,
+          "preSell": false,
+          "playMaxbr": 999000,
+          "downloadMaxbr": 999000,
+          "maxBrLevel": "hires",
+          "playMaxBrLevel": "hires",
+          "downloadMaxBrLevel": "hires",
+          "plLevel": "exhigh",
+          "dlLevel": "none",
+          "flLevel": "exhigh",
+          "rscl": 10,
+          "freeTrialPrivilege": {
+            "resConsumable": false,
+            "userConsumable": false,
+            "listenType": null,
+            "cannotListenReason": null,
+            "playReason": null,
+            "freeLimitTagType": null
+          },
+          "rightSource": 0,
+          "chargeInfoList": [
+            {
+              "rate": 128000,
+              "chargeUrl": null,
+              "chargeMessage": null,
+              "chargeType": 0
+            },
+            {
+              "rate": 192000,
+              "chargeUrl": null,
+              "chargeMessage": null,
+              "chargeType": 0
+            },
+            {
+              "rate": 320000,
+              "chargeUrl": null,
+              "chargeMessage": null,
+              "chargeType": 0
+            },
+            {
+              "rate": 999000,
+              "chargeUrl": null,
+              "chargeMessage": null,
+              "chargeType": 1
+            },
+            {
+              "rate": 1999000,
+              "chargeUrl": null,
+              "chargeMessage": null,
+              "chargeType": 1
+            }
+          ],
+          "code": 0,
+          "message": null,
+          "plLevels": null,
+          "dlLevels": null,
+          "ignoreCache": null,
+          "bd": null
+        }
+      ],
+      "code": 200
+    }
+  }
+}
