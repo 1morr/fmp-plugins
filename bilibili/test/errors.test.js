@@ -13,6 +13,7 @@ const table = [
   [62002, 'NotFound', undefined],
   [62004, 'NotFound', undefined],
   [62012, 'NotFound', undefined],
+  [60004, 'NotFound', undefined],
   [-10403, 'Unavailable', 'region'],
   [87007, 'Unavailable', 'membership'],
   [87008, 'Unavailable', 'membership'],

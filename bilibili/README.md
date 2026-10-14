@@ -6,11 +6,27 @@ B 站音源，可匿名使用，也可用 QR 碼登入（啟動時自動刷新�
 
 - `search`：搜尋影片（`/x/web-interface/search/type`，綜合排序，每頁 20 筆）。課堂這類不是影片的結果沒有 `bvid`，會被略過，所以一頁可能不到 20 筆。標題會去掉 `<em>` 標籤並解 HTML 實體（命名的與 `&#39;`、`&#x27;` 這類數字的）。封面回傳 `@160w`、`@480w` 兩個縮圖（標寬度）加原圖（不標寬度），宿主依顯示大小挑。
 - `login`：QR 碼登入與憑證刷新，見下方〈登入〉〈刷新〉。
+- `live`：直播間，四個匯出，見下方〈直播〉。
 - `resolveStream`：沒給 `cid` 時先以 WBI 簽名呼叫 `/x/web-interface/wbi/view` 取得預設分 P 的 `cid`，再呼叫 `/x/player/playurl`。
   - 優先 DASH 音訊。平台能播的音軌依頻寬由高到低排，`quality` 選中的那一個放最前面：`high` 最高、`low` 最低、`medium` 取中間（第 `⌊n / 2⌋` 個，只有兩個時是低的那個；與舊專案 `selectByQualityLevel` 相同）。其他音軌當備援，先往下降、沒有更低的才往上：接著是比它低的（由高到低），最後是比它高的（由低到高）。例如三軌選 `low` 是低、中、高，選 `medium` 是中、低、高。沒給 `quality` 時當 `high`。每個音軌的主網址排在前面，備用網址排在後面。
   - 沒有平台能播的 DASH 音訊時，改用 durl（影音混流），只取第一段；只有一條，`quality` 不適用。
   - 候選串流只帶 `Referer` 與 `User-Agent`，不帶 Cookie。
   - `expiresAt` 從網址本身讀：upos 取 `deadline`，Akamai 鏡像取 `hdnts=exp=`。
+
+## 直播
+
+`live` 能力的四個匯出（`liveSearch`、`liveRoomFromUrl`、`liveStatus`、`resolveLive`），行為以舊專案 `bilibili_live_client.dart` 為規格。請求一律標 `auth: 'userPreference'`（FMP ADR 0012 §決定 2「電台」）；直播 API 的 `Referer` 是 `https://live.bilibili.com/`。
+
+- `liveSearch`：沿用舊專案 `searchRooms` 的語意，`status` 決定搜什麼。
+  - `live`：**直播間搜尋**，`/x/web-interface/search/type?search_type=live_room`（每頁 20 筆），只回開播中的房間，每筆 `status` 都是 `live`。標題與主播名去掉 `<em>` 並解實體。
+  - `offline` 與 `null`（全部）：**主播名搜尋**，`search_type=bili_user`，留下 `mid`、`room_id` 都大於 0 的主播，再用**一個**批次請求補房間狀態：`GET https://api.live.bilibili.com/room/v1/Room/get_status_info_by_uids?uids%5B%5D=<mid>&uids%5B%5D=<mid>…`（重複的 `uids[]`，編碼成 `uids%5B%5D`，宿主的 `Uri.parse` 本來也會這樣送；整頁的 `mid` 一次問；舊專案是每位主播一個 `get_info`）。回應 `data` 以 `mid` 字串為鍵，取 `room_id`、`title`、`live_status`、`online`、`cover_from_user`（沒有時 `keyframe`）。`offline` 只留未開播的，`null` 兩種都留（舊專案是 live_room 與 bili_user 兩路合併，bili_user 這路已涵蓋開播中的主播）。主播名用搜尋結果的 `uname`，空的才用批次回應的 `uname`。`hasMore` 由 `numResults` 算，同 `search`。
+  - 批次回應裡沒有的 `mid` 直接略過（debug log），不猜狀態；批次請求失敗、某筆缺 `title`／`room_id`、`uid` 與鍵對不上、或 `live_status` 不認得，整個 `liveSearch` 拋錯，不回部分結果。
+  - `data` 不是以 `mid` 為鍵的物件（例如 PHP 的空 map `[]`），或問到的 `mid` 一個都不在裡面，是 `ParseError`，不當成空頁：形狀變了不能悄悄變成「沒有結果」。沒有可問的主播時不發批次請求，直接回空頁。
+  - 批次端點的形式（GET、以 `mid` 字串為鍵、每筆的 `room_id`、`title`、`live_status`、`online`、`cover_from_user`、`keyframe`、`uid`、`uname`）對過一次真實的匿名回應；一個都對不上時回不回 `[]` 沒驗證過。
+- `liveRoomFromUrl`：不連網，只認 `live.bilibili.com/<數字>` 與 `live.bilibili.com/h5/<數字>`（`http`／`https` 可省，後面接結尾、`/`、`?`、`#` 或空白），規則同舊專案 `parseLiveUrl`，只多一條：前面不准緊接 `/`（`https://evil.example/live.bilibili.com/1` 的網域不是 B 站，舊專案會認）；其他一律 `null`。不處理短連結（舊專案也沒有）。回的 `roomId` 是網址裡的號碼，可能是短號，`liveStatus`、`resolveLive` 各自用 `room_init` 換成真實房號；`liveStatus` 回的 `roomId` 是真實房號（舊專案同）。
+- `liveStatus`：`room_init`（短號 → 真實房號）、`get_info`（標題、封面、人數、`live_status`）、`get_anchor_in_room`（主播名），三個請求都在 `api.live.bilibili.com`。主播名（`hostName`，契約裡選填）查不到（請求失敗、業務碼不是 0、沒有 `uname`）時照樣回房間資料、不給 `hostName`，只寫一筆 warning。`live_status` `1` → `live`，`0` 與 `2`（輪播）→ `offline`，其他值或缺 → `ParseError`。封面取 `user_cover`、沒有時取 `keyframe`，格式同 `search` 的封面。**查詢失敗一律拋錯，絕不回 `offline`**（FMP design D10）：HTTP 非 200、不是 JSON、業務碼不是 0、`title` 不是字串、缺 `live_status`，全都拋。房間不存在（`room_init` 的 `60004`）→ `NotFound`（`60004` 的意義來自記憶，還沒在真實回應上看過）。
+- 標題是空字串（去掉標籤與空白後）時三處都換成 `Unknown`，同 `search`：宿主拒收空白標題，`liveSearch` 會整頁被拒。主播名空的不給。
+- `resolveLive`：`room_init` 後呼叫 `/room/v1/Room/playUrl?cid=<真實房號>&platform=web&quality=2&qn=80`，取第一個 `durl`；它的 `backup_url` 排在後面當備援。網址不在 `allowedHosts` 的丟掉並寫 warning，全被丟掉回 `Unavailable`；沒有 `durl` 回 `NotFound`。候選只帶 `Referer`（`live.bilibili.com`）與 `User-Agent`；`container`、`codec` 不標，`formats` 不參與挑選。`expiresAt` 照 `resolveStream` 從網址讀 `deadline`／`hdnts=exp=`，讀不到是 `null`。
 
 ## 登入（QR）
 
@@ -69,7 +85,7 @@ manifest 宣告 `login: { methods: ['qr'], refresh: 'onStartup' }`。流程由�
 | HTTP 412；業務碼 `-352`、`-412`、`-509`、`-799`（風控） | `RateLimited` |
 | HTTP 5xx；業務碼 `-503` | `NetworkError` |
 | 業務碼 `-101`、`-111`（csrf 驗證失敗）、`-403` | `AuthRequired`（回應帶了憑證時 `-101`、`-111` 改為 `CredentialInvalid`；`loginVerify`、`loginRefresh` 同） |
-| 業務碼 `-404`、`62002`、`62004`、`62012` | `NotFound` |
+| 業務碼 `-404`、`62002`、`62004`、`62012`、`60004`（直播間不存在） | `NotFound` |
 | 業務碼 `-10403` | `Unavailable`（`region`） |
 | 業務碼 `87007`、`87008` | `Unavailable`（`membership`） |
 | 不是 JSON、缺 `data` 或 `cid`；nav 回 `0` 或 `-101` 卻沒有 `wbi_img` | `ParseError` |
@@ -87,7 +103,7 @@ HTTP 429 由 FMP 的網路層轉成 `RateLimited`。DASH 以 `NotFound` 或 `Una
 
 ## 契約測試與錄製
 
-指令見 repo 根目錄的 `README.md`。錄製會真的連 B 站：`search` 發 1 個請求，`resolveStream` 發 3 個（nav、view、playurl）。`login` 的案例標 `requiresLogin`，命令列錄製略過（`loginRefresh` 沒有契約案例，每個能力只有一條，ADR 0015）；它的 fixture（`fixtures/login/001.json`）是手寫的（`meta.edited`），憑證與帳號都是假的，body 的形狀照 nav 的真實回應。
+指令見 repo 根目錄的 `README.md`。錄製會真的連 B 站：`search` 發 1 個請求，`resolveStream` 發 3 個（nav、view、playurl），`live`（跑 `liveStatus`，房號 `1` 是短號）發 3 個（匿名 cookie 不發請求；`room_init`、`get_info`、`get_anchor_in_room`）。`resolveLive`、`liveSearch`、`liveRoomFromUrl` 沒有契約案例（每個能力一條），只有單元測試。`login` 的案例標 `requiresLogin`，命令列錄製略過（`loginRefresh` 沒有契約案例，每個能力只有一條，ADR 0015）；它的 fixture（`fixtures/login/001.json`）是手寫的（`meta.edited`），憑證與帳號都是假的，body 的形狀照 nav 的真實回應。
 
 ## 打包
 
@@ -102,4 +118,4 @@ npm test
 
 ## 測試
 
-`npm test`（`node --test`，要先 `npm ci`）測 `test/` 裡的純函式與以假宿主 API 跑的流程：實體解碼與封面尺寸（`helpers.test.js`）；QR 狀態碼、`Set-Cookie` 解析、缺 cookie、verify 對應與請求形狀（`login.test.js`）；SHA-256、MGF1、RSA-OAEP 以 `node:crypto`（`privateDecrypt`，`oaepHash: 'sha256'`，測試自己生的金鑰）獨立驗證、寫死的公鑰等於舊專案的，以及打包檔不得出現 `BigInt`、`TextEncoder`、`crypto.subtle`、`getRandomValues` 且在 `BigInt` 被清掉時仍能載入（`oaep.test.js`）；憑證無效的判定表與 `loginRefresh` 的 5 步和各種失敗（`refresh.test.js`）。cookie 與 token 的值都是 `fake-…`。`src/plugin.js` 匯出 `decodeHtmlEntities`、`artwork`、`parseSetCookies`、`qrCredentials`、`verifyCookie`、`credentialsRejected`、`refreshCsrfOf` 只為了這個；宿主只認能力名稱的匯出，其他名稱忽略。
+`npm test`（`node --test`，要先 `npm ci`）測 `test/` 裡的純函式與以假宿主 API 跑的流程：實體解碼與封面尺寸（`helpers.test.js`）；QR 狀態碼、`Set-Cookie` 解析、缺 cookie、verify 對應與請求形狀（`login.test.js`）；SHA-256、MGF1、RSA-OAEP 以 `node:crypto`（`privateDecrypt`，`oaepHash: 'sha256'`，測試自己生的金鑰）獨立驗證、寫死的公鑰等於舊專案的，以及打包檔不得出現 `BigInt`、`TextEncoder`、`crypto.subtle`、`getRandomValues` 且在 `BigInt` 被清掉時仍能載入（`oaep.test.js`）；憑證無效的判定表與 `loginRefresh` 的 5 步和各種失敗（`refresh.test.js`）；直播的欄位對應、狀態篩選、批次回應的形狀（`[]`、`{}`、鍵對不上都拋 `ParseError`）、空標題、網址解析與反例（含網域偽裝）、D10（失敗一律拋錯）、playUrl 取第一段、`userPreference`（`live.test.js`）。cookie 與 token 的值都是 `fake-…`。`src/plugin.js` 匯出 `decodeHtmlEntities`、`artwork`、`parseSetCookies`、`qrCredentials`、`verifyCookie`、`credentialsRejected`、`refreshCsrfOf` 只為了這個；宿主只認能力名稱的匯出，其他名稱忽略。

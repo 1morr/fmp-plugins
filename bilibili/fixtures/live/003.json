@@ -1,0 +1,91 @@
+{
+  "meta": {
+    "recordedAt": "2026-10-14T07:13:31.401823Z"
+  },
+  "request": {
+    "method": "GET",
+    "url": "https://api.live.bilibili.com/live_user/v1/UserInfo/get_anchor_in_room?roomid=5440",
+    "headers": {
+      "accept": "application/json, text/plain, */*",
+      "cookie": "***",
+      "origin": "https://live.bilibili.com",
+      "referer": "https://live.bilibili.com/",
+      "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "access-control-allow-credentials": [
+        "true"
+      ],
+      "access-control-allow-headers": [
+        "origin,no-cache,x-requested-with,if-modified-since,pragma,last-modified,cache-control,expires,content-type,access-control-allow-credentials,dnt,x-customheader,keep-alive,user-agent,x-cache-webcdn,x-bilibili-key-real-ip,x-backend-bili-real-ip,x-risk-header,x-event-traceid"
+      ],
+      "access-control-allow-methods": [
+        "GET,POST,PUT,DELETE,PATCH,HEAD,OPTIONS"
+      ],
+      "access-control-allow-origin": [
+        "https://live.bilibili.com"
+      ],
+      "access-control-expose-headers": [
+        "x-bili-gaia-vvoucher,x-bili-trace-id,x-bili-gaia-param"
+      ],
+      "cache-control": [
+        "no-cache"
+      ],
+      "connection": [
+        "keep-alive"
+      ],
+      "content-type": [
+        "application/json"
+      ],
+      "cross-origin-resource-policy": [
+        "cross-origin"
+      ],
+      "date": [
+        "Wed, 14 Oct 2026 07:13:32 GMT"
+      ],
+      "expires": [
+        "Wed, 14 Oct 2026 07:13:31 GMT"
+      ],
+      "server": [
+        "swoole-http-server"
+      ],
+      "set-cookie": [
+        "LIVE_BUVID=***; expires=Fri, 31-Dec-2038 23:59:59 GMT; path=/; domain=.bilibili.com"
+      ],
+      "vary": [
+        "Accept-Encoding,Origin"
+      ],
+      "x-cache-webcdn": [
+        "BYPASS from blzone09"
+      ]
+    },
+    "jsonBody": {
+      "code": 0,
+      "msg": "success",
+      "message": "success",
+      "data": {
+        "info": {
+          "uid": 9617619,
+          "uname": "哔哩哔哩直播",
+          "face": "https://i0.hdslb.com/bfs/face/8f6a614a48a3813d90da7a11894ae56a59396fcd.jpg",
+          "rank": "10000",
+          "platform_user_level": 6,
+          "mobile_verify": 1,
+          "identification": 1,
+          "official_verify": {
+            "type": 1,
+            "desc": "哔哩哔哩直播官方账号",
+            "role": 3
+          },
+          "vip_type": 2,
+          "gender": -1
+        },
+        "level": null,
+        "san": 12
+      }
+    }
+  }
+}
