@@ -5,6 +5,8 @@ B 站音源，可匿名使用，也可用 QR 碼登入（啟動時自動刷新�
 ## 能力
 
 - `search`：搜尋影片（`/x/web-interface/search/type`，綜合排序，每頁 20 筆）。課堂這類不是影片的結果沒有 `bvid`，會被略過，所以一頁可能不到 20 筆。標題會去掉 `<em>` 標籤並解 HTML 實體（命名的與 `&#39;`、`&#x27;` 這類數字的）。封面回傳 `@160w`、`@480w` 兩個縮圖（標寬度）加原圖（不標寬度），宿主依顯示大小挑。
+- `multiPart`：影片的分 P 列表，`GET api.bilibili.com/x/player/pagelist?bvid=<bvid>`（舊專案取 `view` 的 `pages`；改走 pagelist 是因為舊專案實測它匿名也是 200，且不必簽 WBI，一個請求就夠），請求標 `auth: 'userPreference'`。回應 `data` 是陣列，每筆 `cid`、`page`（→ `index`，從 1）、`part`（→ `title`，去掉頭尾空白；空的或不是字串時用 `P<index>`）、`duration`（秒 → `durationMs`，缺或非整數就不給）。`sourceId` 不是 `BV` 加 10 個英數字就是 `ParseError`，不發請求；沒有分 P 回 `NotFound`；`data` 不是陣列或任何一筆的 `cid` 不是正整數是 `ParseError`（形狀變了不悄悄少一筆）；業務碼照〈錯誤對應〉。回應形狀已對過一次真實匿名回應（`cid`、`ctime`、`dimension`、`duration`、`first_frame`、`from`、`page`、`part`、`vid`、`weblink`）。搜尋回應現在沒有每筆的 `page`（2026-10 的 search fixture 也沒有），所以 `partCount` 多半不給；宿主把它當提示，不知道時也讓使用者展開。
+- `search` 的 `partCount`：搜尋結果每筆的 `page`（分 P 數）是正整數才給，否則省略。
 - `login`：QR 碼登入與憑證刷新，見下方〈登入〉〈刷新〉。
 - `live`：直播間，四個匯出，見下方〈直播〉。
 - `resolveStream`：沒給 `cid` 時先以 WBI 簽名呼叫 `/x/web-interface/wbi/view` 取得預設分 P 的 `cid`，再呼叫 `/x/player/playurl`。
@@ -96,14 +98,14 @@ HTTP 429 由 FMP 的網路層轉成 `RateLimited`。DASH 以 `NotFound` 或 `Una
 ## 已知限制
 
 - 不登入時拿不到需要登入或大會員的音質（Hi-Res、杜比）。匿名身分被風控（`-352`）時只會回 `RateLimited`；登入後開著「以登入身分瀏覽與播放」可能緩解。登入後的取流行為（含 `dash.flac`）還沒有處理。
-- 只取 `view` 回傳的預設分 P；多 P 影片的其他分 P 要由呼叫端給 `cid`。
+- `resolveStream` 沒給 `cid` 時只取 `view` 回傳的預設分 P；其他分 P 由呼叫端先用 `multiPart` 取得 `cid` 再給。
 - `allowedHosts` 列了 `bilivideo.cn`：B 站的 PCDN（`*.mcdn.bilivideo.cn`）在部分網路會出現，但這次錄製沒遇到。網域不在清單內的串流網址（例如其他 PCDN 網域、直接寫 IP 的節點）會被丟掉，並寫一筆 warning log；一個音軌的網址全被丟掉時，那個音軌就不會出現在候選裡。
 - fixture 裡串流網址的簽名參數（`upsig`、`e`、`uparams` 等）已經遮蔽，`deadline` 留著（公開的到期時間，FMP 的遮蔽名單不遮它）。`checks.json` 的 `expiresAtPattern` 讓契約檢查核對每個候選的 `expiresAt` 與網址裡的期限一致；Akamai 鏡像的 `hdnts` 整段遮掉（含 `hmac`），沒有 `deadline` 的那種網址重播時 `expiresAt` 是 `null`，不在核對範圍內。
 - `quality` 的選擇沒有自動測試：契約每個能力只有一條檢查案例（`high`）。改它時以 fixture 的 playurl 回應另外跑過 `low`、`medium`。
 
 ## 契約測試與錄製
 
-指令見 repo 根目錄的 `README.md`。錄製會真的連 B 站：`search` 發 1 個請求，`resolveStream` 發 3 個（nav、view、playurl），`live`（跑 `liveStatus`，房號 `1` 是短號）發 3 個（匿名 cookie 不發請求；`room_init`、`get_info`、`get_anchor_in_room`）。`resolveLive`、`liveSearch`、`liveRoomFromUrl` 沒有契約案例（每個能力一條），只有單元測試。`login` 的案例標 `requiresLogin`，命令列錄製略過（`loginRefresh` 沒有契約案例，每個能力只有一條，ADR 0015）；它的 fixture（`fixtures/login/001.json`）是手寫的（`meta.edited`），憑證與帳號都是假的，body 的形狀照 nav 的真實回應。
+指令見 repo 根目錄的 `README.md`。錄製會真的連 B 站：`search` 發 1 個請求，`multiPart` 發 1 個（`pagelist`；案例的 `sourceId` 是 `BV1YmHx6QEV6`，2026-10 時有 9 個分 P；下架或剩不到 2 個分 P 時換一支），`resolveStream` 發 3 個（nav、view、playurl），`live`（跑 `liveStatus`，房號 `1` 是短號）發 3 個（匿名 cookie 不發請求；`room_init`、`get_info`、`get_anchor_in_room`）。`resolveLive`、`liveSearch`、`liveRoomFromUrl` 沒有契約案例（每個能力一條），只有單元測試。`login` 的案例標 `requiresLogin`，命令列錄製略過（`loginRefresh` 沒有契約案例，每個能力只有一條，ADR 0015）；它的 fixture（`fixtures/login/001.json`）是手寫的（`meta.edited`），憑證與帳號都是假的，body 的形狀照 nav 的真實回應。
 
 ## 打包
 
@@ -118,4 +120,4 @@ npm test
 
 ## 測試
 
-`npm test`（`node --test`，要先 `npm ci`）測 `test/` 裡的純函式與以假宿主 API 跑的流程：實體解碼與封面尺寸（`helpers.test.js`）；QR 狀態碼、`Set-Cookie` 解析、缺 cookie、verify 對應與請求形狀（`login.test.js`）；SHA-256、MGF1、RSA-OAEP 以 `node:crypto`（`privateDecrypt`，`oaepHash: 'sha256'`，測試自己生的金鑰）獨立驗證、寫死的公鑰等於舊專案的，以及打包檔不得出現 `BigInt`、`TextEncoder`、`crypto.subtle`、`getRandomValues` 且在 `BigInt` 被清掉時仍能載入（`oaep.test.js`）；憑證無效的判定表與 `loginRefresh` 的 5 步和各種失敗（`refresh.test.js`）；直播的欄位對應、狀態篩選、批次回應的形狀（`[]`、`{}`、鍵對不上都拋 `ParseError`）、空標題、網址解析與反例（含網域偽裝）、D10（失敗一律拋錯）、playUrl 取第一段、`userPreference`（`live.test.js`）。cookie 與 token 的值都是 `fake-…`。`src/plugin.js` 匯出 `decodeHtmlEntities`、`artwork`、`parseSetCookies`、`qrCredentials`、`verifyCookie`、`credentialsRejected`、`refreshCsrfOf` 只為了這個；宿主只認能力名稱的匯出，其他名稱忽略。
+`npm test`（`node --test`，要先 `npm ci`）測 `test/` 裡的純函式與以假宿主 API 跑的流程：實體解碼與封面尺寸（`helpers.test.js`）；QR 狀態碼、`Set-Cookie` 解析、缺 cookie、verify 對應與請求形狀（`login.test.js`）；SHA-256、MGF1、RSA-OAEP 以 `node:crypto`（`privateDecrypt`，`oaepHash: 'sha256'`，測試自己生的金鑰）獨立驗證、寫死的公鑰等於舊專案的，以及打包檔不得出現 `BigInt`、`TextEncoder`、`crypto.subtle`、`getRandomValues` 且在 `BigInt` 被清掉時仍能載入（`oaep.test.js`）；憑證無效的判定表與 `loginRefresh` 的 5 步和各種失敗（`refresh.test.js`）；`multiPart` 的對應（含錄下的 pagelist 回應）、錯誤、無效 bvid 不發請求、`userPreference`，與 `search` 的 `partCount`（`multipart.test.js`）；直播的欄位對應、狀態篩選、批次回應的形狀（`[]`、`{}`、鍵對不上都拋 `ParseError`）、空標題、網址解析與反例（含網域偽裝）、D10（失敗一律拋錯）、playUrl 取第一段、`userPreference`（`live.test.js`）。cookie 與 token 的值都是 `fake-…`。`src/plugin.js` 匯出 `decodeHtmlEntities`、`artwork`、`parseSetCookies`、`qrCredentials`、`verifyCookie`、`credentialsRejected`、`refreshCsrfOf` 只為了這個；宿主只認能力名稱的匯出，其他名稱忽略。

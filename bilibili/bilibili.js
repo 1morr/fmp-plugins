@@ -2,13 +2,14 @@
 {
   "id": "bilibili",
   "name": "Bilibili",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "author": "FMP",
   "description": "搜尋 Bilibili 影片並播放其音訊，也能搜尋與收聽直播間，可用 QR 碼登入。",
   "apiVersion": 1,
   "capabilities": [
     "search",
     "resolveStream",
+    "multiPart",
     "live",
     "login"
   ],
@@ -3496,11 +3497,38 @@ async function search({ keyword, page }) {
       title: title === "" ? "Unknown" : title,
       uploader: typeof item.author === "string" ? item.author : null,
       durationMs: colonDurationMs(item.duration),
-      artwork: artwork(item.pic)
+      artwork: artwork(item.pic),
+      // 搜尋結果的 page 是分 P 數；沒有或不是正整數就不給（舊專案預設 1，這裡省略）。
+      ...Number.isInteger(item.page) && item.page > 0 ? { partCount: item.page } : {}
     });
   }
   fmp.log.debug("search results", { count: items.length, total: numResults });
   return { items, hasMore: page * SEARCH_PAGE_SIZE < numResults };
+}
+var BVID_PATTERN = /^BV[0-9A-Za-z]{10}$/;
+async function multiPart({ sourceId }) {
+  if (typeof sourceId !== "string" || !BVID_PATTERN.test(sourceId)) {
+    throw error("ParseError", "pagelist: invalid bvid");
+  }
+  const json = await get(
+    `${API}/x/player/pagelist?${query({ bvid: sourceId })}`,
+    API_HEADERS,
+    "pagelist"
+  );
+  const data = checkCode(json, "pagelist");
+  if (!Array.isArray(data)) throw error("ParseError", "pagelist: data is not a list");
+  if (data.length === 0) throw error("NotFound", "pagelist: no parts");
+  const parts = data.map((raw, i) => {
+    if (raw === null || typeof raw !== "object" || !Number.isInteger(raw.cid) || raw.cid <= 0) {
+      throw error("ParseError", "pagelist: part without cid");
+    }
+    const index = Number.isInteger(raw.page) && raw.page > 0 ? raw.page : i + 1;
+    const title = typeof raw.part === "string" ? raw.part.trim() : "";
+    const part = { cid: raw.cid, title: title === "" ? `P${index}` : title, index };
+    if (Number.isInteger(raw.duration) && raw.duration >= 0) part.durationMs = raw.duration * 1e3;
+    return part;
+  });
+  return { parts };
 }
 function hostOf(url) {
   const match = /^https:\/\/([^/?#:]+)(?::\d+)?(?:[/?#]|$)/i.exec(url);
@@ -3991,6 +4019,7 @@ export {
   loginQrStart,
   loginRefresh,
   loginVerify,
+  multiPart,
   parseSetCookies,
   qrCredentials,
   refreshCsrfOf,

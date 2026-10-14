@@ -40,5 +40,12 @@
       "nonEmpty": ["userId", "displayName", "avatar"]
     },
     "requiresLogin": true
+  },
+  "multiPart": {
+    "input": { "sourceId": "BV1YmHx6QEV6" },
+    "expect": {
+      "minItems": 2,
+      "nonEmpty": ["cid", "title", "durationMs", "index"]
+    }
   }
 }
