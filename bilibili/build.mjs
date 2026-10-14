@@ -6,11 +6,11 @@ import { writeFileSync, statSync } from 'node:fs';
 const manifest = {
   id: 'bilibili',
   name: 'Bilibili',
-  version: '1.4.0',
+  version: '1.5.0',
   author: 'FMP',
   description: '搜尋 Bilibili 影片並播放其音訊，也能搜尋與收聽直播間，可用 QR 碼登入。',
   apiVersion: 1,
-  capabilities: ['search', 'resolveStream', 'multiPart', 'live', 'login'],
+  capabilities: ['search', 'resolveStream', 'multiPart', 'trackDetail', 'live', 'login'],
   allowedHosts: [
     'api.bilibili.com',
     'api.live.bilibili.com',

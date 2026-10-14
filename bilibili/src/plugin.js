@@ -384,11 +384,16 @@ function candidatesFor(urls, fields, dropped) {
   return out;
 }
 
-async function cidOf(bvid) {
+/** WBI 簽名的 `view`：resolveStream 取預設分 P 的 cid，trackDetail 取詳細，共用一份。 */
+async function viewData(bvid) {
   const keys = await wbiKeys();
   const signed = wbiSign({ bvid }, keys, Math.round(Date.now() / 1000), fmp.crypto.md5);
   const json = await get(`${API}/x/web-interface/wbi/view?${signed}`, API_HEADERS, 'view');
-  const data = checkCode(json, 'view');
+  return checkCode(json, 'view');
+}
+
+async function cidOf(bvid) {
+  const data = await viewData(bvid);
   if (typeof data.cid !== 'number') throw error('ParseError', 'view: no cid');
   return data.cid;
 }
@@ -485,6 +490,50 @@ export async function resolveStream({ sourceId, cid, formats, quality }) {
   if (candidates.length > 0) return { candidates };
   if (lastError !== null) throw lastError;
   throw error('NotFound', `playurl: no stream in a requested format for ${sourceId}:${resolvedCid}`);
+}
+
+// ---------------------------------------------------------------- trackDetail
+
+// view 的 `stat` 欄位 → 契約的 stats kind；順序即輸出順序。
+const STAT_KINDS = [
+  ['view', 'view'],
+  ['like', 'like'],
+  ['favorite', 'favorite'],
+  ['reply', 'comment'],
+  ['share', 'share'],
+  ['danmaku', 'danmaku'],
+  ['coin', 'coin'],
+];
+
+/**
+ * 影片詳細（`wbi/view`，同 resolveStream 取 cid 的那個請求；舊專案 getVideoDetail 的欄位，不含熱門評論）。
+ * 只給端點真的有的欄位：`stat` 的值不是非負整數（例如隱藏時的 `"--"`）就略過那一項，不補 0。
+ * `cid` 不參與（簡介、統計都是整支影片的）；給了就要是正整數。
+ */
+export async function trackDetail({ sourceId, cid }) {
+  if (typeof sourceId !== 'string' || !BVID_PATTERN.test(sourceId)) {
+    throw error('ParseError', 'view: invalid bvid');
+  }
+  if (cid !== undefined && cid !== null && !(Number.isInteger(cid) && cid > 0)) {
+    throw error('ParseError', 'view: invalid cid');
+  }
+  const data = await viewData(sourceId);
+  const detail = {};
+  // B 站以 "-" 當沒有簡介的佔位。
+  if (typeof data.desc === 'string' && !['', '-'].includes(data.desc.trim())) detail.description = data.desc.trim();
+  if (Number.isInteger(data.pubdate) && data.pubdate > 0) detail.publishedAt = data.pubdate * 1000;
+  const avatar = artwork(data.owner && data.owner.face);
+  if (avatar.length > 0) detail.uploaderAvatar = avatar;
+  const stat = data.stat;
+  if (stat !== null && typeof stat === 'object') {
+    const stats = [];
+    for (const [field, kind] of STAT_KINDS) {
+      const count = stat[field];
+      if (Number.isInteger(count) && count >= 0) stats.push({ kind, count });
+    }
+    if (stats.length > 0) detail.stats = stats;
+  }
+  return detail;
 }
 
 // ---------------------------------------------------------------- live
