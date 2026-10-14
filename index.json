@@ -6,12 +6,13 @@
       "name": "Bilibili",
       "author": "FMP",
       "description": "搜尋 Bilibili 影片並播放其音訊，也能搜尋與收聽直播間，可用 QR 碼登入。",
-      "version": "1.4.0",
+      "version": "1.5.0",
       "apiVersion": 1,
       "capabilities": [
         "search",
         "resolveStream",
         "multiPart",
+        "trackDetail",
         "live",
         "login"
       ],
@@ -26,20 +27,21 @@
         "upos-hz-mirrorakam.akamaized.net"
       ],
       "url": "https://raw.githubusercontent.com/1morr/fmp-plugins/main/bilibili/bilibili.js",
-      "sha256": "e64f72aae382a5a2bca029e44b32bd17d46cdbabf9db3ac5c7740196b5afd4d4",
+      "sha256": "bd1f69f0a46560465c39eccb1fb26a2ba8671282208c6f7c6a6395e8d86d774f",
       "checksUrl": "https://raw.githubusercontent.com/1morr/fmp-plugins/main/bilibili/checks.json",
-      "checksSha256": "52da1428cebe848076eee35ee07f7afa0e0ba1136064f37ba616e5815a864f2b"
+      "checksSha256": "0de2b7070294019ddf420be6dc276bdc8741448c6090d34d15393f03b1cc5c4e"
     },
     {
       "id": "netease",
       "name": "網易雲音樂",
       "author": "FMP",
       "description": "搜尋網易雲音樂的歌曲並播放，可用 QR 碼登入。",
-      "version": "1.2.0",
+      "version": "1.3.0",
       "apiVersion": 1,
       "capabilities": [
         "search",
         "resolveStream",
+        "trackDetail",
         "login"
       ],
       "allowedHosts": [
@@ -47,21 +49,22 @@
         "music.126.net"
       ],
       "url": "https://raw.githubusercontent.com/1morr/fmp-plugins/main/netease/netease.js",
-      "sha256": "314e4108fef0d1fc16531e6976269bf97193df2d31501d30723e4d6e9b984d6f",
+      "sha256": "17325dd1618ed304113e48129d809b560f2e25a61b0d5b9664cec3d589ddb4a3",
       "checksUrl": "https://raw.githubusercontent.com/1morr/fmp-plugins/main/netease/checks.json",
-      "checksSha256": "cda3c989d1c9f4f32c26ca0af44258bfee6bdfcbcace7ac5ad6d68bb54652ed4"
+      "checksSha256": "9d87a7e4e2a1b1625c43175a62546a8585c1bc63e0c10e44a16cc86130a11c4a"
     },
     {
       "id": "youtube",
       "name": "YouTube",
       "author": "FMP",
       "description": "搜尋 YouTube 影片並播放其音訊。",
-      "version": "1.1.0",
+      "version": "1.2.0",
       "apiVersion": 1,
       "capabilities": [
         "search",
         "resolveStream",
         "mix",
+        "trackDetail",
         "login"
       ],
       "allowedHosts": [
@@ -72,9 +75,9 @@
         "accounts.google.com"
       ],
       "url": "https://raw.githubusercontent.com/1morr/fmp-plugins/main/youtube/youtube.js",
-      "sha256": "395a76852d12667b10dc894b820c90a92ec09b3e9e8f3afd5df03443897306df",
+      "sha256": "825ecdc50d9f54f1f02f5a65a1384e70330390809e155ce6dea6e2c3b5e4b131",
       "checksUrl": "https://raw.githubusercontent.com/1morr/fmp-plugins/main/youtube/checks.json",
-      "checksSha256": "d6901cd6da5753b865e7dfded5bb12d7477d679fc67d6ed13959626878ddff2b"
+      "checksSha256": "a52e23388b236e5ac63f0c7ef29c81440a9ff8bea198ad716ba1f493467b4a3b"
     }
   ]
 }
