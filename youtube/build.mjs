@@ -6,11 +6,11 @@ import { writeFileSync, statSync } from 'node:fs';
 const manifest = {
   id: 'youtube',
   name: 'YouTube',
-  version: '1.0.0',
+  version: '1.1.0',
   author: 'FMP',
   description: '搜尋 YouTube 影片並播放其音訊。',
   apiVersion: 1,
-  capabilities: ['search', 'resolveStream', 'login'],
+  capabilities: ['search', 'resolveStream', 'mix', 'login'],
   // accounts.google.com：登入頁（webView.url）；ggpht.com：帳號頭像。
   allowedHosts: ['youtube.com', 'googlevideo.com', 'ytimg.com', 'ggpht.com', 'accounts.google.com'],
   login: {
