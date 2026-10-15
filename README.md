@@ -41,7 +41,7 @@ semver。`.js` 一有改動，manifest 的 `version` 就要比 `main` 上的高�
 
 `.github/workflows/ci.yml`，在 push 到 `main` 與 PR 上跑：
 
-- `index`：`dart analyze`、`dart test`、`build_index.dart --check`。
+- `index`：`dart analyze`、`dart test`（含 `requiresLogin` 案例的 fixture 都標了 `meta.edited`）、`build_index.dart --check`。
 - `npm`：有 `package.json` 的插件目錄跑 `npm ci && npm test`。
 - `contract`：每個插件目錄各一個 job，以 workflow 裡 `FMP_REF`（FMP 的完整 commit SHA）checkout FMP 重播契約，不連網。FMP 的宿主 API 變了，就開 PR 改 `FMP_REF`。
 - `version`：PR 裡 `.js` 改了而版本沒升就失敗。
@@ -57,6 +57,8 @@ FMP_PLUGIN_DIR=<本 repo 的絕對路徑>/bilibili flutter test test/plugins/con
 ```
 
 重播不連網。錄製（真實連線、只限不需要登入的案例）另加 `--run-skipped --tags live` 並改跑 `test/plugins/contract/record_test.dart`，詳見 FMP 的 `app/AGENTS.md`。
+
+`checks.json` 標了 `requiresLogin` 的案例（目前是各插件的 `login`），fixture 一律經人工處理，並在 `meta.edited` 寫明怎麼處理的：手寫（假帳號、照真實回應的形狀），或在 FMP 的插件開發工具錄製後，刪減到只剩插件讀的欄位。登入後的真實回應帶著遮蔽閘門認不得的帳號資訊（email、手機號、等級、地區之類），不原樣提交。閘門：`test/login_fixtures_test.dart`。
 
 ## 授權
 

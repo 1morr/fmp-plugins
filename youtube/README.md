@@ -67,7 +67,7 @@ HTTP 429 與傳輸錯誤由 FMP 的網路層轉成 `RateLimited`、`NetworkError
 - 不收 cookie 的 client（請求 body 的 `clientName` 是 `VISIONOS`、`iOS`、Android 系，`src/clients.js`）不標：2026-10-10 Windows 實測，`VISIONOS` 的 player 帶 Cookie 與 `SAPISIDHASH` 回 HTTP 400 `INVALID_ARGUMENT`（「Request contains an invalid argument.」），yt-dlp 也把這些 client 標成不支援 cookie。所以登入只影響搜尋、Mix 與帳號資訊，`resolveStream` 的 player 請求都是匿名的。
 - 收 cookie 的 client 同日實測都不能用：`WEB_EMBEDDED`（帶嵌入頁的 `encryptedHostFlags`）回 `ERROR`「This video is unavailable」，`TV` 回 `UNPLAYABLE`「The page needs to be reloaded.」（yt-dlp #17389）。它們的網址還要下載並解析 player JS 解 n／簽章（QuickJS 裡首次約 10 秒）。
 - 憑證無效：回應的 `credentialsAttached` 為 `true` 且 HTTP 401 → `CredentialInvalid`（`src/errors.js` 的 `credentialInvalidError`）；沒帶憑證的 401、403、429 維持原本的處理。沒有宣告 `refresh`（Cookie 有效期約兩年）。
-- 沒有實測：`account_menu` 的真實回應形狀（`userId` 的取法是依 YouTube.js 的 `AccountItem` 欄位推的；契約的 `login` fixture 是手寫的，`meta.edited` 有註明）。
+- `account_menu` 的真實回應（2026-10-15 以測試帳號實測）：目前帳號在 `activeAccountHeaderRenderer`，那裡沒有 `datasyncIdToken` 也沒有 `channelHandle`，所以 `userId` 退回帳號名稱，改名後會被當成另一個帳號。回應另一處（`responseContext`）有 `datasyncId`，要改取法時再決定。
 
 ## 打包
 
@@ -84,4 +84,4 @@ npm test         # 錯誤對應表的測試（node:test）
 
 指令見 repo 根目錄的 `README.md`。錄製會真的連 YouTube：每個案例各發 3 個請求（`sw.js_data`、`config`，再來 `search`、`player` 或 `next`），共 12 個（`search`、`resolveStream`、`mix`、`trackDetail`；`trackDetail` 的第三個是 `next`，案例的 `sourceId` 是 `dQw4w9WgXcQ`，與 `resolveStream`、`mix` 相同）。
 
-`login` 案例（`fixtures/login/001.json`）是手寫的，不錄：輸入是假憑證，回應照 `account_menu` 的形狀寫成已遮蔽的形式，錄製模式略過它。
+`login` 案例（`fixtures/login/001.json`）是 2026-10-15 在 FMP 的插件開發工具以測試帳號登入後錄的（FMP #254），再刪減成只剩通往 `activeAccountHeaderRenderer` 的路徑與名稱、頭像（`meta.edited`）：真實回應帶 Google 帳號的 email、頻道 id 與 `datasyncId`。命令列錄製略過它（`requiresLogin`）。
