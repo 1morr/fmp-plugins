@@ -68,14 +68,17 @@ function form(fields) {
  */
 const MAINLAND_IP_HEADERS = { 'X-Real-IP': '118.88.88.88' };
 
-/** 查詢類 POST，語意冪等，暫時失敗時由網路層重試（FMP ADR 0028）。 */
-async function post(url, body, context, extraHeaders) {
+/**
+ * 查詢類 POST，語意冪等，暫時失敗時由網路層重試（FMP ADR 0028）。回 {json, credentialsAttached}；
+ * 頂層 `code` 留給呼叫端判斷（importPlaylist 要分辨「讀不到」）。
+ */
+async function postRaw(url, body, context, extraHeaders, auth = 'userPreference') {
   const response = await fmp.http.request({
     url,
     method: 'POST',
     headers: { ...API_HEADERS, ...extraHeaders },
     body,
-    auth: 'userPreference', // ADR 0012：搜尋與取流依「以登入身分瀏覽與播放」帶憑證
+    auth, // ADR 0012：搜尋與取流依「以登入身分瀏覽與播放」帶憑證
     idempotent: true,
   });
   if (response.status !== 200) throw statusError(response.status, context);
@@ -90,6 +93,12 @@ async function post(url, body, context, extraHeaders) {
   if (credentialsRejected(json, response.credentialsAttached)) {
     throw error('CredentialInvalid', `${context}: code 301 ${json.message || json.msg || ''}`.trim());
   }
+  return { json, credentialsAttached: response.credentialsAttached === true };
+}
+
+/** 同 postRaw，但頂層 `code` 不是 200（或 0）就拋。 */
+async function post(url, body, context, extraHeaders) {
+  const { json } = await postRaw(url, body, context, extraHeaders);
   if (typeof json.code === 'number' && json.code !== 200 && json.code !== 0) {
     throw responseCodeError(json.code, json.message || json.msg, context);
   }
@@ -116,6 +125,23 @@ function artwork(picUrl) {
   return ARTWORK_SIZES.map((size) => ({ url: `${clean}?param=${size}y${size}`, width: size }));
 }
 
+/** 搜尋結果與歌單裡的一首歌 → TrackSummary；不是歌曲物件或沒有 id 回 null。 */
+function trackOfSong(song) {
+  if (song === null || typeof song !== 'object' || song.id === undefined || song.id === null) return null;
+  const artists = (song.ar || song.artists || [])
+    .map((a) => (a && typeof a.name === 'string' ? a.name : ''))
+    .filter((n) => n !== '');
+  const album = song.al || song.album;
+  const dt = typeof song.dt === 'number' ? song.dt : song.duration;
+  return {
+    sourceId: String(song.id),
+    title: typeof song.name === 'string' && song.name !== '' ? song.name : 'Unknown',
+    uploader: artists.length > 0 ? artists.join(', ') : null,
+    durationMs: typeof dt === 'number' && dt >= 0 ? Math.trunc(dt) : null,
+    artwork: artwork(album && album.picUrl),
+  };
+}
+
 export async function search({ keyword, page }) {
   const offset = (page - 1) * SEARCH_PAGE_SIZE;
   const json = await post(
@@ -128,19 +154,8 @@ export async function search({ keyword, page }) {
   const songCount = typeof result.songCount === 'number' ? result.songCount : 0;
   const items = [];
   for (const song of songs) {
-    if (song === null || typeof song !== 'object' || song.id === undefined || song.id === null) continue;
-    const artists = (song.ar || song.artists || [])
-      .map((a) => (a && typeof a.name === 'string' ? a.name : ''))
-      .filter((n) => n !== '');
-    const album = song.al || song.album;
-    const dt = typeof song.dt === 'number' ? song.dt : song.duration;
-    items.push({
-      sourceId: String(song.id),
-      title: typeof song.name === 'string' && song.name !== '' ? song.name : 'Unknown',
-      uploader: artists.length > 0 ? artists.join(', ') : null,
-      durationMs: typeof dt === 'number' && dt >= 0 ? Math.trunc(dt) : null,
-      artwork: artwork(album && album.picUrl),
-    });
+    const track = trackOfSong(song);
+    if (track !== null) items.push(track);
   }
   fmp.log.debug('search results', { count: items.length, total: songCount });
   return { items, hasMore: page * SEARCH_PAGE_SIZE < songCount };
@@ -224,6 +239,165 @@ export async function trackDetail({ sourceId }) {
   if (name !== '') detail.album = name;
   if (Number.isSafeInteger(song.publishTime) && song.publishTime > 0) detail.publishedAt = song.publishTime;
   return detail;
+}
+
+// ---------------------------------------------------------------- importPlaylist
+
+// 規格是舊專案 netease_source.dart 的 parsePlaylist（`api/v6/playlist/detail` 拿 trackIds，
+// 再以 `api/v3/song/detail` 每 400 個 id 一批補歌曲資料）、_extractPlaylistId 與 SourceUrlPolicy。
+// QuickJS 沒有 URL，網址用正規式拆。
+
+const NETEASE_HOSTS = ['music.163.com', 'y.music.163.com'];
+const SHORT_HOSTS = ['163cn.tv'];
+const PLAYLIST_ID = /^[1-9]\d{0,17}$/;
+// 舊專案 _songDetailBatchSize；一頁就是一批 song/detail。
+const PLAYLIST_PAGE_SIZE = 400;
+// cursor：`v1:<trackIds 的起點，PLAYLIST_PAGE_SIZE 的倍數>:<0|1>`，後者是「以 required 送」（第一頁靠補登入才讀到的歌單，之後也要帶）。
+// 每一頁都重新取 detail（歌單資料與完整的 trackIds 都在裡面），所以 cursor 不用背歌單資料或 id 清單。
+const PLAYLIST_CURSOR = /^v1:(0|[1-9]\d{0,6}):([01])$/;
+// 歌單讀不到：301 未登入、401／403 沒權限、404 不存在。
+const PLAYLIST_DENIED_CODES = [301, 401, 403, 404];
+const PLAYLIST_LOGIN_CODES = [301, 401, 403];
+// song/detail 的 privilege.st 為 -200 是下架無版權（舊專案 `isAvailable = (st != -200)`）。
+const ST_UNAVAILABLE = -200;
+
+/** 網址 → {host, path, query, fragment}（http 與 https 都收，沒有 scheme 當 https）；不是 http(s) 回 null。 */
+function splitUrl(raw) {
+  const text = /^[a-z][a-z0-9+.-]*:\/\//i.test(raw) ? raw : `https://${raw}`;
+  const m = /^https?:\/\/([^/?#]+)([^?#]*)(?:\?([^#]*))?(?:#([\s\S]*))?$/i.exec(text);
+  if (m === null || m[1].includes('@')) return null;
+  return {
+    host: m[1].replace(/:\d+$/, '').toLowerCase().replace(/\.+$/, ''),
+    path: m[2],
+    query: m[3] || '',
+    fragment: m[4] || '',
+  };
+}
+
+/** 路徑含 `playlist` 段時的歌單 id：`?id=<數字>`，否則 `playlist` 後面那一段（手機分享的 `/playlist/<id>/<uid>`）。 */
+function playlistIdIn(path, query) {
+  const segments = path.split('/').filter((s) => s !== '');
+  const at = segments.indexOf('playlist');
+  if (at < 0) return null;
+  const fromQuery = /(?:^|&)id=(\d+)(?:&|$)/.exec(query);
+  const id = fromQuery !== null ? fromQuery[1] : segments[at + 1];
+  return typeof id === 'string' && PLAYLIST_ID.test(id) ? id : null;
+}
+
+/** 網易的網址（非短網址）→ 歌單 id | null。網頁版的歌單網址在 `#/` 後面，路徑與 fragment 都看。 */
+function playlistIdOfUrl(parts) {
+  if (parts === null || !NETEASE_HOSTS.includes(parts.host)) return null;
+  const direct = playlistIdIn(parts.path, parts.query);
+  if (direct !== null) return direct;
+  const f = /^([^?]*)(?:\?(.*))?$/.exec(parts.fragment);
+  return f === null ? null : playlistIdIn(f[1], f[2] || '');
+}
+
+/**
+ * 網址 → {playlistId} | null。`163cn.tv` 短網址發一個請求（GET，跟隨轉址，auth never）拿到轉址後的網址再認；
+ * 轉址後不是網易的歌單網址回 null，短網址已失效（404）是 NotFound。
+ */
+export async function playlistFromUrl(input) {
+  const raw = input && typeof input.url === 'string' ? input.url.trim() : '';
+  if (raw === '') return null;
+  const parts = splitUrl(raw);
+  if (parts === null) return null;
+  if (!SHORT_HOSTS.includes(parts.host)) {
+    const playlistId = playlistIdOfUrl(parts);
+    return playlistId === null ? null : { playlistId };
+  }
+  const response = await fmp.http.request({
+    url: `https://${parts.host}${parts.path}${parts.query === '' ? '' : `?${parts.query}`}`,
+    method: 'GET',
+    headers: { 'User-Agent': API_HEADERS['User-Agent'], Accept: 'text/html,*/*' },
+    auth: 'never',
+  });
+  if (response.status === 404) throw error('NotFound', 'short url: HTTP 404');
+  if (response.status !== 200) throw statusError(response.status, 'short url');
+  const playlistId = playlistIdOfUrl(typeof response.url === 'string' ? splitUrl(response.url) : null);
+  return playlistId === null ? null : { playlistId };
+}
+
+/** detail 回應是「讀不到」嗎：見 PLAYLIST_DENIED_CODES；200 卻沒有 playlist 也算（舊專案 "Playlist data not found"）。 */
+function playlistDenied(json) {
+  if (PLAYLIST_DENIED_CODES.includes(json.code)) return true;
+  return json.code === 200 && (json.playlist === null || typeof json.playlist !== 'object');
+}
+
+export async function importPlaylist(input) {
+  const { playlistId, cursor } = input || {};
+  if (typeof playlistId !== 'string' || !PLAYLIST_ID.test(playlistId)) {
+    throw error('ParseError', `playlist: invalid playlistId: ${playlistId}`);
+  }
+  let offset = 0;
+  let required = false;
+  if (cursor !== undefined && cursor !== null) {
+    const m = typeof cursor === 'string' ? PLAYLIST_CURSOR.exec(cursor) : null;
+    if (m === null || Number(m[1]) % PLAYLIST_PAGE_SIZE !== 0) throw error('ParseError', 'playlist: malformed cursor');
+    offset = Number(m[1]);
+    required = m[2] === '1';
+  }
+  const detail = (auth) => postRaw(`${MUSIC}/api/v6/playlist/detail`, form({ id: playlistId }), 'playlist detail', undefined, auth);
+  let res = await detail(required ? 'required' : 'userPreference');
+  let retried = false;
+  // 私人歌單：被拒、這次沒帶憑證、使用者有登入 → 以 required 重送一次（ADR 0032 §決定 2）。已帶憑證被拒不重送。
+  if (playlistDenied(res.json) && !res.credentialsAttached && (await fmp.credentials.get()) !== null) {
+    retried = true;
+    required = true;
+    res = await detail('required');
+  }
+  if (playlistDenied(res.json)) {
+    const detailText = `playlist detail: code ${res.json.code} ${res.json.message || res.json.msg || ''}`.trim();
+    if (!res.credentialsAttached && PLAYLIST_LOGIN_CODES.includes(res.json.code)) throw error('AuthRequired', detailText);
+    throw error('NotFound', detailText);
+  }
+  if (res.json.code !== 200) throw responseCodeError(res.json.code, res.json.message || res.json.msg, 'playlist detail');
+  const info = res.json.playlist;
+  if (typeof info.name !== 'string' || info.name.trim() === '') throw error('ParseError', 'playlist detail: no name');
+  if (!Array.isArray(info.trackIds)) throw error('ParseError', 'playlist detail: no trackIds');
+  const ids = info.trackIds.map((t) => (t !== null && typeof t === 'object' ? t.id : undefined));
+  if (!ids.every((id) => Number.isSafeInteger(id) && id > 0)) throw error('ParseError', 'playlist detail: bad trackIds');
+
+  const playlist = { title: info.name.trim() };
+  if (typeof info.description === 'string' && info.description.trim() !== '') playlist.description = info.description.trim();
+  const cover = artwork(info.coverImgUrl);
+  if (cover.length > 0) playlist.artwork = cover;
+  const creator = info.creator !== null && typeof info.creator === 'object' ? info.creator : {};
+  if (typeof creator.nickname === 'string' && creator.nickname !== '') playlist.ownerName = creator.nickname;
+
+  // 詳情只給前幾首完整資料（tracks），其餘的 id 這一頁的部分再以 song/detail 補。
+  const slice = ids.slice(offset, offset + PLAYLIST_PAGE_SIZE);
+  const songs = new Map();
+  const privileges = new Map();
+  const collect = (songList, privilegeList) => {
+    for (const song of Array.isArray(songList) ? songList : []) {
+      if (song !== null && typeof song === 'object' && song.id !== undefined && song.id !== null) songs.set(String(song.id), song);
+    }
+    for (const p of Array.isArray(privilegeList) ? privilegeList : []) {
+      if (p !== null && typeof p === 'object' && p.id !== undefined && p.id !== null) privileges.set(String(p.id), p);
+    }
+  };
+  collect(info.tracks, res.json.privileges);
+  const missing = slice.filter((id) => !songs.has(String(id)));
+  if (missing.length > 0) {
+    const batch = await post(`${MUSIC}/api/v3/song/detail`, form({ c: JSON.stringify(missing.map((id) => ({ id }))) }), 'song detail');
+    collect(batch.songs, batch.privileges);
+  }
+  const items = [];
+  for (const id of slice) {
+    const track = trackOfSong(songs.get(String(id)));
+    if (track === null) continue; // 歌曲資料取不到（已被刪除）：沒有可匯入的內容
+    const privilege = privileges.get(String(id));
+    items.push(privilege && privilege.st === ST_UNAVAILABLE ? { track, unavailable: true } : { track });
+  }
+  fmp.log.debug('playlist page', { offset, ids: slice.length, fetched: missing.length, items: items.length, retried });
+  return {
+    playlist,
+    items,
+    cursor: offset + PLAYLIST_PAGE_SIZE < ids.length ? `v1:${offset + PLAYLIST_PAGE_SIZE}:${required ? 1 : 0}` : null,
+    // 歌單自己的 id 清單長度；歌曲資料取不到的 id 會讓筆數少於它，宿主就當不完整、不套用移除。
+    total: ids.length,
+  };
 }
 
 // ---------------------------------------------------------------- login (QR)

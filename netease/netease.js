@@ -2,19 +2,21 @@
 {
   "id": "netease",
   "name": "網易雲音樂",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "author": "FMP",
-  "description": "搜尋網易雲音樂的歌曲並播放，可用 QR 碼登入。",
+  "description": "搜尋網易雲音樂的歌曲並播放、匯入歌單，可用 QR 碼登入。",
   "apiVersion": 1,
   "capabilities": [
     "search",
     "resolveStream",
     "trackDetail",
+    "importPlaylist",
     "login"
   ],
   "allowedHosts": [
     "music.163.com",
-    "music.126.net"
+    "music.126.net",
+    "163cn.tv"
   ],
   "login": {
     "methods": [
@@ -3300,13 +3302,13 @@ function form(fields) {
   return Object.entries(fields).map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(String(v))}`).join("&");
 }
 var MAINLAND_IP_HEADERS = { "X-Real-IP": "118.88.88.88" };
-async function post(url, body, context, extraHeaders) {
+async function postRaw(url, body, context, extraHeaders, auth = "userPreference") {
   const response = await fmp.http.request({
     url,
     method: "POST",
     headers: { ...API_HEADERS, ...extraHeaders },
     body,
-    auth: "userPreference",
+    auth,
     // ADR 0012：搜尋與取流依「以登入身分瀏覽與播放」帶憑證
     idempotent: true
   });
@@ -3321,6 +3323,10 @@ async function post(url, body, context, extraHeaders) {
   if (credentialsRejected(json, response.credentialsAttached)) {
     throw error("CredentialInvalid", `${context}: code 301 ${json.message || json.msg || ""}`.trim());
   }
+  return { json, credentialsAttached: response.credentialsAttached === true };
+}
+async function post(url, body, context, extraHeaders) {
+  const { json } = await postRaw(url, body, context, extraHeaders);
   if (typeof json.code === "number" && json.code !== 200 && json.code !== 0) {
     throw responseCodeError(json.code, json.message || json.msg, context);
   }
@@ -3339,6 +3345,19 @@ function artwork(picUrl) {
   const clean = base.split("?")[0];
   return ARTWORK_SIZES.map((size) => ({ url: `${clean}?param=${size}y${size}`, width: size }));
 }
+function trackOfSong(song) {
+  if (song === null || typeof song !== "object" || song.id === void 0 || song.id === null) return null;
+  const artists = (song.ar || song.artists || []).map((a) => a && typeof a.name === "string" ? a.name : "").filter((n) => n !== "");
+  const album = song.al || song.album;
+  const dt = typeof song.dt === "number" ? song.dt : song.duration;
+  return {
+    sourceId: String(song.id),
+    title: typeof song.name === "string" && song.name !== "" ? song.name : "Unknown",
+    uploader: artists.length > 0 ? artists.join(", ") : null,
+    durationMs: typeof dt === "number" && dt >= 0 ? Math.trunc(dt) : null,
+    artwork: artwork(album && album.picUrl)
+  };
+}
 async function search({ keyword, page }) {
   const offset = (page - 1) * SEARCH_PAGE_SIZE;
   const json = await post(
@@ -3351,17 +3370,8 @@ async function search({ keyword, page }) {
   const songCount = typeof result.songCount === "number" ? result.songCount : 0;
   const items = [];
   for (const song of songs) {
-    if (song === null || typeof song !== "object" || song.id === void 0 || song.id === null) continue;
-    const artists = (song.ar || song.artists || []).map((a) => a && typeof a.name === "string" ? a.name : "").filter((n) => n !== "");
-    const album = song.al || song.album;
-    const dt = typeof song.dt === "number" ? song.dt : song.duration;
-    items.push({
-      sourceId: String(song.id),
-      title: typeof song.name === "string" && song.name !== "" ? song.name : "Unknown",
-      uploader: artists.length > 0 ? artists.join(", ") : null,
-      durationMs: typeof dt === "number" && dt >= 0 ? Math.trunc(dt) : null,
-      artwork: artwork(album && album.picUrl)
-    });
+    const track = trackOfSong(song);
+    if (track !== null) items.push(track);
   }
   fmp.log.debug("search results", { count: items.length, total: songCount });
   return { items, hasMore: page * SEARCH_PAGE_SIZE < songCount };
@@ -3424,6 +3434,135 @@ async function trackDetail({ sourceId }) {
   if (name !== "") detail.album = name;
   if (Number.isSafeInteger(song.publishTime) && song.publishTime > 0) detail.publishedAt = song.publishTime;
   return detail;
+}
+var NETEASE_HOSTS = ["music.163.com", "y.music.163.com"];
+var SHORT_HOSTS = ["163cn.tv"];
+var PLAYLIST_ID = /^[1-9]\d{0,17}$/;
+var PLAYLIST_PAGE_SIZE = 400;
+var PLAYLIST_CURSOR = /^v1:(0|[1-9]\d{0,6}):([01])$/;
+var PLAYLIST_DENIED_CODES = [301, 401, 403, 404];
+var PLAYLIST_LOGIN_CODES = [301, 401, 403];
+var ST_UNAVAILABLE = -200;
+function splitUrl(raw) {
+  const text = /^[a-z][a-z0-9+.-]*:\/\//i.test(raw) ? raw : `https://${raw}`;
+  const m = /^https?:\/\/([^/?#]+)([^?#]*)(?:\?([^#]*))?(?:#([\s\S]*))?$/i.exec(text);
+  if (m === null || m[1].includes("@")) return null;
+  return {
+    host: m[1].replace(/:\d+$/, "").toLowerCase().replace(/\.+$/, ""),
+    path: m[2],
+    query: m[3] || "",
+    fragment: m[4] || ""
+  };
+}
+function playlistIdIn(path, query) {
+  const segments = path.split("/").filter((s) => s !== "");
+  const at = segments.indexOf("playlist");
+  if (at < 0) return null;
+  const fromQuery = /(?:^|&)id=(\d+)(?:&|$)/.exec(query);
+  const id = fromQuery !== null ? fromQuery[1] : segments[at + 1];
+  return typeof id === "string" && PLAYLIST_ID.test(id) ? id : null;
+}
+function playlistIdOfUrl(parts) {
+  if (parts === null || !NETEASE_HOSTS.includes(parts.host)) return null;
+  const direct = playlistIdIn(parts.path, parts.query);
+  if (direct !== null) return direct;
+  const f = /^([^?]*)(?:\?(.*))?$/.exec(parts.fragment);
+  return f === null ? null : playlistIdIn(f[1], f[2] || "");
+}
+async function playlistFromUrl(input) {
+  const raw = input && typeof input.url === "string" ? input.url.trim() : "";
+  if (raw === "") return null;
+  const parts = splitUrl(raw);
+  if (parts === null) return null;
+  if (!SHORT_HOSTS.includes(parts.host)) {
+    const playlistId2 = playlistIdOfUrl(parts);
+    return playlistId2 === null ? null : { playlistId: playlistId2 };
+  }
+  const response = await fmp.http.request({
+    url: `https://${parts.host}${parts.path}${parts.query === "" ? "" : `?${parts.query}`}`,
+    method: "GET",
+    headers: { "User-Agent": API_HEADERS["User-Agent"], Accept: "text/html,*/*" },
+    auth: "never"
+  });
+  if (response.status === 404) throw error("NotFound", "short url: HTTP 404");
+  if (response.status !== 200) throw statusError(response.status, "short url");
+  const playlistId = playlistIdOfUrl(typeof response.url === "string" ? splitUrl(response.url) : null);
+  return playlistId === null ? null : { playlistId };
+}
+function playlistDenied(json) {
+  if (PLAYLIST_DENIED_CODES.includes(json.code)) return true;
+  return json.code === 200 && (json.playlist === null || typeof json.playlist !== "object");
+}
+async function importPlaylist(input) {
+  const { playlistId, cursor } = input || {};
+  if (typeof playlistId !== "string" || !PLAYLIST_ID.test(playlistId)) {
+    throw error("ParseError", `playlist: invalid playlistId: ${playlistId}`);
+  }
+  let offset = 0;
+  let required = false;
+  if (cursor !== void 0 && cursor !== null) {
+    const m = typeof cursor === "string" ? PLAYLIST_CURSOR.exec(cursor) : null;
+    if (m === null || Number(m[1]) % PLAYLIST_PAGE_SIZE !== 0) throw error("ParseError", "playlist: malformed cursor");
+    offset = Number(m[1]);
+    required = m[2] === "1";
+  }
+  const detail = (auth) => postRaw(`${MUSIC}/api/v6/playlist/detail`, form({ id: playlistId }), "playlist detail", void 0, auth);
+  let res = await detail(required ? "required" : "userPreference");
+  let retried = false;
+  if (playlistDenied(res.json) && !res.credentialsAttached && await fmp.credentials.get() !== null) {
+    retried = true;
+    required = true;
+    res = await detail("required");
+  }
+  if (playlistDenied(res.json)) {
+    const detailText = `playlist detail: code ${res.json.code} ${res.json.message || res.json.msg || ""}`.trim();
+    if (!res.credentialsAttached && PLAYLIST_LOGIN_CODES.includes(res.json.code)) throw error("AuthRequired", detailText);
+    throw error("NotFound", detailText);
+  }
+  if (res.json.code !== 200) throw responseCodeError(res.json.code, res.json.message || res.json.msg, "playlist detail");
+  const info = res.json.playlist;
+  if (typeof info.name !== "string" || info.name.trim() === "") throw error("ParseError", "playlist detail: no name");
+  if (!Array.isArray(info.trackIds)) throw error("ParseError", "playlist detail: no trackIds");
+  const ids = info.trackIds.map((t) => t !== null && typeof t === "object" ? t.id : void 0);
+  if (!ids.every((id) => Number.isSafeInteger(id) && id > 0)) throw error("ParseError", "playlist detail: bad trackIds");
+  const playlist = { title: info.name.trim() };
+  if (typeof info.description === "string" && info.description.trim() !== "") playlist.description = info.description.trim();
+  const cover = artwork(info.coverImgUrl);
+  if (cover.length > 0) playlist.artwork = cover;
+  const creator = info.creator !== null && typeof info.creator === "object" ? info.creator : {};
+  if (typeof creator.nickname === "string" && creator.nickname !== "") playlist.ownerName = creator.nickname;
+  const slice = ids.slice(offset, offset + PLAYLIST_PAGE_SIZE);
+  const songs = /* @__PURE__ */ new Map();
+  const privileges = /* @__PURE__ */ new Map();
+  const collect = (songList, privilegeList) => {
+    for (const song of Array.isArray(songList) ? songList : []) {
+      if (song !== null && typeof song === "object" && song.id !== void 0 && song.id !== null) songs.set(String(song.id), song);
+    }
+    for (const p of Array.isArray(privilegeList) ? privilegeList : []) {
+      if (p !== null && typeof p === "object" && p.id !== void 0 && p.id !== null) privileges.set(String(p.id), p);
+    }
+  };
+  collect(info.tracks, res.json.privileges);
+  const missing = slice.filter((id) => !songs.has(String(id)));
+  if (missing.length > 0) {
+    const batch = await post(`${MUSIC}/api/v3/song/detail`, form({ c: JSON.stringify(missing.map((id) => ({ id }))) }), "song detail");
+    collect(batch.songs, batch.privileges);
+  }
+  const items = [];
+  for (const id of slice) {
+    const track = trackOfSong(songs.get(String(id)));
+    if (track === null) continue;
+    const privilege = privileges.get(String(id));
+    items.push(privilege && privilege.st === ST_UNAVAILABLE ? { track, unavailable: true } : { track });
+  }
+  fmp.log.debug("playlist page", { offset, ids: slice.length, fetched: missing.length, items: items.length, retried });
+  return {
+    playlist,
+    items,
+    cursor: offset + PLAYLIST_PAGE_SIZE < ids.length ? `v1:${offset + PLAYLIST_PAGE_SIZE}:${required ? 1 : 0}` : null,
+    // 歌單自己的 id 清單長度；歌曲資料取不到的 id 會讓筆數少於它，宿主就當不完整、不套用移除。
+    total: ids.length
+  };
 }
 var QR_COOKIE = "os=pc; osver=Microsoft-Windows-10-Professional-build-10586-64bit; appver=2.7.1.198277; channel=netease; __csrf=; MUSIC_U=";
 var QR_LOGIN_URL = `${MUSIC}/login?codekey=`;
@@ -3497,9 +3636,11 @@ async function loginVerify(credentials) {
   return accountOf(json, responseCodeError, artwork);
 }
 export {
+  importPlaylist,
   loginQrPoll,
   loginQrStart,
   loginVerify,
+  playlistFromUrl,
   resolveStream,
   search,
   trackDetail
