@@ -88,7 +88,7 @@ manifest 宣告 `login: { methods: ['qr'] }`（網易的 `MUSIC_U` 有效期長�
 ## 已知限制
 
 - 不登入時 VIP 歌與匿名拿不到網址的歌播不了。匿名時 VIP 歌（`fee` 1）連試聽片段都沒有（`code` -110、沒有 `freeTrialInfo`），`previewOnly` 只會在登入後出現（登入後的取流行為還沒有實測），由 `test/resolve.test.js` 以手寫回應守。
-- 一個 `checks.json` 每個能力只有一條案例，所以契約測試只重播成功的 `search`、`resolveStream`、`trackDetail` 與（手寫 fixture 的）`login`；上表的錯誤對應由 `test/errors.test.js` 以網易實際給的欄位守（`npm test`）。
+- 一個 `checks.json` 每個能力只有一條案例，所以契約測試只重播成功的 `search`、`resolveStream`、`trackDetail` 與 `login`（錄製後刪減的 fixture）；上表的錯誤對應由 `test/errors.test.js` 以網易實際給的欄位守（`npm test`）。
 - fixture 裡的 `NMTID` 等 Cookie 值已被 FMP 的遮蔽名單遮掉；錄製者的 IP 由錄製器換成文件用位址。
 
 ## 打包
@@ -104,7 +104,7 @@ npm test         # 錯誤對應表、AES／weapi、登入流程、取流、搜�
 
 ## 契約測試與錄製
 
-指令見 repo 根目錄的 `README.md`。錄製會真的連網易：搜尋、取流與 `trackDetail`（案例的 `sourceId` 是 `139774`，與 `resolveStream` 相同）各 1 個請求，共 3 個。`login` 的案例標 `requiresLogin`，命令列錄製略過；它的 fixture（`fixtures/login/001.json`）是手寫的（`meta.edited`），憑證與帳號都是假的，body 的形狀照 account/get 的真實回應。
+指令見 repo 根目錄的 `README.md`。錄製會真的連網易：搜尋、取流與 `trackDetail`（案例的 `sourceId` 是 `139774`，與 `resolveStream` 相同）各 1 個請求，共 3 個。`login` 的案例標 `requiresLogin`，命令列錄製略過；它的 fixture（`fixtures/login/001.json`）是 2026-10-15 在 FMP 的插件開發工具以測試帳號登入後錄的（FMP #254），再刪減成只剩 `loginVerify` 讀的欄位（`meta.edited`）：`account/get` 的 `userName` 是手機號的格式，頭像檔名是可推回原圖的圖片 id，都刪掉或換成 `***`。
 
 ## 測試向量
 

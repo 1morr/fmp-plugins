@@ -1,6 +1,7 @@
 {
   "meta": {
-    "edited": "Hand-written with fake credentials and a fake account: loginVerify needs a login, which recording cannot do from the command line. The response body has the shape of the real nav response (code, data.isLogin, mid, uname, face)."
+    "recordedAt": "2026-10-15T05:46:21.202555Z",
+    "edited": "Recorded in the app with a signed-in test account on 2026-10-15 (FMP #254), then trimmed: the response body keeps only the fields loginVerify reads; every other account field was removed."
   },
   "request": {
     "method": "GET",
@@ -16,22 +17,74 @@
   "response": {
     "status": 200,
     "headers": {
+      "access-control-allow-credentials": [
+        "true"
+      ],
+      "access-control-allow-headers": [
+        "origin,no-cache,x-requested-with,if-modified-since,pragma,last-modified,cache-control,expires,content-type,access-control-allow-credentials,dnt,x-customheader,keep-alive,user-agent,x-cache-webcdn,x-bilibili-key-real-ip,x-backend-bili-real-ip,x-risk-header,x-event-traceid"
+      ],
+      "access-control-allow-methods": [
+        "GET,POST,PUT,DELETE,PATCH"
+      ],
+      "access-control-allow-origin": [
+        "https://www.bilibili.com"
+      ],
+      "access-control-expose-headers": [
+        "x-bili-gaia-vvoucher,x-bili-metadata-legal-region,x-bili-metadata-ip-region,x-bili-trace-id,x-bili-gaia-param",
+        "X-Cache-Webcdn"
+      ],
+      "bili-status-code": [
+        "0"
+      ],
+      "bili-trace-id": [
+        "2a56cb83186ad068"
+      ],
+      "cache-control": [
+        "no-cache"
+      ],
+      "connection": [
+        "keep-alive"
+      ],
       "content-type": [
         "application/json; charset=utf-8"
+      ],
+      "cpu_usage": [
+        "119"
+      ],
+      "cross-origin-resource-policy": [
+        "cross-origin"
+      ],
+      "date": [
+        "Thu, 15 Oct 2026 05:46:23 GMT"
+      ],
+      "expires": [
+        "Thu, 15 Oct 2026 05:46:22 GMT"
+      ],
+      "vary": [
+        "Origin"
+      ],
+      "x-bili-metadata-ip-region": [
+        "***"
+      ],
+      "x-bili-metadata-legal-region": [
+        "***"
+      ],
+      "x-bili-trace-id": [
+        "59f2f5f832cb39ed2a56cb83186ad068"
+      ],
+      "x-cache-webcdn": [
+        "BYPASS from blzone09"
       ]
     },
     "jsonBody": {
       "code": 0,
-      "message": "0",
+      "message": "OK",
       "ttl": 1,
       "data": {
         "isLogin": true,
-        "mid": 1000001,
-        "uname": "fake-user",
-        "face": "https://i0.hdslb.com/bfs/face/fake-avatar-0000.jpg",
-        "vip": {
-          "status": 0
-        }
+        "face": "https://i2.hdslb.com/***",
+        "mid": "***",
+        "uname": "***"
       }
     }
   }

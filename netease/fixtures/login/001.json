@@ -1,6 +1,7 @@
 {
   "meta": {
-    "edited": "Hand-written with fake credentials and a fake account: loginVerify needs a login, which recording cannot do from the command line. The response body has the shape of the real account/get response (code, account.id, profile.userId, nickname, avatarUrl)."
+    "recordedAt": "2026-10-15T05:48:44.870898Z",
+    "edited": "Recorded in the app with a signed-in test account on 2026-10-15 (FMP #254), then trimmed: the response body keeps only the fields loginVerify reads; every other account field was removed."
   },
   "request": {
     "method": "GET",
@@ -16,19 +17,68 @@
   "response": {
     "status": 200,
     "headers": {
+      "cache-control": [
+        "no-cache",
+        "no-store"
+      ],
+      "connection": [
+        "keep-alive"
+      ],
       "content-type": [
         "application/json;charset=UTF-8"
+      ],
+      "date": [
+        "Thu, 15 Oct 2026 05:48:46 GMT"
+      ],
+      "expires": [
+        "Thu, 01 Jan 1970 00:00:00 GMT"
+      ],
+      "gw-thread": [
+        "-893597"
+      ],
+      "gw-time": [
+        "1792043326811"
+      ],
+      "mconfig-bucket": [
+        "548676"
+      ],
+      "server": [
+        "nginx"
+      ],
+      "set-cookie": [
+        "NMTID=***; Max-Age=315360000; Expires=Sun, 12 Oct 2036 05:48:46 GMT; Path=/; Domain=music.163.com"
+      ],
+      "vary": [
+        "Accept-Encoding"
+      ],
+      "x-cv": [
+        "1792043326820"
+      ],
+      "x-from-src": [
+        "203.0.113.1"
+      ],
+      "x-httpcache-status": [
+        "NML-L3"
+      ],
+      "x-traceid": [
+        "000001a13e1b1d57027b0a7b9f750007"
+      ],
+      "x-traceid-v2": [
+        "0684d6f504cdbfec6c10bcfc2ecf5473^1790043132908^-9894084182"
+      ],
+      "x-via": [
+        "MusicServer"
       ]
     },
     "jsonBody": {
       "code": 200,
       "account": {
-        "id": 1000001
+        "id": "***"
       },
       "profile": {
-        "userId": 1000001,
-        "nickname": "fake-user",
-        "avatarUrl": "http://p1.music.126.net/***/0000.jpg"
+        "userId": "***",
+        "nickname": "***",
+        "avatarUrl": "https://p3.music.126.net/***/***.jpg"
       }
     }
   }

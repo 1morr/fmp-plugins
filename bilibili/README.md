@@ -106,7 +106,7 @@ HTTP 429 由 FMP 的網路層轉成 `RateLimited`。DASH 以 `NotFound` 或 `Una
 
 ## 契約測試與錄製
 
-指令見 repo 根目錄的 `README.md`。錄製會真的連 B 站：`search` 發 1 個請求，`trackDetail` 發 2 個（nav、`wbi/view`；案例的 `sourceId` 與 `resolveStream` 相同，`BV1xx411c79H`；每次錄製 storage 是新的，所以要先取 WBI key），`multiPart` 發 1 個（`pagelist`；案例的 `sourceId` 是 `BV1YmHx6QEV6`，2026-10 時有 9 個分 P；下架或剩不到 2 個分 P 時換一支），`resolveStream` 發 3 個（nav、view、playurl），`live`（跑 `liveStatus`，房號 `1` 是短號）發 3 個（匿名 cookie 不發請求；`room_init`、`get_info`、`get_anchor_in_room`）。`resolveLive`、`liveSearch`、`liveRoomFromUrl` 沒有契約案例（每個能力一條），只有單元測試。`login` 的案例標 `requiresLogin`，命令列錄製略過（`loginRefresh` 沒有契約案例，每個能力只有一條，ADR 0015）；它的 fixture（`fixtures/login/001.json`）是手寫的（`meta.edited`），憑證與帳號都是假的，body 的形狀照 nav 的真實回應。
+指令見 repo 根目錄的 `README.md`。錄製會真的連 B 站：`search` 發 1 個請求，`trackDetail` 發 2 個（nav、`wbi/view`；案例的 `sourceId` 與 `resolveStream` 相同，`BV1xx411c79H`；每次錄製 storage 是新的，所以要先取 WBI key），`multiPart` 發 1 個（`pagelist`；案例的 `sourceId` 是 `BV1YmHx6QEV6`，2026-10 時有 9 個分 P；下架或剩不到 2 個分 P 時換一支），`resolveStream` 發 3 個（nav、view、playurl），`live`（跑 `liveStatus`，房號 `1` 是短號）發 3 個（匿名 cookie 不發請求；`room_init`、`get_info`、`get_anchor_in_room`）。`resolveLive`、`liveSearch`、`liveRoomFromUrl` 沒有契約案例（每個能力一條），只有單元測試。`login` 的案例標 `requiresLogin`，命令列錄製略過（`loginRefresh` 沒有契約案例，每個能力只有一條，ADR 0015）；它的 fixture（`fixtures/login/001.json`）是 2026-10-15 在 FMP 的插件開發工具以測試帳號登入後錄的（FMP #254），再刪減成只剩 `loginVerify` 讀的欄位（`meta.edited`）；憑證、`mid`、`uname`、頭像都是 `***`。
 
 ## 打包
 

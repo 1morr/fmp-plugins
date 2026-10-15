@@ -1,12 +1,14 @@
 {
   "meta": {
-    "edited": "hand-written: loginVerify needs a signed-in account, so the response is shaped like account/account_menu with fake values"
+    "recordedAt": "2026-10-15T05:50:09.250734Z",
+    "edited": "Recorded in the app with a signed-in test account on 2026-10-15 (FMP #254), then trimmed: the response body keeps only the fields loginVerify reads; every other account field was removed."
   },
   "request": {
     "method": "POST",
     "url": "https://www.youtube.com/youtubei/v1/account/account_menu?prettyPrint=false",
     "headers": {
       "authorization": "***",
+      "content-length": "98",
       "content-type": "application/json",
       "cookie": "***",
       "origin": "https://www.youtube.com",
@@ -18,52 +20,55 @@
   "response": {
     "status": 200,
     "headers": {
+      "alt-svc": [
+        "h3=\":443\"; ma=2592000,h3-29=\":443\"; ma=2592000"
+      ],
       "content-type": [
         "application/json; charset=UTF-8"
+      ],
+      "date": [
+        "Thu, 15 Oct 2026 05:50:11 GMT"
+      ],
+      "server": [
+        "scaffolding on HTTPServer2"
+      ],
+      "vary": [
+        "Origin",
+        "X-Origin",
+        "Referer"
+      ],
+      "x-content-type-options": [
+        "nosniff"
+      ],
+      "x-frame-options": [
+        "SAMEORIGIN"
+      ],
+      "x-xss-protection": [
+        "0"
       ]
     },
     "jsonBody": {
-      "responseContext": {},
       "actions": [
         {
           "openPopupAction": {
             "popup": {
               "multiPageMenuRenderer": {
-                "sections": [
-                  {
-                    "accountSectionListRenderer": {
-                      "contents": [
+                "header": {
+                  "activeAccountHeaderRenderer": {
+                    "accountName": {
+                      "simpleText": "***"
+                    },
+                    "accountPhoto": {
+                      "thumbnails": [
                         {
-                          "accountItemSectionRenderer": {
-                            "contents": [
-                              {
-                                "accountItem": {
-                                  "accountName": {
-                                    "simpleText": "Fake User"
-                                  },
-                                  "accountPhoto": {
-                                    "thumbnails": [
-                                      {
-                                        "url": "https://yt4.ggpht.com/fake-photo=s48-c-k-c0x00ffffff-no-rj",
-                                        "width": 48,
-                                        "height": 48
-                                      }
-                                    ]
-                                  },
-                                  "isSelected": true,
-                                  "hasChannel": true,
-                                  "channelHandle": {
-                                    "simpleText": "@fake-user"
-                                  }
-                                }
-                              }
-                            ]
-                          }
+                          "url": "https://yt3.ggpht.com/***",
+                          "width": 108,
+                          "height": 108
                         }
                       ]
                     }
                   }
-                ]
+                }
               }
             }
           }
