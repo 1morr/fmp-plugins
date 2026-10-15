@@ -26,6 +26,10 @@
       "nonEmpty": ["roomId", "title", "status"]
     }
   },
+  "importPlaylist": {
+    "input": { "url": "https://space.bilibili.com/8047632/favlist?fid=4026748432" },
+    "expect": { "minItems": 10, "nonEmpty": ["track"] }
+  },
   "login": {
     "input": {
       "cookies": {
