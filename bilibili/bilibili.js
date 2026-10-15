@@ -2,9 +2,9 @@
 {
   "id": "bilibili",
   "name": "Bilibili",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "author": "FMP",
-  "description": "搜尋 Bilibili 影片並播放其音訊，也能搜尋與收聽直播間，可用 QR 碼登入。",
+  "description": "搜尋 Bilibili 影片並播放其音訊，也能搜尋與收聽直播間、匯入收藏夾，可用 QR 碼登入。",
   "apiVersion": 1,
   "capabilities": [
     "search",
@@ -12,6 +12,7 @@
     "multiPart",
     "trackDetail",
     "live",
+    "importPlaylist",
     "login"
   ],
   "allowedHosts": [
@@ -3319,14 +3320,17 @@ async function anonymousCookie() {
   const { buvid3, buvid4, bNut } = identity;
   return `buvid3=${buvid3}; buvid4=${buvid4}; b_nut=${bNut}; _uuid=${buvid3}; buvid_fp=${buvid3}`;
 }
-async function get(url, headers, context) {
+async function getResponse(url, headers, context, auth = "userPreference") {
   const cookie = await anonymousCookie();
   const response = await fmp.http.request({
     url,
     headers: { ...headers, Cookie: cookie },
-    auth: "userPreference"
+    auth
   });
-  return parseJson(response, context);
+  return { json: parseJson(response, context), credentialsAttached: response.credentialsAttached === true };
+}
+async function get(url, headers, context) {
+  return (await getResponse(url, headers, context)).json;
 }
 function query(params) {
   return Object.keys(params).map((key) => `${encodeURIComponent(key)}=${encodeURIComponent(String(params[key]))}`).join("&");
@@ -3530,6 +3534,120 @@ async function multiPart({ sourceId }) {
     return part;
   });
   return { parts };
+}
+var FAV_PAGE_SIZE = 20;
+var BILIBILI_HOSTS = ["bilibili.com", "www.bilibili.com", "m.bilibili.com", "space.bilibili.com"];
+var MEDIA_ID = /^[1-9]\d{0,17}$/;
+var FAV_CURSOR = /^v1:([1-9]\d{0,5}):([01])$/;
+var FAV_UNAVAILABLE_ATTRS = [1, 9];
+var FAV_DENIED_CODES = [-101, -403, -404];
+function playlistFromUrl(input) {
+  const raw = input && typeof input.url === "string" ? input.url.trim() : "";
+  if (raw === "") return null;
+  const text = /^[a-z][a-z0-9+.-]*:\/\//i.test(raw) ? raw : `https://${raw}`;
+  const m = /^https?:\/\/([^/?#]+)([^?#]*)(?:\?([^#]*))?/i.exec(text);
+  if (m === null || m[1].includes("@")) return null;
+  const host = m[1].replace(/:\d+$/, "").toLowerCase().replace(/\.+$/, "");
+  if (!BILIBILI_HOSTS.includes(host)) return null;
+  const fid = /(?:^|&)fid=(\d+)(?:&|$)/.exec(m[3] || "");
+  if (fid !== null && MEDIA_ID.test(fid[1])) return { playlistId: fid[1] };
+  for (const segment of m[2].split("/")) {
+    const ml = /^ml(\d+)$/.exec(segment);
+    if (ml !== null && MEDIA_ID.test(ml[1])) return { playlistId: ml[1] };
+  }
+  return null;
+}
+function favDenied(json) {
+  return json !== null && typeof json === "object" && FAV_DENIED_CODES.includes(json.code);
+}
+async function itemsOfMedia(media) {
+  if (media === null || typeof media !== "object") return null;
+  const bvid = typeof media.bvid === "string" && media.bvid !== "" ? media.bvid : media.bv_id;
+  if (typeof bvid !== "string" || !BVID_PATTERN.test(bvid)) return null;
+  if (media.type !== void 0 && media.type !== null && media.type !== 2) return null;
+  const title = typeof media.title === "string" && media.title.trim() !== "" ? media.title.trim() : "Unknown";
+  const upper = media.upper !== null && typeof media.upper === "object" ? media.upper : {};
+  const uploader = typeof upper.name === "string" && upper.name !== "" ? upper.name : null;
+  const durationMs = Number.isInteger(media.duration) && media.duration >= 0 ? media.duration * 1e3 : null;
+  const art = artwork(media.cover);
+  const pages = Number.isInteger(media.page) && media.page > 0 ? media.page : null;
+  const single = { sourceId: bvid, title, uploader, durationMs, artwork: art };
+  if (pages !== null) single.partCount = pages;
+  if (FAV_UNAVAILABLE_ATTRS.includes(media.attr)) return [{ track: single, unavailable: true }];
+  if (pages === null || pages <= 1) return [{ track: single }];
+  let parts;
+  try {
+    ({ parts } = await multiPart({ sourceId: bvid }));
+  } catch (e) {
+    if (e && e.fmpError === "NotFound") {
+      throw error("UnexpectedError", `fav list: pagelist of ${bvid} says NotFound`);
+    }
+    throw e;
+  }
+  if (parts.length <= 1) return [{ track: single }];
+  return parts.map((part) => ({
+    track: {
+      sourceId: bvid,
+      cid: part.cid,
+      title: part.title,
+      uploader,
+      durationMs: part.durationMs === void 0 ? null : part.durationMs,
+      artwork: art,
+      partCount: parts.length,
+      partIndex: part.index,
+      parentTitle: title
+    }
+  }));
+}
+async function importPlaylist(input) {
+  const { playlistId, cursor } = input || {};
+  if (typeof playlistId !== "string" || !MEDIA_ID.test(playlistId)) {
+    throw error("ParseError", `fav list: invalid playlistId: ${playlistId}`);
+  }
+  let page = 1;
+  let required = false;
+  if (cursor !== void 0 && cursor !== null) {
+    const m = typeof cursor === "string" ? FAV_CURSOR.exec(cursor) : null;
+    if (m === null) throw error("ParseError", "fav list: malformed cursor");
+    page = Number(m[1]);
+    required = m[2] === "1";
+  }
+  const url = `${API}/x/v3/fav/resource/list?${query({ media_id: playlistId, pn: page, ps: FAV_PAGE_SIZE, platform: "web" })}`;
+  let res = await getResponse(url, API_HEADERS, "fav list", required ? "required" : "userPreference");
+  let retried = false;
+  if (favDenied(res.json) && !res.credentialsAttached && await fmp.credentials.get() !== null) {
+    retried = true;
+    required = true;
+    res = await getResponse(url, API_HEADERS, "fav list", "required");
+  }
+  if (favDenied(res.json)) {
+    if (!res.credentialsAttached && res.json.code !== -404) throw businessError(res.json.code, res.json.message, "fav list");
+    throw error("NotFound", `fav list: code ${res.json.code} ${res.json.message || ""}`.trim());
+  }
+  const data = checkCode(res.json, "fav list");
+  const info = data.info;
+  if (info === null || typeof info !== "object" || typeof info.title !== "string" || info.title.trim() === "") {
+    throw error("ParseError", "fav list: no info.title");
+  }
+  const playlist = { title: info.title.trim() };
+  if (typeof info.intro === "string" && info.intro.trim() !== "") playlist.description = info.intro.trim();
+  const cover = artwork(info.cover);
+  if (cover.length > 0) playlist.artwork = cover;
+  const owner = info.upper !== null && typeof info.upper === "object" ? info.upper : {};
+  if (typeof owner.name === "string" && owner.name !== "") playlist.ownerName = owner.name;
+  if (res.credentialsAttached) {
+    const credentials = await fmp.credentials.get();
+    const uid = credentials && credentials.cookies ? credentials.cookies.DedeUserID : void 0;
+    if (typeof uid === "string" && /^\d+$/.test(uid) && Number.isInteger(owner.mid)) playlist.writable = String(owner.mid) === uid;
+  }
+  const medias = Array.isArray(data.medias) ? data.medias : [];
+  const items = [];
+  for (const media of medias) {
+    const expanded = await itemsOfMedia(media);
+    if (expanded !== null) items.push(...expanded);
+  }
+  fmp.log.debug("fav list page", { page, medias: medias.length, items: items.length, retried });
+  return { playlist, items, cursor: data.has_more === true && medias.length > 0 ? `v1:${page + 1}:${required ? 1 : 0}` : null };
 }
 function hostOf(url) {
   const match = /^https:\/\/([^/?#:]+)(?::\d+)?(?:[/?#]|$)/i.exec(url);
@@ -4049,6 +4167,7 @@ async function loginRefresh(credentials) {
 export {
   artwork,
   decodeHtmlEntities,
+  importPlaylist,
   liveRoomFromUrl,
   liveSearch,
   liveStatus,
@@ -4058,6 +4177,7 @@ export {
   loginVerify,
   multiPart,
   parseSetCookies,
+  playlistFromUrl,
   qrCredentials,
   refreshCsrfOf,
   resolveLive,
