@@ -4,7 +4,21 @@ import { ORIGIN, authHeadersFor } from './sapisid.js';
 import { credentialInvalidError } from './errors.js';
 import { acceptsCredentials, clientNameOf } from './clients.js';
 
-export async function hostRequest({ url, method, headers, body, idempotent }) {
+// 呼叫端對單次請求的提示（importPlaylist 用）：header `x-fmp-call: <id>|<auth>`。auth 蓋掉預設的 userPreference
+// （私人歌單補登入時用 required）；請求的結果（狀態、有沒有帶憑證）存在 callResults[id]，因為
+// YouTube.js 遇到 4xx 直接丟例外，呼叫端拿不到回應。提示 header 不會送出。id 由呼叫端產生並負責刪除。
+export const callResults = new Map();
+const CALL_HEADER = 'x-fmp-call';
+
+export async function hostRequest({ url, method, headers: sent, body, idempotent }) {
+  let headers = sent;
+  let callId = null;
+  let forcedAuth = null;
+  if (sent && sent[CALL_HEADER]) {
+    [callId, forcedAuth] = String(sent[CALL_HEADER]).split('|');
+    headers = { ...sent };
+    delete headers[CALL_HEADER];
+  }
   // innertube 請求屬於 userPreference（ADR 0012：搜尋、串流解析）：已登入且「以登入身分瀏覽與播放」開著時，
   // 宿主才注入 Cookie 與 authHeaders，其餘情況整個丟掉，所以有憑證就算好，不必自己判斷開關。
   // 只限 /youtubei/：sw.js_data 的 visitor data 會被快取，不要讓它綁到某個帳號。
@@ -18,9 +32,10 @@ export async function hostRequest({ url, method, headers, body, idempotent }) {
     headers,
     body,
     idempotent,
-    auth: withAuth ? 'userPreference' : null,
+    auth: withAuth ? (forcedAuth || 'userPreference') : null,
     authHeaders,
   });
+  if (callId) callResults.set(callId, { status: res.status, credentialsAttached: res.credentialsAttached === true });
   if (innertube && res.status >= 400) logInnertubeError(url, body, res);
   const invalid = credentialInvalidError(res.status, res.credentialsAttached);
   if (invalid) throw invalid;

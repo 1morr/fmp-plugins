@@ -24,6 +24,20 @@ YouTube 音源，匿名可用，也可以登入。以 [YouTube.js](https://githu
   - `publishedAt`：回應只有 `dateText` 的英文日期（`Oct 25, 2009`，也接 `Premiered …`、`Streamed live on …`），沒有時刻與時區，所以取當天 UTC 正午，只精確到日（宿主以本機時區顯示：取零點的話 UTC 以西會顯示成前一天，正午在 UTC−12 到 UTC+11 都是同一天）；格式不認得或不是真的日期（`Feb 31`）就不給。`hl` 不是插件指定的：YouTube.js 建 session 時以 `Accept-Language: en-US` 取 `sw.js_data`，YouTube 回 `hl` `en`（fixture 裡是 `en`、`gl` 是錄製地的 `TW`），session 存進 storage 沿用；哪天回了別的語言，日期格式認不得，`publishedAt` 就不給，不會給錯的日期。ISO 時間在 `/player` 的 `microformat`，要多一個請求，沒採用。
   - 輸入：`sourceId` 不是 11 碼 → `ParseError`，不發請求；`cid` 不參與。回應沒有 `contents` → `ParseError`；有 `contents` 卻沒有任何影片資訊 renderer → `NotFound`（影片不存在或已刪除的實際回應形狀**沒有實測**，是依 `mix` 同類判斷推的）。
 
+- `importPlaylist`：匯入 YouTube 播放清單，兩個匯出（FMP ADR 0032 §決定 2）。請求與解析在 `src/playlist.js`。
+  - `playlistFromUrl({url})`：不發請求。網域限 `youtube.com`、`www.`、`m.`、`music.youtube.com`、`youtu.be`（舊版 `SourceUrlPolicy.youtubeHosts`），沒有 `://` 的輸入當成 https；取 `list=` 參數（`/playlist?list=…`、`watch?v=…&list=…`、`youtu.be/…?list=…` 都是）。`list` 以 `RD` 開頭是 Mix，回 `{mixSeed: {sourceId}}`，種子取 `v`，沒有就取 `RD` 後面的；`mix:<id>` 簡寫（不分大小寫，id 只收 `[A-Za-z0-9_-]`、至多 64 字，舊版 `youtube_mix_shorthand.dart`）同樣回 `mixSeed`。其餘回 `{playlistId}`，不認得回 `null`。種子是否為 11 碼影片 id 由 `mix` 檢查（不是就 `ParseError`）。
+  - `importPlaylist({playlistId, cursor?})`：POST innertube `browse`（WEB client），第一頁 `{browseId: 'VL<playlistId>'}`，續取 `{continuation: <token>}`；與 `search` 同樣標 `idempotent: true`、`auth: 'userPreference'`。`playlistId` 以 `RD` 開頭（Mix）或不合法 → `ParseError`，不發請求。
+  - **回應形狀與舊版不同**（2026-10-15 匿名實測，Flutter 官方頻道的 181 部公開歌單）：項目是 `lockupViewModel`，不是舊版 `_parsePlaylistViaInnerTube` 認的 `playlistVideoRenderer`（舊版匿名失敗時回退 `youtube_explode_dart`，所以沒看出來）。第一頁 100 部，`tabs[0]…sectionListRenderer.contents[0].itemSectionRenderer.contents` 是 100 個 `lockupViewModel` 加最後一個 `continuationItemViewModel`；第二頁 81 部，在 `onResponseReceivedActions[0].appendContinuationItemsAction.continuationItems`，沒有 continuation 就是最後一頁。`sectionListRenderer.contents` 的最後還有一個 `continuationItemViewModel`，那不是這張歌單的下一頁，不用。
+  - `track`（欄位同 `search`）：`sourceId`＝`contentId`；`title`＝`metadata.lockupMetadataViewModel.title.content`；`uploader`＝`metadataRows[0].metadataParts[0].text.content`；`durationMs` 讀縮圖角標 `thumbnailBottomOverlayViewModel.badges[].thumbnailBadgeViewModel.text`（`m:ss`、`h:mm:ss`），角標不是時長（直播、首播、`SHORTS`）或沒有角標的略過；`artwork` 取 `contentImage.thumbnailViewModel.image.sources`，只留 `ytimg.com`。`contentType` 不是影片的略過。同一支影片出現兩次就是兩項，不去重。若某一項是舊版的 `playlistVideoRenderer`（例如帶登入時），也認，欄位規則同舊版（`isPlayable` 為 `false` 或沒有長度的略過）；為它不另發請求。
+  - `playlist`（每頁都要給）：`title` 依序取 `pageHeaderRenderer.pageTitle`、標頭 `dynamicTextViewModel`、`metadata.playlistMetadataRenderer.title`；`description` 取 `playlistMetadataRenderer.description`；`artwork` 用第一首的縮圖（舊版 `coverUrl` 也是，標頭沒有可靠的欄位）；`ownerName` 取標頭 `metadataRows` 裡帶頭像的那一格文字 `by Flutter`，去掉 `by `，沒有這個前綴（YouTube 回非英文時）就不給。後續頁的回應沒有標頭，歌單資料因此放在 `cursor` 裡。
+  - `cursor`：不透明字串，`v1:<URL 編碼的 JSON {p: 歌單資料, r: 是否以 required 讀到的}>:<YouTube 的 continuation token>`；最後一頁 `null`。讀回時只收 `p` 的 `title`（不空）、`description`、`artwork`（只留 `ytimg.com`）、`ownerName`，`r` 只認 `true`；格式不對 → `ParseError`，不發請求。cursor 不綁 `playlistId`（token 本身帶歌單），宿主原樣傳回；改 `r` 最多讓續取以 `required` 送到 YouTube，憑證不會送到別處。
+  - **不給 `total`**：標頭筆數含被隱藏的影片（YouTube 另標「N 部影片已隱藏」），給了會讓每次刷新都「部分完成」。實測這張歌單標頭 181、實際回 181，沒有被隱藏的影片，但不能因此給 `total`。
+  - **不給 `remoteItemId`**：匿名回應完全沒有 `setVideoId`（兩頁 181 項的原始 JSON 搜尋 0 次）。只有登入才給的話，切換「以登入身分瀏覽與播放」會讓宿主的比對鍵在有 id、沒 id 兩池之間跳，所以一律不給，即使回應裡出現 `setVideoId` 也不給。移除遠端項目（FMP M4 PR 14）改用影片 id。
+  - **不給 `unavailable`**：匿名回應看不到失效項（私人、已刪除）的形狀，未實作；沒有證據就不猜。**不給 `writable`**：匿名判斷不了，回應裡沒有 `isEditable`；帶憑證時的判斷留到 FMP M4 PR 13 實測。
+  - **私人歌單**：請求一律 `userPreference`。第一頁被拒（HTTP 401／403／404，或回應沒有項目區塊）、這次沒帶憑證（`credentialsAttached` 為假）、`fmp.credentials.get()` 不是 `null` 時，以 `required` 重送同一個請求一次；已帶憑證被拒、或重送後還被拒都不再送。靠重送讀到的歌單，後續頁也以 `required` 送（記在 cursor 的 `r`）。續取頁同樣的規則。為了知道每次請求的狀態與有沒有帶憑證（YouTube.js 遇到 4xx 直接丟例外），請求帶一個只在插件內用的 header `x-fmp-call`，`src/host_request.js` 讀了就拿掉，不會送出。
+  - **錯誤**：被拒且（重送後）仍讀不到：HTTP 401／403，或 200 回應的 alert 提到 `private`、`sign in`、`log in`，且最後一次請求沒帶憑證 → `AuthRequired`；其餘 → `NotFound`（歌單不存在、HTTP 404、已帶憑證仍沒權限）。4xx 的 body 被 YouTube.js 包進例外，不讀。帶了憑證的 HTTP 401 照「憑證無效」判定表是 `CredentialInvalid`（`src/host_request.js` 在 YouTube.js 之前丟），不是 `NotFound`。回應形狀不對（沒有標題、續取沒有項目）→ `ParseError`。其他 HTTP 4xx／5xx 同 `search`，YouTube.js 丟例外，由宿主轉成 `UnexpectedError`。**未實測**：匿名讀不存在的歌單與私人歌單的實際回應（HTTP 狀態與 alert 文字），所以這幾個判斷是照舊版與 YouTube.js 的行為推的；`test/import_playlist.test.js` 用手寫的 alert 與 403 守邏輯。
+  - 實測（2026-10-15，匿名，Windows，Node 模擬宿主）：歌單 `PLjxrf2q8roU23XGwz3Km7sQZFTdB996iG`（Flutter 官方頻道的 "Flutter Widget of the Week"）標頭 181 部，兩頁 100 加 81 共 181 筆，差 0，`setVideoId` 0/181。請求 4 個：`sw.js_data`、`config`、第一頁、第二頁。
+
 ## 錯誤對應
 
 只看 `playabilityStatus`；兩個 client 都不能播時，丟第一個 client 的結果。
@@ -53,7 +67,7 @@ HTTP 429 與傳輸錯誤由 FMP 的網路層轉成 `RateLimited`、`NetworkError
 
 - 年齡限制與會員影片播不了，登入也一樣：player 請求不帶憑證（見「登入」）。匿名身分被要求驗證時只會回 `VerificationRequired`。
 - 哪個 client 能用由 YouTube 決定，`VISIONOS` 也可能被加上同樣的限制。換 client 只要改 `src/clients.js` 的 `CLIENTS` 並重新打包，不必發新版 App；新 client 收不收 cookie 要對 `COOKIELESS_CLIENT_NAMES`。
-- 一個 `checks.json` 每個能力只有一條案例，所以契約測試只重播成功的 `search`、`resolveStream`、`mix`、`trackDetail` 與 `login`；上表的錯誤對應由 `test/errors.test.js` 以 YouTube 實際給的 `playabilityStatus` 文字守（`npm test`）。player 請求不用 YouTube.js 的 `getBasicInfo`：它遇到 `ERROR` 直接拋例外，走不到 `NotFound`；`test/resolve.test.js` 以錄好的 fixture 跑整條 `resolveStream` 守這點；`test/mix.test.js` 以手寫與錄好的（`fixtures/mix/003.json`）`/next` 回應跑整條 `mix`；`test/track_detail.test.js` 以同一份錄好的 `/next` 加手寫變體跑整條 `trackDetail`（欄位對應、省略、直播與按過讚的計數、日期的時區、輸入驗證、錯誤、`idempotent` 與 `auth`）（測試裡用 esbuild 在記憶體打包 `src/`）。
+- 一個 `checks.json` 每個能力只有一條案例，所以契約測試只重播成功的 `search`、`resolveStream`、`mix`、`trackDetail`、`importPlaylist` 與 `login`；上表的錯誤對應由 `test/errors.test.js` 以 YouTube 實際給的 `playabilityStatus` 文字守（`npm test`）。player 請求不用 YouTube.js 的 `getBasicInfo`：它遇到 `ERROR` 直接拋例外，走不到 `NotFound`；`test/resolve.test.js` 以錄好的 fixture 跑整條 `resolveStream` 守這點；`test/mix.test.js` 以手寫與錄好的（`fixtures/mix/003.json`）`/next` 回應跑整條 `mix`；`test/track_detail.test.js` 以同一份錄好的 `/next` 加手寫變體跑整條 `trackDetail`（欄位對應、省略、直播與按過讚的計數、日期的時區、輸入驗證、錯誤、`idempotent` 與 `auth`）；`test/import_playlist.test.js` 以 `fixtures/importPlaylist/003.json`（第一頁）、`test/data/playlist-page2.json`（續取頁）加手寫變體跑整條 `importPlaylist`（網址辨識、`mixSeed`、解析、續取、略過、cursor 驗證、私人歌單重送 `required` 的各種情況（含續取頁）、`x-fmp-call` 不送出、錯誤對應）（測試裡用 esbuild 在記憶體打包 `src/`）。
 - fixture 裡有匿名的 `visitorData` 與 `x-goog-visitor-id`（YouTube 發的匿名識別，不是憑證）。
 - 錄製者的公網 IP 會出現在 `sw.js_data` 回應、請求 body 的 `remoteHost`、`hlsManifestUrl` 路徑的 `/ip/…/`：FMP 的錄製器把 fixture 裡的 IP 一律換成文件用位址，掃描也會擋（FMP `app/test/plugins/contract/ip_scrub.dart`）。`hlsManifestUrl` 路徑式的 `/sig/…/`、`/lsig/…/` 遮蔽名單遮不到，現有 fixture 已手動換成 `***`（已過期、重播只比對方法與網址）；重錄後要再換一次。
 
@@ -82,6 +96,8 @@ npm test         # 錯誤對應表的測試（node:test）
 
 ## 契約測試與錄製
 
-指令見 repo 根目錄的 `README.md`。錄製會真的連 YouTube：每個案例各發 3 個請求（`sw.js_data`、`config`，再來 `search`、`player` 或 `next`），共 12 個（`search`、`resolveStream`、`mix`、`trackDetail`；`trackDetail` 的第三個是 `next`，案例的 `sourceId` 是 `dQw4w9WgXcQ`，與 `resolveStream`、`mix` 相同）。
+指令見 repo 根目錄的 `README.md`。錄製會真的連 YouTube：每個案例各發 3 個請求（`sw.js_data`、`config`，再來 `search`、`player` 或 `next`），共 12 個（`search`、`resolveStream`、`mix`、`trackDetail`，不含手改過而略過的 `importPlaylist`；`trackDetail` 的第三個是 `next`，案例的 `sourceId` 是 `dQw4w9WgXcQ`，與 `resolveStream`、`mix` 相同）。
+
+`importPlaylist` 案例（`fixtures/importPlaylist/`）：`001`、`002` 是 `mix` 錄製的 `sw.js_data` 與 `config` 複本，`003` 是 2026-10-15 匿名 `browse` 第一頁的真實回應，刪減到只剩插件讀的路徑並把續取 token 遮成 `***`（`meta.edited`；原始回應 1.3 MB）；請求的 body 與標頭、回應的標頭沿用 `mix` 同一次 session 的錄製（2026-10-14）。所以命令列錄製會略過它，要重錄時把 `meta.edited` 拿掉再錄，並注意第一頁 100 部加上 session 共 3 個請求。續取頁 `test/data/playlist-page2.json` 同樣是真實回應刪減而成，不是 fixture（契約案例只跑第一頁）。
 
 `login` 案例（`fixtures/login/001.json`）是 2026-10-15 在 FMP 的插件開發工具以測試帳號登入後錄的（FMP #254），再刪減成只剩通往 `activeAccountHeaderRenderer` 的路徑與名稱、頭像（`meta.edited`）：真實回應帶 Google 帳號的 email、頻道 id 與 `datasyncId`。命令列錄製略過它（`requiresLogin`）。

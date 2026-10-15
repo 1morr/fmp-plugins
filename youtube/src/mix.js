@@ -32,13 +32,13 @@ export function mixRequest(input) {
 }
 
 // "3:33" / "1:02:03" → 毫秒；格式不對或 0 是 null。
-function durationMs(text) {
+export function durationMs(text) {
   if (typeof text !== 'string' || !/^\d+(:\d{1,2}){1,2}$/.test(text)) return null;
   const seconds = text.split(':').reduce((acc, part) => acc * 60 + Number(part), 0);
   return seconds > 0 ? seconds * 1000 : null;
 }
 
-function textOf(t) {
+export function textOf(t) {
   if (!t) return null;
   if (typeof t.simpleText === 'string') return t.simpleText;
   const runs = Array.isArray(t.runs) ? t.runs : [];

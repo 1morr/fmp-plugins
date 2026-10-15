@@ -7,6 +7,8 @@ import { CLIENTS } from './clients.js';
 import { mixRequest, parseMixResponse } from './mix.js';
 import { trackDetailRequest, parseTrackDetail } from './track_detail.js';
 import { isAllowedHttps } from './urls.js';
+import { callResults } from './host_request.js';
+import { browseRequest, cursorFor, interpret, playlistFromUrl as parsePlaylistUrl } from './playlist.js';
 
 // ---------------------------------------------------------------- platform
 // Cache over fmp.storage (values are ArrayBuffers; storage takes strings).
@@ -247,6 +249,57 @@ export async function trackDetail(input) {
   const detail = parseTrackDetail(res.data);
   fmp.log.debug('track detail', { fields: Object.keys(detail).length, ms: now() - t0 });
   return detail;
+}
+
+// ---------------------------------------------------------------- importPlaylist
+export function playlistFromUrl(input) {
+  return parsePlaylistUrl(input);
+}
+
+let callSeq = 0;
+
+/** 一次 browse。2xx 回 {status, data, credentialsAttached}；4xx／5xx 回 {status, error, credentialsAttached}（不丟）。 */
+async function browse(yt, body, auth) {
+  const id = `browse-${++callSeq}`;
+  try {
+    const response = await yt.session.http.fetch('/browse', {
+      method: 'POST',
+      body: JSON.stringify(body),
+      headers: { 'Content-Type': 'application/json', 'x-fmp-call': `${id}|${auth}` },
+    });
+    const data = await response.json();
+    const meta = callResults.get(id);
+    return { status: response.status, data, credentialsAttached: !!(meta && meta.credentialsAttached) };
+  } catch (e) {
+    const meta = callResults.get(id);
+    // 宿主或 hostRequest 丟的結構化錯誤（網路、限流、憑證無效）原樣往外；YouTube.js 因 4xx 丟的才轉成回應。
+    if (!meta || meta.status < 400 || (e && typeof e.fmpError === 'string')) throw e;
+    return { status: meta.status, error: e, credentialsAttached: meta.credentialsAttached };
+  } finally {
+    callResults.delete(id);
+  }
+}
+
+export async function importPlaylist(input) {
+  const { body, meta, required } = browseRequest(input);
+  const yt = await innertube();
+  const t0 = now();
+  let usedRequired = required;
+  let res = await browse(yt, body, required ? 'required' : 'userPreference');
+  let outcome = interpret(res, meta);
+  // 私人歌單：被拒、這次沒帶憑證、使用者有登入 → 以 required 重送一次（ADR 0032 §決定 2）。已帶憑證被拒不重送。
+  if (outcome.denied && !res.credentialsAttached && (await fmp.credentials.get()) !== null) {
+    usedRequired = true;
+    res = await browse(yt, body, 'required');
+    outcome = interpret(res, meta);
+  }
+  if (outcome.denied) {
+    if (!res.credentialsAttached && outcome.loginHint) throw error('AuthRequired', 'playlist needs a signed-in account');
+    throw error('NotFound', 'playlist not found or not readable');
+  }
+  const { playlist, items, token } = outcome.page;
+  fmp.log.debug('playlist page', { count: items.length, hasCursor: token !== null, retried: usedRequired !== required, ms: now() - t0 });
+  return { playlist, items, cursor: cursorFor(playlist, token, usedRequired) };
 }
 
 // ---------------------------------------------------------------- login

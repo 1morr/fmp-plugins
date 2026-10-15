@@ -36,6 +36,10 @@
       "nonEmpty": ["description", "publishedAt", "uploaderAvatar", "stats"]
     }
   },
+  "importPlaylist": {
+    "input": { "url": "https://www.youtube.com/playlist?list=PLjxrf2q8roU23XGwz3Km7sQZFTdB996iG" },
+    "expect": { "minItems": 50, "nonEmpty": ["track"] }
+  },
   "login": {
     "input": {
       "cookies": {
