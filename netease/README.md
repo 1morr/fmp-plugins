@@ -18,6 +18,17 @@
   - **沒有** `description`、`stats`、`uploaderAvatar`：這個端點沒有簡介與統計，`ar[]` 也沒有歌手頭像。舊專案的歌手頭像（`api/artist/head/info/get`）、專輯發行日（`api/v1/album/<id>`，歌曲本身沒有 `publishTime` 時的備援）、留言數與熱門評論都是另外的請求，為了維持一個請求沒有取（熱門評論本來就不做，design §16 第 13 條）。要補頭像或備援發行日時各加一個請求，`music.126.net` 已在 `allowedHosts`。
   - `sourceId` 不是純數字（或大到轉成數字會失真，超過 2^53）→ `ParseError`，不發請求（`resolveStream` 對同樣的輸入回 `NotFound`，是它原本的行為）；回應沒有歌（`songs` 空或缺）→ `NotFound`；`songs[0]` 不是物件 → `ParseError`。
 
+- `importPlaylist`：匯入歌單，兩個匯出（FMP ADR 0032 §決定 2）。規格是舊專案 `netease_source.dart` 的 `parsePlaylist`（`api/v6/playlist/detail` 拿 `trackIds`，再以 `api/v3/song/detail` 每 400 個 id 一批補歌曲資料）、`_extractPlaylistId` 與 `SourceUrlPolicy`。
+  - `playlistFromUrl({url})`：網域限舊專案的 `music.163.com`、`y.music.163.com`，沒有 `://` 的輸入當成 https。路徑或 `#` 後面（網頁版 `#/playlist?id=…`）要有 `playlist` 段（舊版 `isPlaylistUrl` 同），id 取 `?id=<數字>`，沒有就取 `playlist` 後面那一段（手機分享的 `/playlist/<id>/<uid>`）；回 `{playlistId}`，其餘 `null`。與舊版不同：舊版用 `[?&]id=(d+)` 與 `/playlist[?/].*?(d{5,})` 在整個網址裡找，這裡限定在 `playlist` 段之後，所以 `song?id=…` 這類回 `null`，id 也不再要求至少 5 位。
+  - **短網址**：`163cn.tv`（舊版 `neteaseShortHosts`，`allowedHosts` 為此加了它）是唯一會發請求的情況：`GET https://163cn.tv/<碼>`（`auth: 'never'`，宿主跟隨轉址），用回應的最終網址（`response.url`）照上面的規則認；最終網址不是網易的歌單網址回 `null`，短網址已失效（HTTP 404）回 `NotFound`，其他非 200 照〈錯誤對應〉。舊版先 HEAD 再 GET，這裡只 GET（宿主 `HttpRequest` 沒說 HEAD 的轉址行為，頁面本身是小的殼）。**未實測**：沒有現成可用的 `163cn.tv` 網址，轉址形狀（最終網址的網域與路徑）是照舊版的轉址白名單（`music.163.com`、`y.music.163.com`）推的，`test/import_playlist.test.js` 以手寫的轉址結果守。
+  - `importPlaylist({playlistId, cursor?})`：`POST music.163.com/api/v6/playlist/detail`（明文 form `id=<id>`，舊版同），拿歌單資料與**全部** `trackIds`；詳情自己附的 `tracks` 只有前幾首完整資料，這一頁要的 id 裡不在其中的，再以 `POST api/v3/song/detail`（`c=[{"id":…}]`，與 `trackDetail` 同一個端點）**一次**補齊。兩個請求都標 `auth: 'userPreference'`、`idempotent: true`，不帶 `X-Real-IP`。`playlistId` 不是正整數字串、`cursor` 格式不對 → `ParseError`，不發請求。
+  - **分頁**：一頁 400 個 id（舊版 `_songDetailBatchSize`，一批就是一頁）；`cursor` 是 `v1:<起點>:<0|1>`，起點必須是 400 的倍數，後者是「以 `required` 送」。**每一頁都重新取 detail**（歌單資料與完整的 `trackIds` 都在裡面），所以 cursor 不用背歌單資料或 id 清單；代價是每頁多一個 detail 請求，而且歌單在兩頁之間被改過時，頁界會跟著移（少數重複或漏掉；`total` 對不上時宿主不套用移除）。`items` 依 `trackIds` 的順序；`song/detail` 沒回的 id（歌曲資料取不到）略過。
+  - `playlist`：`title`（`name`，缺或空 → `ParseError`）、`description`（空不給）、`artwork`（`coverImgUrl`，格式同 `search` 的封面，方形 120、200、400）、`ownerName`（`creator.nickname`）。**不給 `writable`**：回應沒有「這張是登入者自己的」旗標，要比 `creator.userId` 得先知道登入者的 uid（只在 `loginVerify` 取得），留到 FMP M4 PR 13（`libraryPlaylists`）一起決定。
+  - `items`：`track` 欄位同 `search`（共用同一個映射，`test/import_playlist.test.js` 守）。**`unavailable`**：`privileges` 裡該首的 `st` 為 `-200` 才標 `true`（舊版 `isAvailable = (st != -200)`）；**實測的榜單歌單沒有 `-200`**（沒驗過），倒是匿名時 100 首裡有 77 首 `st` 是 `-100`（歌單是官方榜單，不可能多數下架），所以不當失效。
+  - **`total`**：給歌單 `trackIds` 的長度（每頁相同，實測等於 `trackCount`）。`song/detail` 沒回的 id 會讓回傳筆數少於它，宿主就當不完整、不套用移除；寧可如此也不讓缺的歌被當成已完整。
+  - **不給 `remoteItemId`**：網易歌單的新增與移除（`playlist/manipulate/tracks`）直接用歌曲 id，沒有獨立的項目 id（舊版 `netease_playlist_service.dart` 的 `_manipulateTracks`；這次沒有實測）。
+  - **私人歌單**：請求一律 `userPreference`。detail 的 `code` 為 301、401、403、404，或 200 卻沒有 `playlist`（舊版 "Playlist data not found"）視為讀不到；這次沒帶憑證（`credentialsAttached` 為假）且 `fmp.credentials.get()` 不是 `null` 時，以 `required` 重送一次；已帶憑證被拒、或重送後還被拒都不再送。靠重送讀到的歌單，後續頁的 detail 也以 `required` 送（記在 cursor）；`song/detail` 一律 `userPreference`（歌曲資料是公開的）。最後還讀不到：沒帶憑證的 301、401、403 → `AuthRequired`，其餘（404、沒有 `playlist`、已帶憑證被拒）→ `NotFound`；帶了憑證的 301 是 `CredentialInvalid`（既有的判定表）。**未實測**：匿名讀私人歌單與不存在的歌單的實際回應（`code` 與訊息），上面的碼是照舊版 `_checkResponse` 與網易網頁行為推的，`test/import_playlist.test.js` 用手寫的碼守邏輯。
+  - **實測**（2026-10-15，匿名，Windows，FMP 的錄製器）：官方帳號（`creator.nickname` 為「网易云音乐」）的榜單歌單「飙升榜」，`id` `19723756`，網址 `https://music.163.com/#/playlist?id=19723756`。`trackCount` 100、`trackIds` 100 個；**詳情一次給 10 首完整資料**（`tracks` 10 筆），其餘 90 首以一批 `song/detail` 補齊（1 批，90 首都回來了；`privileges` detail 與 `song/detail` 各 10、90 筆，合計 100），所以一頁收完、`cursor` 為 `null`、`total` 100。`code` 全是 200，沒有觸發風控。錄製發了 2 個請求（detail 一個、`song/detail` 一個）。`163cn.tv` 沒有實測（見上）。分頁（超過 400 首）只有單元測試。
 - `login`：QR 碼登入，見下方〈登入〉。
 
 ## 登入（QR）
@@ -88,7 +99,7 @@ manifest 宣告 `login: { methods: ['qr'] }`（網易的 `MUSIC_U` 有效期長�
 ## 已知限制
 
 - 不登入時 VIP 歌與匿名拿不到網址的歌播不了。匿名時 VIP 歌（`fee` 1）連試聽片段都沒有（`code` -110、沒有 `freeTrialInfo`），`previewOnly` 只會在登入後出現（登入後的取流行為還沒有實測），由 `test/resolve.test.js` 以手寫回應守。
-- 一個 `checks.json` 每個能力只有一條案例，所以契約測試只重播成功的 `search`、`resolveStream`、`trackDetail` 與 `login`（錄製後刪減的 fixture）；上表的錯誤對應由 `test/errors.test.js` 以網易實際給的欄位守（`npm test`）。
+- 一個 `checks.json` 每個能力只有一條案例，所以契約測試只重播成功的 `search`、`resolveStream`、`trackDetail`、`importPlaylist` 與 `login`（錄製後刪減的 fixture）；上表的錯誤對應由 `test/errors.test.js` 以網易實際給的欄位守（`npm test`）。
 - fixture 裡的 `NMTID` 等 Cookie 值已被 FMP 的遮蔽名單遮掉；錄製者的 IP 由錄製器換成文件用位址。
 
 ## 打包
@@ -97,14 +108,14 @@ manifest 宣告 `login: { methods: ['qr'] }`（網易的 `MUSIC_U` 有效期長�
 cd netease
 npm ci
 node build.mjs   # 輸出 netease.js（不壓縮，內容固定）
-npm test         # 錯誤對應表、AES／weapi、登入流程、取流、搜尋與 trackDetail 的測試（node:test）
+npm test         # 錯誤對應表、AES／weapi、登入流程、取流、搜尋、trackDetail 與 importPlaylist 的測試（node:test）
 ```
 
 用 esbuild 把 `src/` 與 `bn.js` 打成單一檔，`netease.js` 與原始碼、`package-lock.json` 一起提交；index 只認這一個 `.js`。`manifest` 寫在 `build.mjs`。
 
 ## 契約測試與錄製
 
-指令見 repo 根目錄的 `README.md`。錄製會真的連網易：搜尋、取流與 `trackDetail`（案例的 `sourceId` 是 `139774`，與 `resolveStream` 相同）各 1 個請求，共 3 個。`login` 的案例標 `requiresLogin`，命令列錄製略過；它的 fixture（`fixtures/login/001.json`）是 2026-10-15 在 FMP 的插件開發工具以測試帳號登入後錄的（FMP #254），再刪減成只剩 `loginVerify` 讀的欄位（`meta.edited`）：`account/get` 的 `userName` 是手機號的格式，頭像檔名是可推回原圖的圖片 id，都刪掉或換成 `***`。
+指令見 repo 根目錄的 `README.md`。錄製會真的連網易：搜尋、取流與 `trackDetail`（案例的 `sourceId` 是 `139774`，與 `resolveStream` 相同）各 1 個請求，`importPlaylist`（`playlistFromUrl` 不發請求，再讀第一頁：detail 與一批 `song/detail`）2 個，共 5 個。`importPlaylist` 的 fixture（`fixtures/importPlaylist/001.json`、`002.json`）是 2026-10-15 錄的飙升榜，刪減到只剩插件讀的欄位（`meta.edited`；原始回應 44 KB 與 192 KB，歌曲的音質檔位、專輯詳情等都刪了），所以命令列錄製會略過它；要重錄時先拿掉 `meta.edited`。榜單內容天天變，案例只檢查第一頁至少 50 首。`login` 的案例標 `requiresLogin`，命令列錄製略過；它的 fixture（`fixtures/login/001.json`）是 2026-10-15 在 FMP 的插件開發工具以測試帳號登入後錄的（FMP #254），再刪減成只剩 `loginVerify` 讀的欄位（`meta.edited`）：`account/get` 的 `userName` 是手機號的格式，頭像檔名是可推回原圖的圖片 id，都刪掉或換成 `***`。
 
 ## 測試向量
 

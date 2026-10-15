@@ -1,0 +1,487 @@
+{
+  "meta": {
+    "recordedAt": "2026-10-15T12:44:57.597371Z"
+  },
+  "request": {
+    "method": "GET",
+    "url": "https://api.bilibili.com/x/v3/fav/resource/list?media_id=4026748432&pn=1&ps=20&platform=web",
+    "headers": {
+      "accept": "application/json, text/plain, */*",
+      "cookie": "***",
+      "origin": "https://www.bilibili.com",
+      "referer": "https://www.bilibili.com/",
+      "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "access-control-allow-credentials": [
+        "true"
+      ],
+      "access-control-allow-headers": [
+        "origin,no-cache,x-requested-with,if-modified-since,pragma,last-modified,cache-control,expires,content-type,access-control-allow-credentials,dnt,x-customheader,keep-alive,user-agent,x-cache-webcdn,x-bilibili-key-real-ip,x-backend-bili-real-ip,x-risk-header,x-event-traceid"
+      ],
+      "access-control-allow-methods": [
+        "GET,POST,PUT,DELETE,PATCH"
+      ],
+      "access-control-allow-origin": [
+        "https://www.bilibili.com"
+      ],
+      "access-control-expose-headers": [
+        "x-bili-gaia-vvoucher,x-bili-metadata-legal-region,x-bili-metadata-ip-region,x-bili-metadata-idc-region,x-bili-idc-redirect,bili-status-code,x-bili-metadata-recent-region,x-bili-trace-id,x-bili-gaia-param"
+      ],
+      "bili-status-code": [
+        "0"
+      ],
+      "bili-trace-id": [
+        "580da8957c6ad0ca"
+      ],
+      "cache-control": [
+        "no-cache"
+      ],
+      "connection": [
+        "keep-alive"
+      ],
+      "content-type": [
+        "application/json; charset=utf-8"
+      ],
+      "cpu_usage": [
+        "399"
+      ],
+      "cross-origin-resource-policy": [
+        "cross-origin"
+      ],
+      "date": [
+        "Thu, 15 Oct 2026 12:45:00 GMT"
+      ],
+      "expires": [
+        "Thu, 15 Oct 2026 12:44:59 GMT"
+      ],
+      "vary": [
+        "Origin"
+      ],
+      "x-bili-trace-id": [
+        "2ab77b91b67c3b5d580da8957c6ad0ca"
+      ],
+      "x-cache-webcdn": [
+        "BYPASS from blzone08"
+      ]
+    },
+    "jsonBody": {
+      "code": 0,
+      "message": "OK",
+      "ttl": 1,
+      "data": {
+        "info": {
+          "id": 4026748432,
+          "fid": 40267484,
+          "mid": 8047632,
+          "attr": 258,
+          "title": "B站 × WAIC AI会客厅",
+          "cover": "http://i2.hdslb.com/bfs/archive/6a30dcc8fb75605c281e7ccdfe5226446f7b5245.jpg",
+          "upper": {
+            "mid": 8047632,
+            "name": "哔哩哔哩弹幕网",
+            "face": "https://i0.hdslb.com/bfs/face/0c84b9f4ad546d3f20324809d45fc439a2a8ddab.jpg",
+            "followed": false,
+            "vip_type": 2,
+            "vip_statue": 1
+          },
+          "cover_type": 2,
+          "cnt_info": {
+            "collect": 40,
+            "play": 2051,
+            "thumb_up": 0,
+            "share": 1
+          },
+          "type": 11,
+          "intro": "",
+          "ctime": 1784463653,
+          "mtime": 1785146610,
+          "state": 0,
+          "fav_state": 0,
+          "like_state": 0,
+          "media_count": 10,
+          "is_top": false,
+          "is_kid_playlist": false,
+          "kid_playlist_desc": ""
+        },
+        "medias": [
+          {
+            "id": 116980698843032,
+            "type": 2,
+            "title": "对华为半导体首席科学家廖恒的5小时访谈：一部昇腾史、18层宝塔与全球芯片恢弘30年史诗| B站 x WAIC AI会客厅",
+            "cover": "http://i2.hdslb.com/bfs/archive/6a30dcc8fb75605c281e7ccdfe5226446f7b5245.jpg",
+            "intro": "今天我们的嘉宾是华为Fellow、半导体首席科学家廖恒博士，这应该是华为第一次对外聊，华为在经历2020年的磨难之后，昇腾芯片从低谷一步步走出的故事。\n\n与此同时，这也是我个人第一次来学习芯片半导体产业。所以，除了昇腾史、中国的选择与故事，我们也从一个更恢弘的视角，聊了聊全球半导体芯片产业的历史、规律和概况。 \n\n这集内容在世界人工智能大会(WAIC)期间，于B站播出1小时先导片，今天发布的是全片完整版！\n\n很希望这集芯片内容，能够和你一起，深入更底层、更全局的视角学习AI！也给你带来新的启发！\n\n廖恒博",
+            "page": 1,
+            "duration": 16672,
+            "upper": {
+              "mid": 280780745,
+              "name": "张小珺商业访谈录",
+              "face": "https://i2.hdslb.com/bfs/face/d8d2df2874ca62e2f53dc690eff38549ce6cb8e1.jpg",
+              "jump_link": ""
+            },
+            "attr": 0,
+            "cnt_info": {
+              "collect": 32058,
+              "play": 1216904,
+              "danmaku": 5738,
+              "vt": 0,
+              "play_switch": 0,
+              "reply": 0,
+              "view_text_1": "121.6万"
+            },
+            "link": "bilibili://video/116980698843032",
+            "ctime": 1784985578,
+            "pubtime": 1784985578,
+            "fav_time": 1785146610,
+            "bv_id": "BV1nB3u6tERu",
+            "bvid": "BV1nB3u6tERu",
+            "season": null,
+            "ogv": null,
+            "ugc": {
+              "first_cid": 40282095854
+            },
+            "media_list_link": "bilibili://music/playlist/playpage/4034796032?page_type=3&oid=116980698843032&otype=2"
+          },
+          {
+            "id": 116972947906556,
+            "type": 2,
+            "title": "“双林会”：AI将如何重塑真实世界 | B站 x WAIC AI会客厅",
+            "cover": "http://i1.hdslb.com/bfs/archive/d127660b1f453659e8d462a4a373bc15731f45c7.jpg",
+            "intro": "-",
+            "page": 1,
+            "duration": 3488,
+            "upper": {
+              "mid": 630319191,
+              "name": "商汤科技SenseTime",
+              "face": "https://i0.hdslb.com/bfs/face/7a8ffad062c5b44c5d7a36e0a720c8436e94acd6.jpg",
+              "jump_link": ""
+            },
+            "attr": 0,
+            "cnt_info": {
+              "collect": 60,
+              "play": 18131,
+              "danmaku": 0,
+              "vt": 0,
+              "play_switch": 0,
+              "reply": 0,
+              "view_text_1": "1.8万"
+            },
+            "link": "bilibili://video/116972947906556",
+            "ctime": 1784866018,
+            "pubtime": 1784866017,
+            "fav_time": 1785146610,
+            "bv_id": "BV1wtgh6QECt",
+            "bvid": "BV1wtgh6QECt",
+            "season": null,
+            "ogv": null,
+            "ugc": {
+              "first_cid": 40244940783
+            },
+            "media_list_link": "bilibili://music/playlist/playpage/4034796032?page_type=3&oid=116972947906556&otype=2"
+          },
+          {
+            "id": 116967914669509,
+            "type": 2,
+            "title": "对话多位skill开发者：蒸馏与反蒸馏，《诗云》，GStack，个性化，AI恋人 | B站 x WAIC AI会客厅",
+            "cover": "http://i2.hdslb.com/bfs/archive/1463cceed5580e66a1b2074b2ae311b7f875f5e2.jpg",
+            "intro": "主持人：硅星人AI分析师 周一笑\n嘉宾：\ncolleague.skiil 开发者—— 只是路过的titanwings\n反蒸馏skill 开发者—— 小闲邓koki\n基德创作skill 开发者—— 吟游诗人基德\n\n探讨的问题：\nskill的定义\n快问快答每位嘉宾创作的“Skill”的核心功能\n回顾26年“同事Skill”爆火的幕后故事，当时想到过“同事”会引爆全网，甚至衍生出“前任”、“老板”等一整个模拟宇宙吗？\n当市场上全是各种模拟人格、情绪价值的“Skill”时，为什么要推“反蒸馏”？\n为什么愿意把自己",
+            "page": 1,
+            "duration": 3598,
+            "upper": {
+              "mid": 1660681622,
+              "name": "专注AI的研究员",
+              "face": "https://i2.hdslb.com/bfs/face/2365afce06fb19de994afe13253f7f46415e40e8.jpg",
+              "jump_link": ""
+            },
+            "attr": 0,
+            "cnt_info": {
+              "collect": 234,
+              "play": 82345,
+              "danmaku": 2,
+              "vt": 0,
+              "play_switch": 0,
+              "reply": 0,
+              "view_text_1": "8.2万"
+            },
+            "link": "bilibili://video/116967914669509",
+            "ctime": 1784789181,
+            "pubtime": 1784789181,
+            "fav_time": 1785146610,
+            "bv_id": "BV1VogU6RE5K",
+            "bvid": "BV1VogU6RE5K",
+            "season": null,
+            "ogv": null,
+            "ugc": {
+              "first_cid": 40217085554
+            },
+            "media_list_link": "bilibili://music/playlist/playpage/4034796032?page_type=3&oid=116967914669509&otype=2"
+          },
+          {
+            "id": 116959140120052,
+            "type": 2,
+            "title": "从“动”到“懂”，具身落地还差什么  | B站 x WAIC AI会客厅",
+            "cover": "http://i2.hdslb.com/bfs/archive/4f02f2e4bd6ca57615f04ce2b5619644fa82b1fb.jpg",
+            "intro": "在WAIC2026世博馆现场，视频播客「一线之间」特别放送——线性资本创始人兼CEO王淮对谈它石智航联合创始人&首席科学家丁文超，聊聊具身智能热潮背后的故事。他们从它石为什么不跟风做VLA和遥操聊起，一路聊到什么数据才真有用、模型能力如何冒出来、具身怎么走出Demo、长期研究和眼前交付怎么取舍，也谈了中美团队对“成功”的不同理解。",
+            "page": 1,
+            "duration": 3712,
+            "upper": {
+              "mid": 3706962583751137,
+              "name": "线性资本",
+              "face": "https://i1.hdslb.com/bfs/face/8b08be3c1ec9cc9215e8b2ec917c9b76c4aea9ef.jpg",
+              "jump_link": ""
+            },
+            "attr": 0,
+            "cnt_info": {
+              "collect": 82,
+              "play": 20567,
+              "danmaku": 1,
+              "vt": 0,
+              "play_switch": 0,
+              "reply": 0,
+              "view_text_1": "2.1万"
+            },
+            "link": "bilibili://video/116959140120052",
+            "ctime": 1784655244,
+            "pubtime": 1784655244,
+            "fav_time": 1785146610,
+            "bv_id": "BV1AXKa6UEUR",
+            "bvid": "BV1AXKa6UEUR",
+            "season": null,
+            "ogv": null,
+            "ugc": {
+              "first_cid": 40172061143
+            },
+            "media_list_link": "bilibili://music/playlist/playpage/4034796032?page_type=3&oid=116959140120052&otype=2"
+          },
+          {
+            "id": 116951305297432,
+            "type": 2,
+            "title": "对话Vincent Koc：OpenClaw的反思与进化，与Agent的下一步 | B站 x WAIC AI会客厅【101视频播客】",
+            "cover": "http://i2.hdslb.com/bfs/archive/b6708bba85fea63cdbaf72b9bc0c2cd871ddbc64.jpg",
+            "intro": "OpenClaw，这个在2026年初引爆全球AI圈的现象级项目，让Mac Mini卖到断货，也引发了关于AI安全与边界的全民讨论。当喧嚣褪去，这项技术真正为我们的生活带来了什么改变？\n在WAIC 2026现场，我们对话了OpenClaw基金会首席架构师Vincent Koc，从项目爆火背后的故事聊起，也深入讨论了Agent为什么在中国风靡、OpenClaw如何从开源项目成长为全球社区，以及“降温”之后，为什么真实下载量反而创下新高？作为项目的核心设计者，他也详细拆解了OpenClaw“中枢神经”的Gate",
+            "page": 1,
+            "duration": 3939,
+            "upper": {
+              "mid": 508452265,
+              "name": "硅谷101",
+              "face": "https://i1.hdslb.com/bfs/face/a28cfe42cd10ed9a042a5f02e17c425f039f5b9b.jpg",
+              "jump_link": ""
+            },
+            "attr": 0,
+            "cnt_info": {
+              "collect": 5355,
+              "play": 548807,
+              "danmaku": 165,
+              "vt": 0,
+              "play_switch": 0,
+              "reply": 0,
+              "view_text_1": "54.9万"
+            },
+            "link": "bilibili://video/116951305297432",
+            "ctime": 1784535655,
+            "pubtime": 1784550306,
+            "fav_time": 1784721483,
+            "bv_id": "BV1pNKU6dE3V",
+            "bvid": "BV1pNKU6dE3V",
+            "season": null,
+            "ogv": null,
+            "ugc": {
+              "first_cid": 40134051148
+            },
+            "media_list_link": "bilibili://music/playlist/playpage/4034796032?page_type=3&oid=116951305297432&otype=2"
+          },
+          {
+            "id": 116946389442122,
+            "type": 2,
+            "title": "WAIC 对话星动纪元陈建宇：中国具身产业的“木桶游戏”| B站x WAIC AI会客厅",
+            "cover": "http://i0.hdslb.com/bfs/archive/e8846f7f04422a94a931828a39adac02cb155282.jpg",
+            "intro": "在 waic 现场，和星动纪元创始人兼 CEO 陈建宇的访谈～可以说是非常有干货又真诚的一场对话。",
+            "page": 1,
+            "duration": 3617,
+            "upper": {
+              "mid": 97202976,
+              "name": "卫诗婕_漫谈播客集",
+              "face": "https://i0.hdslb.com/bfs/face/70ea82706a59e4b66a2b91e45e9898474c5a77a3.jpg",
+              "jump_link": ""
+            },
+            "attr": 0,
+            "cnt_info": {
+              "collect": 272,
+              "play": 31310,
+              "danmaku": 1,
+              "vt": 0,
+              "play_switch": 0,
+              "reply": 0,
+              "view_text_1": "3.1万"
+            },
+            "link": "bilibili://video/116946389442122",
+            "ctime": 1784460437,
+            "pubtime": 1784460437,
+            "fav_time": 1784721483,
+            "bv_id": "BV13UKB61ERJ",
+            "bvid": "BV13UKB61ERJ",
+            "season": null,
+            "ogv": null,
+            "ugc": {
+              "first_cid": 40097941390
+            },
+            "media_list_link": "bilibili://music/playlist/playpage/4034796032?page_type=3&oid=116946389442122&otype=2"
+          },
+          {
+            "id": 116947027168169,
+            "type": 2,
+            "title": "【视频播客】中国AI未来去哪里？年轻人如何学AI？来WAIC现场听听院士怎么讲！ | B站 x WAIC AI会客厅",
+            "cover": "http://i0.hdslb.com/bfs/archive/7bbbd151ed03f533664f1e2f363875e51f16608b.jpg",
+            "intro": "这一次我们请到了郑纬民院士给我们讲讲，中国的AI在哪？未来去哪儿？\nWAIC视频播客特别节目~AI会客厅",
+            "page": 1,
+            "duration": 2318,
+            "upper": {
+              "mid": 38061207,
+              "name": "Git源宝",
+              "face": "https://i0.hdslb.com/bfs/face/1e342336068320c3e43ad2769ce6df1d47fd15c4.jpg",
+              "jump_link": ""
+            },
+            "attr": 0,
+            "cnt_info": {
+              "collect": 15329,
+              "play": 766420,
+              "danmaku": 354,
+              "vt": 0,
+              "play_switch": 0,
+              "reply": 0,
+              "view_text_1": "76.6万"
+            },
+            "link": "bilibili://video/116947027168169",
+            "ctime": 1784470351,
+            "pubtime": 1784470351,
+            "fav_time": 1784532751,
+            "bv_id": "BV1SqKr6DE8Z",
+            "bvid": "BV1SqKr6DE8Z",
+            "season": null,
+            "ogv": null,
+            "ugc": {
+              "first_cid": 40116226905
+            },
+            "media_list_link": "bilibili://music/playlist/playpage/4034796032?page_type=3&oid=116947027168169&otype=2"
+          },
+          {
+            "id": 116949124120799,
+            "type": 2,
+            "title": "《bilibili x WAIC AI会客厅》AI科技视频播客系列 | 719全程回顾",
+            "cover": "http://i1.hdslb.com/bfs/archive/cfcfcb92c3a6db310cb451cc0f751af782beb72f.jpg",
+            "intro": "B站2026 WAIC世界人工智能大会特别直播企划 — bilibili x WAIC AI会客厅\n头部AI科技UP主将与OpenClaw前核心团队成员、华为海思半导体首席科学家、星动纪元创始人、郑纬民院士等产学研投界领袖展开深度对话；同时将有B站UP主带逛WAIC世博、徐汇热门展台，让你一次性看懂2026WAIC。",
+            "page": 1,
+            "duration": 14436,
+            "upper": {
+              "mid": 8047632,
+              "name": "哔哩哔哩弹幕网",
+              "face": "https://i0.hdslb.com/bfs/face/0c84b9f4ad546d3f20324809d45fc439a2a8ddab.jpg",
+              "jump_link": ""
+            },
+            "attr": 0,
+            "cnt_info": {
+              "collect": 1743,
+              "play": 248519,
+              "danmaku": 74,
+              "vt": 0,
+              "play_switch": 0,
+              "reply": 0,
+              "view_text_1": "24.9万"
+            },
+            "link": "bilibili://video/116949124120799",
+            "ctime": 1784503035,
+            "pubtime": 1784505600,
+            "fav_time": 1784532751,
+            "bv_id": "BV1WeKy6JESF",
+            "bvid": "BV1WeKy6JESF",
+            "season": null,
+            "ogv": null,
+            "ugc": {
+              "first_cid": 40112491740
+            },
+            "media_list_link": "bilibili://music/playlist/playpage/4034796032?page_type=3&oid=116949124120799&otype=2"
+          },
+          {
+            "id": 116942295795244,
+            "type": 2,
+            "title": "《bilibili x WAIC AI会客厅》AI科技视频播客系列 | 718全程回顾",
+            "cover": "http://i0.hdslb.com/bfs/archive/1ad077745816a453ef74f4478b0964475abb4e11.jpg",
+            "intro": "B站2026 WAIC世界人工智能大会特别直播企划 — bilibili x WAIC AI会客厅\n\n头部AI科技UP主将与OpenClaw前核心团队成员、华为海思半导体首席科学家、星动纪元创始人、郑纬民院士等产学研投界领袖展开深度对话；同时将有B站UP主带逛WAIC世博、徐汇热门展台，让你一次性看懂2026WAIC。",
+            "page": 1,
+            "duration": 17835,
+            "upper": {
+              "mid": 8047632,
+              "name": "哔哩哔哩弹幕网",
+              "face": "https://i0.hdslb.com/bfs/face/0c84b9f4ad546d3f20324809d45fc439a2a8ddab.jpg",
+              "jump_link": ""
+            },
+            "attr": 0,
+            "cnt_info": {
+              "collect": 2271,
+              "play": 363971,
+              "danmaku": 60,
+              "vt": 0,
+              "play_switch": 0,
+              "reply": 0,
+              "view_text_1": "36.4万"
+            },
+            "link": "bilibili://video/116942295795244",
+            "ctime": 1784399397,
+            "pubtime": 1784419200,
+            "fav_time": 1784463725,
+            "bv_id": "BV1iPKM6PEEW",
+            "bvid": "BV1iPKM6PEEW",
+            "season": null,
+            "ogv": null,
+            "ugc": {
+              "first_cid": 40080903945
+            },
+            "media_list_link": "bilibili://music/playlist/playpage/4034796032?page_type=3&oid=116942295795244&otype=2"
+          },
+          {
+            "id": 116936054736277,
+            "type": 2,
+            "title": "《bilibili x WAIC AI会客厅》AI科技视频播客系列 | 717全程回顾",
+            "cover": "http://i2.hdslb.com/bfs/archive/1f31bb9af6c79780295e89b96890b2a669c0e8e1.jpg",
+            "intro": "B站2026 WAIC世界人工智能大会特别直播企划 — bilibili x WAIC AI会客厅\n头部AI科技UP主将与OpenClaw前核心团队成员、华为海思半导体首席科学家、乐奇Rokid创始人、星动纪元创始人、郑纬民院士等产学研投界领袖展开深度对话；同时将有B站UP主带逛WAIC世博、徐汇热门展台，让你一次性看懂2026WAIC。",
+            "page": 1,
+            "duration": 10067,
+            "upper": {
+              "mid": 8047632,
+              "name": "哔哩哔哩弹幕网",
+              "face": "https://i0.hdslb.com/bfs/face/0c84b9f4ad546d3f20324809d45fc439a2a8ddab.jpg",
+              "jump_link": ""
+            },
+            "attr": 0,
+            "cnt_info": {
+              "collect": 2681,
+              "play": 280062,
+              "danmaku": 34,
+              "vt": 0,
+              "play_switch": 0,
+              "reply": 0,
+              "view_text_1": "28万"
+            },
+            "link": "bilibili://video/116936054736277",
+            "ctime": 1784304000,
+            "pubtime": 1784304000,
+            "fav_time": 1784463687,
+            "bv_id": "BV1BnNZ6kEeZ",
+            "bvid": "BV1BnNZ6kEeZ",
+            "season": null,
+            "ogv": null,
+            "ugc": {
+              "first_cid": 40046691387
+            },
+            "media_list_link": "bilibili://music/playlist/playpage/4034796032?page_type=3&oid=116936054736277&otype=2"
+          }
+        ],
+        "has_more": false,
+        "ttl": 1792068300
+      }
+    }
+  }
+}

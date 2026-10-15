@@ -5,8 +5,8 @@
       "id": "bilibili",
       "name": "Bilibili",
       "author": "FMP",
-      "description": "搜尋 Bilibili 影片並播放其音訊，也能搜尋與收聽直播間，可用 QR 碼登入。",
-      "version": "1.5.0",
+      "description": "搜尋 Bilibili 影片並播放其音訊，也能搜尋與收聽直播間、匯入收藏夾，可用 QR 碼登入。",
+      "version": "1.6.0",
       "apiVersion": 1,
       "capabilities": [
         "search",
@@ -14,6 +14,7 @@
         "multiPart",
         "trackDetail",
         "live",
+        "importPlaylist",
         "login"
       ],
       "allowedHosts": [
@@ -27,31 +28,33 @@
         "upos-hz-mirrorakam.akamaized.net"
       ],
       "url": "https://raw.githubusercontent.com/1morr/fmp-plugins/main/bilibili/bilibili.js",
-      "sha256": "bd1f69f0a46560465c39eccb1fb26a2ba8671282208c6f7c6a6395e8d86d774f",
+      "sha256": "8d711e0606776c500f57df0294a5fd4c2200dc2e60622a2c3fe553a445409e21",
       "checksUrl": "https://raw.githubusercontent.com/1morr/fmp-plugins/main/bilibili/checks.json",
-      "checksSha256": "0de2b7070294019ddf420be6dc276bdc8741448c6090d34d15393f03b1cc5c4e"
+      "checksSha256": "8d25f68b441ffe6564efffa3c35b8fe86b3dfb30e34f645dd7b9dbfafcf187ea"
     },
     {
       "id": "netease",
       "name": "網易雲音樂",
       "author": "FMP",
-      "description": "搜尋網易雲音樂的歌曲並播放，可用 QR 碼登入。",
-      "version": "1.3.0",
+      "description": "搜尋網易雲音樂的歌曲並播放、匯入歌單，可用 QR 碼登入。",
+      "version": "1.4.0",
       "apiVersion": 1,
       "capabilities": [
         "search",
         "resolveStream",
         "trackDetail",
+        "importPlaylist",
         "login"
       ],
       "allowedHosts": [
         "music.163.com",
-        "music.126.net"
+        "music.126.net",
+        "163cn.tv"
       ],
       "url": "https://raw.githubusercontent.com/1morr/fmp-plugins/main/netease/netease.js",
-      "sha256": "17325dd1618ed304113e48129d809b560f2e25a61b0d5b9664cec3d589ddb4a3",
+      "sha256": "dbc6b9563c162b99bba211548d99b74e3e027b04cadf091b7b676e87a00557e3",
       "checksUrl": "https://raw.githubusercontent.com/1morr/fmp-plugins/main/netease/checks.json",
-      "checksSha256": "9d87a7e4e2a1b1625c43175a62546a8585c1bc63e0c10e44a16cc86130a11c4a"
+      "checksSha256": "92cd1d9a2f2babf6fb85ae97aeac95b0eb935d7a6dfcb67309b14db3e5c48a13"
     },
     {
       "id": "youtube",

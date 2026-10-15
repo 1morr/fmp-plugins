@@ -127,14 +127,19 @@ async function anonymousCookie() {
   return `buvid3=${buvid3}; buvid4=${buvid4}; b_nut=${bNut}; _uuid=${buvid3}; buvid_fp=${buvid3}`;
 }
 
-async function get(url, headers, context) {
+/** 回 {json, credentialsAttached}：importPlaylist 要知道這次請求有沒有真的帶憑證。 */
+async function getResponse(url, headers, context, auth = 'userPreference') {
   const cookie = await anonymousCookie();
   const response = await fmp.http.request({
     url,
     headers: { ...headers, Cookie: cookie },
-    auth: 'userPreference',
+    auth,
   });
-  return parseJson(response, context);
+  return { json: parseJson(response, context), credentialsAttached: response.credentialsAttached === true };
+}
+
+async function get(url, headers, context) {
+  return (await getResponse(url, headers, context)).json;
 }
 
 function query(params) {
@@ -332,6 +337,151 @@ export async function multiPart({ sourceId }) {
     return part;
   });
   return { parts };
+}
+
+// ---------------------------------------------------------------- importPlaylist
+
+// 規格是舊專案 bilibili_source.dart 的 parsePlaylist（收藏夾 `fav/resource/list`）與 import_service.dart 的
+// _expandMultiPageVideos（多 P 影片在匯入時展開成各 P）。QuickJS 沒有 URL，網址用正規式拆。
+
+const FAV_PAGE_SIZE = 20; // fav/resource/list 的 ps 上限
+// 舊專案 SourceUrlPolicy.bilibiliHosts。
+const BILIBILI_HOSTS = ['bilibili.com', 'www.bilibili.com', 'm.bilibili.com', 'space.bilibili.com'];
+const MEDIA_ID = /^[1-9]\d{0,17}$/;
+// cursor：`v1:<頁碼>:<0|1>`，後者是「以 required 送」（第一頁靠補登入才讀到的收藏夾，之後也要帶）。
+const FAV_CURSOR = /^v1:([1-9]\d{0,5}):([01])$/;
+// 收藏夾回應裡 `attr` 標示失效的值（B 站網頁端慣例：9 是 UP 主自己刪除，1 是其他原因刪除）。
+const FAV_UNAVAILABLE_ATTRS = [1, 9];
+// 匿名或沒權限讀：-101 未登入、-403 權限不足、-404。
+const FAV_DENIED_CODES = [-101, -403, -404];
+
+/**
+ * 收藏夾網址 → {playlistId} | null；不發請求。網域限舊專案的 B 站清單。認 `fid=<數字>`
+ * （`space.bilibili.com/<mid>/favlist?fid=…`）與路徑裡整段的 `ml<數字>`
+ * （`/medialist/detail/ml…`、`/list/ml…`）；舊版是在整個網址裡找 `ml\d+`，這裡限定整段。
+ */
+export function playlistFromUrl(input) {
+  const raw = input && typeof input.url === 'string' ? input.url.trim() : '';
+  if (raw === '') return null;
+  const text = /^[a-z][a-z0-9+.-]*:\/\//i.test(raw) ? raw : `https://${raw}`;
+  const m = /^https?:\/\/([^/?#]+)([^?#]*)(?:\?([^#]*))?/i.exec(text);
+  if (m === null || m[1].includes('@')) return null;
+  const host = m[1].replace(/:\d+$/, '').toLowerCase().replace(/\.+$/, '');
+  if (!BILIBILI_HOSTS.includes(host)) return null;
+  const fid = /(?:^|&)fid=(\d+)(?:&|$)/.exec(m[3] || '');
+  if (fid !== null && MEDIA_ID.test(fid[1])) return { playlistId: fid[1] };
+  for (const segment of m[2].split('/')) {
+    const ml = /^ml(\d+)$/.exec(segment);
+    if (ml !== null && MEDIA_ID.test(ml[1])) return { playlistId: ml[1] };
+  }
+  return null;
+}
+
+/** 收藏夾回應是「讀不到」嗎（見 FAV_DENIED_CODES）。 */
+function favDenied(json) {
+  return json !== null && typeof json === 'object' && FAV_DENIED_CODES.includes(json.code);
+}
+
+/**
+ * 一個收藏項目 → items：單 P 與失效的一筆，多 P 展開成各 P（每 P 一個 pagelist 請求在 multiPart）。
+ * 不是 B 站影片（音訊、合集沒有 bvid）的回 null。
+ */
+async function itemsOfMedia(media) {
+  if (media === null || typeof media !== 'object') return null;
+  const bvid = typeof media.bvid === 'string' && media.bvid !== '' ? media.bvid : media.bv_id;
+  if (typeof bvid !== 'string' || !BVID_PATTERN.test(bvid)) return null;
+  if (media.type !== undefined && media.type !== null && media.type !== 2) return null;
+  const title = typeof media.title === 'string' && media.title.trim() !== '' ? media.title.trim() : 'Unknown';
+  const upper = media.upper !== null && typeof media.upper === 'object' ? media.upper : {};
+  const uploader = typeof upper.name === 'string' && upper.name !== '' ? upper.name : null;
+  const durationMs = Number.isInteger(media.duration) && media.duration >= 0 ? media.duration * 1000 : null;
+  const art = artwork(media.cover);
+  const pages = Number.isInteger(media.page) && media.page > 0 ? media.page : null;
+  const single = { sourceId: bvid, title, uploader, durationMs, artwork: art };
+  if (pages !== null) single.partCount = pages;
+  if (FAV_UNAVAILABLE_ATTRS.includes(media.attr)) return [{ track: single, unavailable: true }];
+  if (pages === null || pages <= 1) return [{ track: single }];
+  let parts;
+  try {
+    ({ parts } = await multiPart({ sourceId: bvid }));
+  } catch (e) {
+    // 收藏夾沒標失效（attr）而分 P 列表說不見了，多半是審核中這類暫時狀態：整頁失敗，宿主記「部分完成」、
+    // 不移除先前展開的各 P。不能原樣丟 NotFound，宿主會把整張收藏夾當成來源失效。其他錯誤同樣整頁失敗。
+    if (e && e.fmpError === 'NotFound') {
+      throw error('UnexpectedError', `fav list: pagelist of ${bvid} says NotFound`);
+    }
+    throw e;
+  }
+  if (parts.length <= 1) return [{ track: single }];
+  return parts.map((part) => ({
+    track: {
+      sourceId: bvid,
+      cid: part.cid,
+      title: part.title,
+      uploader,
+      durationMs: part.durationMs === undefined ? null : part.durationMs,
+      artwork: art,
+      partCount: parts.length,
+      partIndex: part.index,
+      parentTitle: title,
+    },
+  }));
+}
+
+export async function importPlaylist(input) {
+  const { playlistId, cursor } = input || {};
+  if (typeof playlistId !== 'string' || !MEDIA_ID.test(playlistId)) {
+    throw error('ParseError', `fav list: invalid playlistId: ${playlistId}`);
+  }
+  let page = 1;
+  let required = false;
+  if (cursor !== undefined && cursor !== null) {
+    const m = typeof cursor === 'string' ? FAV_CURSOR.exec(cursor) : null;
+    if (m === null) throw error('ParseError', 'fav list: malformed cursor');
+    page = Number(m[1]);
+    required = m[2] === '1';
+  }
+  const url = `${API}/x/v3/fav/resource/list?${query({ media_id: playlistId, pn: page, ps: FAV_PAGE_SIZE, platform: 'web' })}`;
+  let res = await getResponse(url, API_HEADERS, 'fav list', required ? 'required' : 'userPreference');
+  let retried = false;
+  // 私人收藏夾：被拒、這次沒帶憑證、使用者有登入 → 以 required 重送一次（ADR 0032 §決定 2）。已帶憑證被拒不重送。
+  if (favDenied(res.json) && !res.credentialsAttached && (await fmp.credentials.get()) !== null) {
+    retried = true;
+    required = true;
+    res = await getResponse(url, API_HEADERS, 'fav list', 'required');
+  }
+  if (favDenied(res.json)) {
+    // -404 是「不見了」；-101／-403 沒帶憑證時是要登入，已帶憑證還被拒就是這個帳號看不到。
+    if (!res.credentialsAttached && res.json.code !== -404) throw businessError(res.json.code, res.json.message, 'fav list');
+    throw error('NotFound', `fav list: code ${res.json.code} ${res.json.message || ''}`.trim());
+  }
+  const data = checkCode(res.json, 'fav list');
+  const info = data.info;
+  if (info === null || typeof info !== 'object' || typeof info.title !== 'string' || info.title.trim() === '') {
+    throw error('ParseError', 'fav list: no info.title');
+  }
+  const playlist = { title: info.title.trim() };
+  if (typeof info.intro === 'string' && info.intro.trim() !== '') playlist.description = info.intro.trim();
+  const cover = artwork(info.cover);
+  if (cover.length > 0) playlist.artwork = cover;
+  const owner = info.upper !== null && typeof info.upper === 'object' ? info.upper : {};
+  if (typeof owner.name === 'string' && owner.name !== '') playlist.ownerName = owner.name;
+  if (res.credentialsAttached) {
+    // 帶了憑證才判斷得出是不是自己的：收藏夾擁有者的 mid 對登入帳號的 DedeUserID。
+    const credentials = await fmp.credentials.get();
+    const uid = credentials && credentials.cookies ? credentials.cookies.DedeUserID : undefined;
+    if (typeof uid === 'string' && /^\d+$/.test(uid) && Number.isInteger(owner.mid)) playlist.writable = String(owner.mid) === uid;
+  }
+  const medias = Array.isArray(data.medias) ? data.medias : [];
+  const items = [];
+  // 依序展開，限流交給宿主的 rateLimit。
+  for (const media of medias) {
+    const expanded = await itemsOfMedia(media);
+    if (expanded !== null) items.push(...expanded);
+  }
+  fmp.log.debug('fav list page', { page, medias: medias.length, items: items.length, retried });
+  // 不給 total：media_count 含失效與略過的項目，多 P 展開後筆數也不同。
+  return { playlist, items, cursor: data.has_more === true && medias.length > 0 ? `v1:${page + 1}:${required ? 1 : 0}` : null };
 }
 
 // ---------------------------------------------------------------- resolveStream
