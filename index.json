@@ -5,8 +5,8 @@
       "id": "bilibili",
       "name": "Bilibili",
       "author": "FMP",
-      "description": "搜尋 Bilibili 影片並播放其音訊，也能搜尋與收聽直播間、匯入收藏夾，可用 QR 碼登入。",
-      "version": "1.6.0",
+      "description": "搜尋 Bilibili 影片並播放其音訊，也能搜尋與收聽直播間、匯入收藏夾、瀏覽音樂排行榜，可用 QR 碼登入。",
+      "version": "1.7.0",
       "apiVersion": 1,
       "capabilities": [
         "search",
@@ -15,6 +15,7 @@
         "trackDetail",
         "live",
         "importPlaylist",
+        "charts",
         "login"
       ],
       "allowedHosts": [
@@ -28,9 +29,9 @@
         "upos-hz-mirrorakam.akamaized.net"
       ],
       "url": "https://raw.githubusercontent.com/1morr/fmp-plugins/main/bilibili/bilibili.js",
-      "sha256": "8d711e0606776c500f57df0294a5fd4c2200dc2e60622a2c3fe553a445409e21",
+      "sha256": "c0241d21f05796512ed660f1a6d5db93e3857bc3372205ba5d4976f88443a3ff",
       "checksUrl": "https://raw.githubusercontent.com/1morr/fmp-plugins/main/bilibili/checks.json",
-      "checksSha256": "8d25f68b441ffe6564efffa3c35b8fe86b3dfb30e34f645dd7b9dbfafcf187ea"
+      "checksSha256": "64a1563b1d962759ee15f817da34224187cd1794486c1b03392c2c4742d4f7b4"
     },
     {
       "id": "netease",
