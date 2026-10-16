@@ -69,6 +69,10 @@ test('viewCountOf: suffixes, commas, unknown text', () => {
   assert.equal(viewCountOf('1,234 views'), 1234);
   assert.equal(viewCountOf('1 view'), 1);
   assert.equal(viewCountOf('No views'), 0);
+  // 舊版 _parseViewCountText 先去掉單位再 trim，數字與單位之間有空白也認；小寫單位也認。
+  assert.equal(viewCountOf('1.5 M views'), 1_500_000);
+  assert.equal(viewCountOf('1.5 M'), 1_500_000);
+  assert.equal(viewCountOf('3k'), 3000);
   assert.equal(viewCountOf(''), 0);
   assert.equal(viewCountOf(null), 0);
 });
@@ -98,6 +102,25 @@ test('parseChartResponse: the views cell is found with or without the word "view
     withRows('ddddddddddd', [row(['9999999']), row(['7d ago'])]),
   ]));
   assert.deepEqual(ids(tracks), ['bbbbbbbbbbb', 'aaaaaaaaaaa', 'ccccccccccc', 'ddddddddddd']);
+});
+
+test('parseChartResponse: a views cell with a space before the unit is read, not taken as 0', () => {
+  const tracks = parseChartResponse(pageOf([lockup('aaaaaaaaaaa', '900K'), lockup('bbbbbbbbbbb', '1.5 M')]));
+  assert.deepEqual(ids(tracks), ['bbbbbbbbbbb', 'aaaaaaaaaaa']);
+});
+
+test('parseChartResponse: metadata rows or parts that are not arrays count as unknown views, not an error', () => {
+  const broken = (id, rows) => {
+    const entry = lockup(id, null);
+    entry.lockupViewModel.metadata.lockupMetadataViewModel.metadata.contentMetadataViewModel.metadataRows = rows;
+    return entry;
+  };
+  const tracks = parseChartResponse(pageOf([
+    broken('aaaaaaaaaaa', {}),
+    broken('bbbbbbbbbbb', [{ metadataParts: [] }, { metadataParts: { text: { content: '5K' } } }]),
+    lockup('ccccccccccc', '1K'),
+  ]));
+  assert.deepEqual(ids(tracks), ['ccccccccccc', 'aaaaaaaaaaa', 'bbbbbbbbbbb']);
 });
 
 test('parseChartResponse: ties keep playlist order; unreadable counts go last; unplayable entries are skipped', () => {
@@ -173,8 +196,16 @@ test('chart: one anonymous browse of the playlist, userPreference, hint header n
 
 test('chart: HTTP errors surface, unknown chartId does not hit the network', async () => {
   browseReply = () => ({ status: 500, body: '{"error":{"message":"boom"}}' });
-  await assert.rejects(chart({ chartId: 'new-this-week' }));
+  // YouTube.js 的例外原樣往外（宿主轉成 UnexpectedError），不是解析空回應得到的 ParseError。
+  await assert.rejects(chart({ chartId: 'new-this-week' }), /status code 500/);
   const before = browses.length;
   await assert.rejects(chart({ chartId: 'nope' }), (e) => e.fmpError === 'NotFound');
   assert.equal(browses.length, before);
+});
+
+test('chart: errors the host network layer raises (rate limit, transport) pass through unchanged', async () => {
+  for (const kind of ['RateLimited', 'NetworkError']) {
+    browseReply = () => { throw Object.assign(new Error(kind), { fmpError: kind }); };
+    await assert.rejects(chart({ chartId: 'new-this-week' }), (e) => e.fmpError === kind, kind);
+  }
 });

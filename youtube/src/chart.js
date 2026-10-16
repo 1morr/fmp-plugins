@@ -18,11 +18,14 @@ export function chartRequest(input) {
   return { browseId: `VL${NEW_THIS_WEEK.playlistId}` };
 }
 
-/** "14M views"、"2.2M"、"1,234 views"、"No views" → 數字；認不得是 0（排在最後）。同舊版 _parseViewCountText。 */
+/**
+ * "14M views"、"2.2M"、"1.5 M"、"1,234 views"、"No views" → 數字；認不得是 0（排在最後）。同舊版 _parseViewCountText
+ * （它先去掉單位再 trim，所以數字與單位之間可以有空白；VIEWS_TEXT 也收這種，兩邊要一致）。
+ */
 export function viewCountOf(text) {
   if (typeof text !== 'string') return 0;
   const cleaned = text.replace(/\s*views?\s*/i, '').replace(/,/g, '').trim();
-  const m = /^(\d+(?:\.\d+)?)([BMK])?$/i.exec(cleaned);
+  const m = /^(\d+(?:\.\d+)?)\s*([BMK])?$/i.exec(cleaned);
   if (!m) return 0;
   const unit = { B: 1e9, M: 1e6, K: 1e3 }[(m[2] || '').toUpperCase()] || 1;
   return Math.round(Number(m[1]) * unit);
@@ -34,12 +37,13 @@ const VIEWS_TEXT = /^(?:\d[\d.,]*\s*[KMB]?(?:\s*views?)?|no views)$/i;
 
 /**
  * lockupViewModel 的觀看次數。第一列是頻道名（可能是純數字，不看）；其後的列裡第一個符合 VIEWS_TEXT 的 part。
- * 找不到是 0（排在最後）。
+ * 找不到是 0（排在最後）；列或格不是陣列（改版）也是 0，不丟例外。
  */
 function lockupViews(lockup) {
-  const rows = ((((lockup.metadata || {}).lockupMetadataViewModel || {}).metadata || {}).contentMetadataViewModel || {}).metadataRows || [];
-  for (const row of rows.slice(1)) {
-    for (const part of (row && row.metadataParts) || []) {
+  const rows = ((((lockup.metadata || {}).lockupMetadataViewModel || {}).metadata || {}).contentMetadataViewModel || {}).metadataRows;
+  for (const row of Array.isArray(rows) ? rows.slice(1) : []) {
+    const parts = row && row.metadataParts;
+    for (const part of Array.isArray(parts) ? parts : []) {
       const text = part && part.text && part.text.content;
       if (typeof text === 'string' && VIEWS_TEXT.test(text.trim())) return viewCountOf(text);
     }
