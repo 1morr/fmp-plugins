@@ -30,6 +30,13 @@
     "input": { "url": "https://space.bilibili.com/8047632/favlist?fid=4026748432" },
     "expect": { "minItems": 10, "nonEmpty": ["track"] }
   },
+  "charts": {
+    "input": { "chartId": "music" },
+    "expect": {
+      "minItems": 10,
+      "nonEmpty": ["sourceId", "title", "uploader", "durationMs", "artwork"]
+    }
+  },
   "login": {
     "input": {
       "cookies": {
