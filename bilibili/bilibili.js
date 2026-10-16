@@ -2,9 +2,9 @@
 {
   "id": "bilibili",
   "name": "Bilibili",
-  "version": "1.6.0",
+  "version": "1.7.0",
   "author": "FMP",
-  "description": "搜尋 Bilibili 影片並播放其音訊，也能搜尋與收聽直播間、匯入收藏夾，可用 QR 碼登入。",
+  "description": "搜尋 Bilibili 影片並播放其音訊，也能搜尋與收聽直播間、匯入收藏夾、瀏覽音樂排行榜，可用 QR 碼登入。",
   "apiVersion": 1,
   "capabilities": [
     "search",
@@ -13,6 +13,7 @@
     "trackDetail",
     "live",
     "importPlaylist",
+    "charts",
     "login"
   ],
   "allowedHosts": [
@@ -39,7 +40,8 @@
     "headerNames": [
       "X-Bili-Metadata-Ip-Region",
       "X-Bili-Metadata-Legal-Region",
-      "X-Bili-Gaia-Vvoucher"
+      "X-Bili-Gaia-Vvoucher",
+      "X-Client-Sign"
     ],
     "keyNames": [
       "buvid",
@@ -3535,6 +3537,41 @@ async function multiPart({ sourceId }) {
   });
   return { parts };
 }
+var CHARTS = [{ chartId: "music", title: "\u97F3\u6A02\u6392\u884C\u699C", rid: 1003 }];
+function chartList() {
+  return { charts: CHARTS.map(({ chartId, title }) => ({ chartId, title })) };
+}
+function rankingTrack(item) {
+  if (item === null || typeof item !== "object" || typeof item.bvid !== "string" || item.bvid === "") return null;
+  const owner = item.owner !== null && typeof item.owner === "object" ? item.owner : {};
+  const title = typeof item.title === "string" ? item.title.trim() : "";
+  return {
+    sourceId: item.bvid,
+    title: title === "" ? "Unknown" : title,
+    uploader: typeof owner.name === "string" && owner.name !== "" ? owner.name : null,
+    durationMs: Number.isInteger(item.duration) && item.duration >= 0 ? item.duration * 1e3 : null,
+    artwork: artwork(item.pic),
+    // 分 P 數（同 search 的 page）：宿主當成能展開的提示。
+    ...Number.isInteger(item.videos) && item.videos > 0 ? { partCount: item.videos } : {}
+  };
+}
+async function chart({ chartId }) {
+  const found = CHARTS.find((entry) => entry.chartId === chartId);
+  if (found === void 0) throw error("NotFound", `chart: no such chart: ${chartId}`);
+  const keys = await wbiKeys();
+  const signed = wbiSign(
+    { rid: found.rid, type: "all", web_location: "333.934" },
+    keys,
+    Math.round(Date.now() / 1e3),
+    fmp.crypto.md5
+  );
+  const json = await get(`${API}/x/web-interface/ranking/v2?${signed}`, API_HEADERS, "ranking");
+  const data = checkCode(json, "ranking");
+  if (!Array.isArray(data.list)) throw error("ParseError", "ranking: no list");
+  const tracks = data.list.map(rankingTrack).filter((track) => track !== null);
+  fmp.log.debug("ranking", { count: tracks.length });
+  return { tracks };
+}
 var FAV_PAGE_SIZE = 20;
 var BILIBILI_HOSTS = ["bilibili.com", "www.bilibili.com", "m.bilibili.com", "space.bilibili.com"];
 var MEDIA_ID = /^[1-9]\d{0,17}$/;
@@ -4166,6 +4203,8 @@ async function loginRefresh(credentials) {
 }
 export {
   artwork,
+  chart,
+  chartList,
   decodeHtmlEntities,
   importPlaylist,
   liveRoomFromUrl,
@@ -4179,6 +4218,7 @@ export {
   parseSetCookies,
   playlistFromUrl,
   qrCredentials,
+  rankingTrack,
   refreshCsrfOf,
   resolveLive,
   resolveStream,

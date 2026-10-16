@@ -339,6 +339,55 @@ export async function multiPart({ sourceId }) {
   return { parts };
 }
 
+// ---------------------------------------------------------------- charts
+
+// 規格是舊專案 bilibili_source.dart 的 getRankingVideos：`x/web-interface/ranking/v2`，音樂區 rid=1003
+// （網頁 /v/popular/rank/music 用的 id，不是 3）、type=all；舊專案不簽 WBI，也不排序、不截斷，順序就是 B 站的榜單順序。
+// 風控（-352 等）照 checkCode 的業務碼對應成 RateLimited；請求帶瀏覽器 UA 與 Referer（API_HEADERS）。
+const CHARTS = [{ chartId: 'music', title: '音樂排行榜', rid: 1003 }];
+
+export function chartList() {
+  return { charts: CHARTS.map(({ chartId, title }) => ({ chartId, title })) };
+}
+
+/**
+ * 榜單的一筆 → TrackSummary；沒有 bvid 的略過。標題是純文字（錄到的回應裡 `&` 沒有轉義、沒有 `<em>`），
+ * 同收藏夾只去頭尾空白，不走 search 的 cleanHtml：那會吃掉標題裡的 `<…>`、把字面的 `&amp;` 解成 `&`。
+ */
+export function rankingTrack(item) {
+  if (item === null || typeof item !== 'object' || typeof item.bvid !== 'string' || item.bvid === '') return null;
+  const owner = item.owner !== null && typeof item.owner === 'object' ? item.owner : {};
+  const title = typeof item.title === 'string' ? item.title.trim() : '';
+  return {
+    sourceId: item.bvid,
+    title: title === '' ? 'Unknown' : title,
+    uploader: typeof owner.name === 'string' && owner.name !== '' ? owner.name : null,
+    durationMs: Number.isInteger(item.duration) && item.duration >= 0 ? item.duration * 1000 : null,
+    artwork: artwork(item.pic),
+    // 分 P 數（同 search 的 page）：宿主當成能展開的提示。
+    ...(Number.isInteger(item.videos) && item.videos > 0 ? { partCount: item.videos } : {}),
+  };
+}
+
+export async function chart({ chartId }) {
+  const found = CHARTS.find((entry) => entry.chartId === chartId);
+  if (found === undefined) throw error('NotFound', `chart: no such chart: ${chartId}`);
+  // 網頁版排行頁帶 WBI 簽名與 web_location；不簽的匿名請求一律 -352（2026-10-16 實測三次）。
+  const keys = await wbiKeys();
+  const signed = wbiSign(
+    { rid: found.rid, type: 'all', web_location: '333.934' },
+    keys,
+    Math.round(Date.now() / 1000),
+    fmp.crypto.md5,
+  );
+  const json = await get(`${API}/x/web-interface/ranking/v2?${signed}`, API_HEADERS, 'ranking');
+  const data = checkCode(json, 'ranking');
+  if (!Array.isArray(data.list)) throw error('ParseError', 'ranking: no list');
+  const tracks = data.list.map(rankingTrack).filter((track) => track !== null);
+  fmp.log.debug('ranking', { count: tracks.length });
+  return { tracks };
+}
+
 // ---------------------------------------------------------------- importPlaylist
 
 // 規格是舊專案 bilibili_source.dart 的 parsePlaylist（收藏夾 `fav/resource/list`）與 import_service.dart 的
