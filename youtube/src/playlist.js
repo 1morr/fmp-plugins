@@ -100,7 +100,7 @@ function playlistOf(p) {
  * 舊版面把項目包在 playlistVideoListRenderer.contents 裡，一併認。找不到 itemSectionRenderer 是 null（歌單不存在、私人）。
  * 注意：sectionListRenderer.contents 的最後也有一個 continuationItemViewModel，但那不是歌單的下一頁，不用。
  */
-function firstPageContents(data) {
+export function firstPageContents(data) {
   const tabs = ((obj(data.contents) || {}).twoColumnBrowseResultsRenderer || {}).tabs || [];
   for (const tab of tabs) {
     const sections = ((((obj(tab) || {}).tabRenderer || {}).content || {}).sectionListRenderer || {}).contents || [];
@@ -154,7 +154,7 @@ function artworkOf(sources) {
  * lockupViewModel（匿名 WEB 現行版面，2026-10 實測）→ TrackSummary。
  * 時長只在縮圖角標（"3:33"／"1:02:03"）；角標不是時長（直播、首播、SHORTS）或沒有的略過，同 search。
  */
-function trackFromLockup(lockup) {
+export function trackFromLockup(lockup) {
   const sourceId = lockup.contentId;
   if (typeof sourceId !== 'string' || sourceId === '') return null;
   if (lockup.contentType !== undefined && lockup.contentType !== 'LOCKUP_CONTENT_TYPE_VIDEO') return null;
@@ -183,7 +183,7 @@ function trackFromLockup(lockup) {
 }
 
 /** playlistVideoRenderer（舊版面）→ TrackSummary；不能播（isPlayable 為 false）或沒有長度的略過。 */
-function trackFromRenderer(renderer) {
+export function trackFromRenderer(renderer) {
   const sourceId = renderer.videoId;
   if (typeof sourceId !== 'string' || sourceId === '' || renderer.isPlayable === false) return null;
   const seconds = Number(renderer.lengthSeconds);

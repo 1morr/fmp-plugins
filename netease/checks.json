@@ -32,6 +32,13 @@
     "input": { "url": "https://music.163.com/#/playlist?id=19723756" },
     "expect": { "minItems": 50, "nonEmpty": ["track"] }
   },
+  "charts": {
+    "input": { "chartId": "hot" },
+    "expect": {
+      "minItems": 40,
+      "nonEmpty": ["sourceId", "title", "uploader", "durationMs", "artwork"]
+    }
+  },
   "login": {
     "input": {
       "cookies": { "MUSIC_U": "fake-music-u-0000", "__csrf": "fake-csrf-0000" }

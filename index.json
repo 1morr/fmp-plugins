@@ -36,14 +36,15 @@
       "id": "netease",
       "name": "網易雲音樂",
       "author": "FMP",
-      "description": "搜尋網易雲音樂的歌曲並播放、匯入歌單，可用 QR 碼登入。",
-      "version": "1.4.0",
+      "description": "搜尋網易雲音樂的歌曲並播放、匯入歌單、瀏覽熱歌榜，可用 QR 碼登入。",
+      "version": "1.5.0",
       "apiVersion": 1,
       "capabilities": [
         "search",
         "resolveStream",
         "trackDetail",
         "importPlaylist",
+        "charts",
         "login"
       ],
       "allowedHosts": [
@@ -52,16 +53,16 @@
         "163cn.tv"
       ],
       "url": "https://raw.githubusercontent.com/1morr/fmp-plugins/main/netease/netease.js",
-      "sha256": "dbc6b9563c162b99bba211548d99b74e3e027b04cadf091b7b676e87a00557e3",
+      "sha256": "4a12950f8c80bcade3efd58a8314fcd9bed8fda99ce2de7b464ce2fa123c240c",
       "checksUrl": "https://raw.githubusercontent.com/1morr/fmp-plugins/main/netease/checks.json",
-      "checksSha256": "92cd1d9a2f2babf6fb85ae97aeac95b0eb935d7a6dfcb67309b14db3e5c48a13"
+      "checksSha256": "ae51bc0cfdf6c4a27299e6e0ffee5df59b9b3325269a7514e2910c9b6a75ccde"
     },
     {
       "id": "youtube",
       "name": "YouTube",
       "author": "FMP",
-      "description": "搜尋 YouTube 影片並播放其音訊。",
-      "version": "1.3.0",
+      "description": "搜尋 YouTube 影片並播放其音訊，可匯入播放清單與瀏覽「本週新歌」榜單。",
+      "version": "1.4.0",
       "apiVersion": 1,
       "capabilities": [
         "search",
@@ -69,6 +70,7 @@
         "mix",
         "trackDetail",
         "importPlaylist",
+        "charts",
         "login"
       ],
       "allowedHosts": [
@@ -79,9 +81,9 @@
         "accounts.google.com"
       ],
       "url": "https://raw.githubusercontent.com/1morr/fmp-plugins/main/youtube/youtube.js",
-      "sha256": "cdab9e62f6b3e5ba6234dadc325ef1e19ef15ddb851783f8e05de106b031b412",
+      "sha256": "ae13b987ca6550979f284912c5bd1888f1d665f865f54a9285bcd52f2d1335b0",
       "checksUrl": "https://raw.githubusercontent.com/1morr/fmp-plugins/main/youtube/checks.json",
-      "checksSha256": "93479a190cf86837e2d43b6d708164c1934b9d40def26beba9aca841d36fa659"
+      "checksSha256": "05a00114c9fee66a58832d8bad3bbce548f51dc6f41e08216779b53991f7e6b7"
     }
   ]
 }

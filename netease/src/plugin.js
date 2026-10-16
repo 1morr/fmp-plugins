@@ -324,6 +324,30 @@ function playlistDenied(json) {
   return json.code === 200 && (json.playlist === null || typeof json.playlist !== 'object');
 }
 
+/**
+ * 詳情只給前幾首完整資料（tracks），其餘的 id 再以一個 song/detail 補（一批就是一頁，至多 PLAYLIST_PAGE_SIZE 個 id）。
+ * 回 id（字串）→ 歌曲、id → privilege 兩張表與補了幾首。importPlaylist 與 chart 共用。
+ */
+async function songsOf(ids, detailTracks, detailPrivileges) {
+  const songs = new Map();
+  const privileges = new Map();
+  const collect = (songList, privilegeList) => {
+    for (const song of Array.isArray(songList) ? songList : []) {
+      if (song !== null && typeof song === 'object' && song.id !== undefined && song.id !== null) songs.set(String(song.id), song);
+    }
+    for (const p of Array.isArray(privilegeList) ? privilegeList : []) {
+      if (p !== null && typeof p === 'object' && p.id !== undefined && p.id !== null) privileges.set(String(p.id), p);
+    }
+  };
+  collect(detailTracks, detailPrivileges);
+  const missing = ids.filter((id) => !songs.has(String(id)));
+  if (missing.length > 0) {
+    const batch = await post(`${MUSIC}/api/v3/song/detail`, form({ c: JSON.stringify(missing.map((id) => ({ id }))) }), 'song detail');
+    collect(batch.songs, batch.privileges);
+  }
+  return { songs, privileges, fetched: missing.length };
+}
+
 export async function importPlaylist(input) {
   const { playlistId, cursor } = input || {};
   if (typeof playlistId !== 'string' || !PLAYLIST_ID.test(playlistId)) {
@@ -365,24 +389,8 @@ export async function importPlaylist(input) {
   const creator = info.creator !== null && typeof info.creator === 'object' ? info.creator : {};
   if (typeof creator.nickname === 'string' && creator.nickname !== '') playlist.ownerName = creator.nickname;
 
-  // 詳情只給前幾首完整資料（tracks），其餘的 id 這一頁的部分再以 song/detail 補。
   const slice = ids.slice(offset, offset + PLAYLIST_PAGE_SIZE);
-  const songs = new Map();
-  const privileges = new Map();
-  const collect = (songList, privilegeList) => {
-    for (const song of Array.isArray(songList) ? songList : []) {
-      if (song !== null && typeof song === 'object' && song.id !== undefined && song.id !== null) songs.set(String(song.id), song);
-    }
-    for (const p of Array.isArray(privilegeList) ? privilegeList : []) {
-      if (p !== null && typeof p === 'object' && p.id !== undefined && p.id !== null) privileges.set(String(p.id), p);
-    }
-  };
-  collect(info.tracks, res.json.privileges);
-  const missing = slice.filter((id) => !songs.has(String(id)));
-  if (missing.length > 0) {
-    const batch = await post(`${MUSIC}/api/v3/song/detail`, form({ c: JSON.stringify(missing.map((id) => ({ id }))) }), 'song detail');
-    collect(batch.songs, batch.privileges);
-  }
+  const { songs, privileges, fetched } = await songsOf(slice, info.tracks, res.json.privileges);
   const items = [];
   for (const id of slice) {
     const track = trackOfSong(songs.get(String(id)));
@@ -390,7 +398,7 @@ export async function importPlaylist(input) {
     const privilege = privileges.get(String(id));
     items.push(privilege && privilege.st === ST_UNAVAILABLE ? { track, unavailable: true } : { track });
   }
-  fmp.log.debug('playlist page', { offset, ids: slice.length, fetched: missing.length, items: items.length, retried });
+  fmp.log.debug('playlist page', { offset, ids: slice.length, fetched, items: items.length, retried });
   return {
     playlist,
     items,
@@ -398,6 +406,33 @@ export async function importPlaylist(input) {
     // 歌單自己的 id 清單長度；歌曲資料取不到的 id 會讓筆數少於它，宿主就當不完整、不套用移除。
     total: ids.length,
   };
+}
+
+// ---------------------------------------------------------------- charts
+
+// 規格是舊專案 netease_source.dart 的 getHotRankingTracks：官方熱歌榜歌單 3778678，取前 50 個 trackId，
+// 歌曲資料的取法同 importPlaylist（詳情自帶的前幾首加一個 song/detail 補齊），順序是歌單的順序。
+const HOT_PLAYLIST_ID = '3778678';
+const HOT_LIMIT = 50;
+const CHARTS = [{ chartId: 'hot', title: '熱歌榜' }];
+
+export function chartList() {
+  return { charts: CHARTS.map(({ chartId, title }) => ({ chartId, title })) };
+}
+
+export async function chart({ chartId }) {
+  if (!CHARTS.some((entry) => entry.chartId === chartId)) throw error('NotFound', `chart: no such chart: ${chartId}`);
+  const { json } = await postRaw(`${MUSIC}/api/v6/playlist/detail`, form({ id: HOT_PLAYLIST_ID }), 'chart detail');
+  if (json.code !== 200) throw responseCodeError(json.code, json.message || json.msg, 'chart detail');
+  const info = json.playlist;
+  if (info === null || typeof info !== 'object' || !Array.isArray(info.trackIds)) throw error('ParseError', 'chart detail: no trackIds');
+  const ids = info.trackIds.slice(0, HOT_LIMIT).map((t) => (t !== null && typeof t === 'object' ? t.id : undefined));
+  if (!ids.every((id) => Number.isSafeInteger(id) && id > 0)) throw error('ParseError', 'chart detail: bad trackIds');
+  const { songs, fetched } = await songsOf(ids, info.tracks, json.privileges);
+  // song/detail 的回傳順序不保證，照榜單的 id 順序排；取不到歌曲資料的 id 略過。
+  const tracks = ids.map((id) => trackOfSong(songs.get(String(id)))).filter((track) => track !== null);
+  fmp.log.debug('chart', { ids: ids.length, fetched, tracks: tracks.length });
+  return { tracks };
 }
 
 // ---------------------------------------------------------------- login (QR)

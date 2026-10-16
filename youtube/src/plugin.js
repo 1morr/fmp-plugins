@@ -8,6 +8,7 @@ import { mixRequest, parseMixResponse } from './mix.js';
 import { trackDetailRequest, parseTrackDetail } from './track_detail.js';
 import { isAllowedHttps } from './urls.js';
 import { callResults } from './host_request.js';
+import { chartList as chartListOf, chartRequest, parseChartResponse } from './chart.js';
 import { browseRequest, cursorFor, interpret, playlistFromUrl as parsePlaylistUrl } from './playlist.js';
 
 // ---------------------------------------------------------------- platform
@@ -300,6 +301,23 @@ export async function importPlaylist(input) {
   const { playlist, items, token } = outcome.page;
   fmp.log.debug('playlist page', { count: items.length, hasCursor: token !== null, retried: usedRequired !== required, ms: now() - t0 });
   return { playlist, items, cursor: cursorFor(playlist, token, usedRequired) };
+}
+
+// ---------------------------------------------------------------- charts
+export function chartList() {
+  return chartListOf();
+}
+
+export async function chart(input) {
+  const body = chartRequest(input);
+  const yt = await innertube();
+  const t0 = now();
+  // 匿名可讀的公開歌單：userPreference，被拒不補登入（沒有私人榜單）。4xx／5xx 原樣往外。
+  const res = await browse(yt, body, 'userPreference');
+  if (res.status >= 400) throw res.error;
+  const tracks = parseChartResponse(res.data);
+  fmp.log.debug('chart', { count: tracks.length, ms: now() - t0 });
+  return { tracks };
 }
 
 // ---------------------------------------------------------------- login

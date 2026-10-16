@@ -2,15 +2,16 @@
 {
   "id": "netease",
   "name": "網易雲音樂",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "author": "FMP",
-  "description": "搜尋網易雲音樂的歌曲並播放、匯入歌單，可用 QR 碼登入。",
+  "description": "搜尋網易雲音樂的歌曲並播放、匯入歌單、瀏覽熱歌榜，可用 QR 碼登入。",
   "apiVersion": 1,
   "capabilities": [
     "search",
     "resolveStream",
     "trackDetail",
     "importPlaylist",
+    "charts",
     "login"
   ],
   "allowedHosts": [
@@ -3493,6 +3494,25 @@ function playlistDenied(json) {
   if (PLAYLIST_DENIED_CODES.includes(json.code)) return true;
   return json.code === 200 && (json.playlist === null || typeof json.playlist !== "object");
 }
+async function songsOf(ids, detailTracks, detailPrivileges) {
+  const songs = /* @__PURE__ */ new Map();
+  const privileges = /* @__PURE__ */ new Map();
+  const collect = (songList, privilegeList) => {
+    for (const song of Array.isArray(songList) ? songList : []) {
+      if (song !== null && typeof song === "object" && song.id !== void 0 && song.id !== null) songs.set(String(song.id), song);
+    }
+    for (const p of Array.isArray(privilegeList) ? privilegeList : []) {
+      if (p !== null && typeof p === "object" && p.id !== void 0 && p.id !== null) privileges.set(String(p.id), p);
+    }
+  };
+  collect(detailTracks, detailPrivileges);
+  const missing = ids.filter((id) => !songs.has(String(id)));
+  if (missing.length > 0) {
+    const batch = await post(`${MUSIC}/api/v3/song/detail`, form({ c: JSON.stringify(missing.map((id) => ({ id }))) }), "song detail");
+    collect(batch.songs, batch.privileges);
+  }
+  return { songs, privileges, fetched: missing.length };
+}
 async function importPlaylist(input) {
   const { playlistId, cursor } = input || {};
   if (typeof playlistId !== "string" || !PLAYLIST_ID.test(playlistId)) {
@@ -3532,22 +3552,7 @@ async function importPlaylist(input) {
   const creator = info.creator !== null && typeof info.creator === "object" ? info.creator : {};
   if (typeof creator.nickname === "string" && creator.nickname !== "") playlist.ownerName = creator.nickname;
   const slice = ids.slice(offset, offset + PLAYLIST_PAGE_SIZE);
-  const songs = /* @__PURE__ */ new Map();
-  const privileges = /* @__PURE__ */ new Map();
-  const collect = (songList, privilegeList) => {
-    for (const song of Array.isArray(songList) ? songList : []) {
-      if (song !== null && typeof song === "object" && song.id !== void 0 && song.id !== null) songs.set(String(song.id), song);
-    }
-    for (const p of Array.isArray(privilegeList) ? privilegeList : []) {
-      if (p !== null && typeof p === "object" && p.id !== void 0 && p.id !== null) privileges.set(String(p.id), p);
-    }
-  };
-  collect(info.tracks, res.json.privileges);
-  const missing = slice.filter((id) => !songs.has(String(id)));
-  if (missing.length > 0) {
-    const batch = await post(`${MUSIC}/api/v3/song/detail`, form({ c: JSON.stringify(missing.map((id) => ({ id }))) }), "song detail");
-    collect(batch.songs, batch.privileges);
-  }
+  const { songs, privileges, fetched } = await songsOf(slice, info.tracks, res.json.privileges);
   const items = [];
   for (const id of slice) {
     const track = trackOfSong(songs.get(String(id)));
@@ -3555,7 +3560,7 @@ async function importPlaylist(input) {
     const privilege = privileges.get(String(id));
     items.push(privilege && privilege.st === ST_UNAVAILABLE ? { track, unavailable: true } : { track });
   }
-  fmp.log.debug("playlist page", { offset, ids: slice.length, fetched: missing.length, items: items.length, retried });
+  fmp.log.debug("playlist page", { offset, ids: slice.length, fetched, items: items.length, retried });
   return {
     playlist,
     items,
@@ -3563,6 +3568,25 @@ async function importPlaylist(input) {
     // 歌單自己的 id 清單長度；歌曲資料取不到的 id 會讓筆數少於它，宿主就當不完整、不套用移除。
     total: ids.length
   };
+}
+var HOT_PLAYLIST_ID = "3778678";
+var HOT_LIMIT = 50;
+var CHARTS = [{ chartId: "hot", title: "\u71B1\u6B4C\u699C" }];
+function chartList() {
+  return { charts: CHARTS.map(({ chartId, title }) => ({ chartId, title })) };
+}
+async function chart({ chartId }) {
+  if (!CHARTS.some((entry) => entry.chartId === chartId)) throw error("NotFound", `chart: no such chart: ${chartId}`);
+  const { json } = await postRaw(`${MUSIC}/api/v6/playlist/detail`, form({ id: HOT_PLAYLIST_ID }), "chart detail");
+  if (json.code !== 200) throw responseCodeError(json.code, json.message || json.msg, "chart detail");
+  const info = json.playlist;
+  if (info === null || typeof info !== "object" || !Array.isArray(info.trackIds)) throw error("ParseError", "chart detail: no trackIds");
+  const ids = info.trackIds.slice(0, HOT_LIMIT).map((t) => t !== null && typeof t === "object" ? t.id : void 0);
+  if (!ids.every((id) => Number.isSafeInteger(id) && id > 0)) throw error("ParseError", "chart detail: bad trackIds");
+  const { songs, fetched } = await songsOf(ids, info.tracks, json.privileges);
+  const tracks = ids.map((id) => trackOfSong(songs.get(String(id)))).filter((track) => track !== null);
+  fmp.log.debug("chart", { ids: ids.length, fetched, tracks: tracks.length });
+  return { tracks };
 }
 var QR_COOKIE = "os=pc; osver=Microsoft-Windows-10-Professional-build-10586-64bit; appver=2.7.1.198277; channel=netease; __csrf=; MUSIC_U=";
 var QR_LOGIN_URL = `${MUSIC}/login?codekey=`;
@@ -3636,6 +3660,8 @@ async function loginVerify(credentials) {
   return accountOf(json, responseCodeError, artwork);
 }
 export {
+  chart,
+  chartList,
   importPlaylist,
   loginQrPoll,
   loginQrStart,
