@@ -73,6 +73,7 @@ test('chart: first 50 of the playlist, the rest filled in by one song/detail bat
     assert.equal(req.method, 'POST');
     assert.equal(req.auth, 'userPreference');
     assert.equal(req.idempotent, true);
+    assert.equal(req.headers['X-Real-IP'], undefined, 'the mainland address is only for resolveStream');
   }
 });
 
