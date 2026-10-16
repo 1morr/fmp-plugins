@@ -1,0 +1,620 @@
+{
+  "contents": {
+    "twoColumnBrowseResultsRenderer": {
+      "tabs": [
+        {
+          "tabRenderer": {
+            "content": {
+              "sectionListRenderer": {
+                "contents": [
+                  {
+                    "itemSectionRenderer": {
+                      "contents": [
+                        {
+                          "lockupViewModel": {
+                            "contentId": "QKNcOVr6okA",
+                            "contentType": "LOCKUP_CONTENT_TYPE_VIDEO",
+                            "contentImage": {
+                              "thumbnailViewModel": {
+                                "image": {
+                                  "sources": [
+                                    {
+                                      "url": "https://i.ytimg.com/vi/QKNcOVr6okA/hqdefault.jpg?sqp=-oaymwEfCKgBEF5IVfKriqkDEggBFQAAiEIYAXABwAEGuALzGA==&rs=AOn4CLAqrUZ8nvhGitZM4o7tGx1KwSSf9Q",
+                                      "width": 168,
+                                      "height": 94
+                                    },
+                                    {
+                                      "url": "https://i.ytimg.com/vi/QKNcOVr6okA/hqdefault.jpg?sqp=-oaymwEfCMQBEG5IVfKriqkDEggBFQAAiEIYAXABwAEGuALzGA==&rs=AOn4CLDDQiRI3ved6YM5B-AmHtXwTJWbyw",
+                                      "width": 196,
+                                      "height": 110
+                                    }
+                                  ]
+                                },
+                                "overlays": [
+                                  {
+                                    "thumbnailBottomOverlayViewModel": {
+                                      "badges": [
+                                        {
+                                          "thumbnailBadgeViewModel": {
+                                            "text": "2:23"
+                                          }
+                                        }
+                                      ]
+                                    }
+                                  }
+                                ]
+                              }
+                            },
+                            "metadata": {
+                              "lockupMetadataViewModel": {
+                                "title": {
+                                  "content": "DDG, BunnaB - SCRUB DA GROUND (Official Music Video)"
+                                },
+                                "metadata": {
+                                  "contentMetadataViewModel": {
+                                    "metadataRows": [
+                                      {
+                                        "metadataParts": [
+                                          {
+                                            "text": {
+                                              "content": "DDG"
+                                            }
+                                          }
+                                        ]
+                                      },
+                                      {
+                                        "metadataParts": [
+                                          {
+                                            "text": {
+                                              "content": "235K"
+                                            }
+                                          },
+                                          {
+                                            "text": {
+                                              "content": "7d ago"
+                                            }
+                                          }
+                                        ]
+                                      }
+                                    ]
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "lockupViewModel": {
+                            "contentId": "AVu5p2DMIf8",
+                            "contentType": "LOCKUP_CONTENT_TYPE_VIDEO",
+                            "contentImage": {
+                              "thumbnailViewModel": {
+                                "image": {
+                                  "sources": [
+                                    {
+                                      "url": "https://i.ytimg.com/vi/AVu5p2DMIf8/hqdefault.jpg?sqp=-oaymwEfCKgBEF5IVfKriqkDEggBFQAAiEIYAXABwAEGuALzGA==&rs=AOn4CLC7IVMgsx__o-Lz152qx-aySRRtoA",
+                                      "width": 168,
+                                      "height": 94
+                                    },
+                                    {
+                                      "url": "https://i.ytimg.com/vi/AVu5p2DMIf8/hqdefault.jpg?sqp=-oaymwEfCMQBEG5IVfKriqkDEggBFQAAiEIYAXABwAEGuALzGA==&rs=AOn4CLDFGlrA_D6dUqqNc9-L21KTmeW-yQ",
+                                      "width": 196,
+                                      "height": 110
+                                    }
+                                  ]
+                                },
+                                "overlays": [
+                                  {
+                                    "thumbnailBottomOverlayViewModel": {
+                                      "badges": [
+                                        {
+                                          "thumbnailBadgeViewModel": {
+                                            "text": "4:32"
+                                          }
+                                        }
+                                      ]
+                                    }
+                                  }
+                                ]
+                              }
+                            },
+                            "metadata": {
+                              "lockupMetadataViewModel": {
+                                "title": {
+                                  "content": "Grimes - ACCELERANDO (Official Music Video)"
+                                },
+                                "metadata": {
+                                  "contentMetadataViewModel": {
+                                    "metadataRows": [
+                                      {
+                                        "metadataParts": [
+                                          {
+                                            "text": {
+                                              "content": "Grimes"
+                                            }
+                                          }
+                                        ]
+                                      },
+                                      {
+                                        "metadataParts": [
+                                          {
+                                            "text": {
+                                              "content": "1.2M"
+                                            }
+                                          },
+                                          {
+                                            "text": {
+                                              "content": "6d ago"
+                                            }
+                                          }
+                                        ]
+                                      }
+                                    ]
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "lockupViewModel": {
+                            "contentId": "ibLgtCXxTfw",
+                            "contentType": "LOCKUP_CONTENT_TYPE_VIDEO",
+                            "contentImage": {
+                              "thumbnailViewModel": {
+                                "image": {
+                                  "sources": [
+                                    {
+                                      "url": "https://i.ytimg.com/vi/ibLgtCXxTfw/hqdefault.jpg?sqp=-oaymwE5CKgBEF5IVfKriqkDLAgBFQAAiEIYAXABwAEG8AEB-AH-CYAC0AWKAgwIABABGHIgTChFMA-4AvMY&rs=AOn4CLDBVONbUJe6F50gaXPsBZ83iicDww",
+                                      "width": 168,
+                                      "height": 94
+                                    },
+                                    {
+                                      "url": "https://i.ytimg.com/vi/ibLgtCXxTfw/hqdefault.jpg?sqp=-oaymwE5CMQBEG5IVfKriqkDLAgBFQAAiEIYAXABwAEG8AEB-AH-CYAC0AWKAgwIABABGHIgTChFMA-4AvMY&rs=AOn4CLBqliXrdhPpiNXHk3dJQvRnMHlwoA",
+                                      "width": 196,
+                                      "height": 110
+                                    }
+                                  ]
+                                },
+                                "overlays": [
+                                  {
+                                    "thumbnailBottomOverlayViewModel": {
+                                      "badges": [
+                                        {
+                                          "thumbnailBadgeViewModel": {
+                                            "text": "3:05"
+                                          }
+                                        }
+                                      ]
+                                    }
+                                  }
+                                ]
+                              }
+                            },
+                            "metadata": {
+                              "lockupMetadataViewModel": {
+                                "title": {
+                                  "content": "Sheryl Crow - Pick You Up (Official Music Video)"
+                                },
+                                "metadata": {
+                                  "contentMetadataViewModel": {
+                                    "metadataRows": [
+                                      {
+                                        "metadataParts": [
+                                          {
+                                            "text": {
+                                              "content": "Sheryl Crow"
+                                            }
+                                          }
+                                        ]
+                                      },
+                                      {
+                                        "metadataParts": [
+                                          {
+                                            "text": {
+                                              "content": "257K"
+                                            }
+                                          },
+                                          {
+                                            "text": {
+                                              "content": "6d ago"
+                                            }
+                                          }
+                                        ]
+                                      }
+                                    ]
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "lockupViewModel": {
+                            "contentId": "rtXWUOMXHRI",
+                            "contentType": "LOCKUP_CONTENT_TYPE_VIDEO",
+                            "contentImage": {
+                              "thumbnailViewModel": {
+                                "image": {
+                                  "sources": [
+                                    {
+                                      "url": "https://i.ytimg.com/vi/rtXWUOMXHRI/hqdefault.jpg?sqp=-oaymwEfCKgBEF5IVfKriqkDEggBFQAAiEIYAXABwAEGuALzGA==&rs=AOn4CLD06RKM_YTU5qoW1yZr7CTA4xeBwg",
+                                      "width": 168,
+                                      "height": 94
+                                    },
+                                    {
+                                      "url": "https://i.ytimg.com/vi/rtXWUOMXHRI/hqdefault.jpg?sqp=-oaymwEfCMQBEG5IVfKriqkDEggBFQAAiEIYAXABwAEGuALzGA==&rs=AOn4CLDLKp7_mnUG28WQqA_A4w0l2MDbEw",
+                                      "width": 196,
+                                      "height": 110
+                                    }
+                                  ]
+                                },
+                                "overlays": [
+                                  {
+                                    "thumbnailBottomOverlayViewModel": {
+                                      "badges": [
+                                        {
+                                          "thumbnailBadgeViewModel": {
+                                            "text": "2:39"
+                                          }
+                                        }
+                                      ]
+                                    }
+                                  }
+                                ]
+                              }
+                            },
+                            "metadata": {
+                              "lockupMetadataViewModel": {
+                                "title": {
+                                  "content": "TOBE NWIGWE, BUSTA RHYMES | CHINEKE (Official Music Video)"
+                                },
+                                "metadata": {
+                                  "contentMetadataViewModel": {
+                                    "metadataRows": [
+                                      {
+                                        "metadataParts": [
+                                          {
+                                            "text": {
+                                              "content": "Tobe Nwigwe"
+                                            }
+                                          }
+                                        ]
+                                      },
+                                      {
+                                        "metadataParts": [
+                                          {
+                                            "text": {
+                                              "content": "700K"
+                                            }
+                                          },
+                                          {
+                                            "text": {
+                                              "content": "7d ago"
+                                            }
+                                          }
+                                        ]
+                                      }
+                                    ]
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "lockupViewModel": {
+                            "contentId": "3juuih0WdH8",
+                            "contentType": "LOCKUP_CONTENT_TYPE_VIDEO",
+                            "contentImage": {
+                              "thumbnailViewModel": {
+                                "image": {
+                                  "sources": [
+                                    {
+                                      "url": "https://i.ytimg.com/vi/3juuih0WdH8/hqdefault.jpg?sqp=-oaymwEfCKgBEF5IVfKriqkDEggBFQAAiEIYAXABwAEGuALzGA==&rs=AOn4CLBOsk65xsRAmJBF8FyRx-oKTLx7kw",
+                                      "width": 168,
+                                      "height": 94
+                                    },
+                                    {
+                                      "url": "https://i.ytimg.com/vi/3juuih0WdH8/hqdefault.jpg?sqp=-oaymwEfCMQBEG5IVfKriqkDEggBFQAAiEIYAXABwAEGuALzGA==&rs=AOn4CLBXcP6CGSifLgmEAeAtTr1CJUXhWA",
+                                      "width": 196,
+                                      "height": 110
+                                    }
+                                  ]
+                                },
+                                "overlays": [
+                                  {
+                                    "thumbnailBottomOverlayViewModel": {
+                                      "badges": [
+                                        {
+                                          "thumbnailBadgeViewModel": {
+                                            "text": "4:50"
+                                          }
+                                        }
+                                      ]
+                                    }
+                                  }
+                                ]
+                              }
+                            },
+                            "metadata": {
+                              "lockupMetadataViewModel": {
+                                "title": {
+                                  "content": "Anuel AA - Vuelve (Video Oficial)"
+                                },
+                                "metadata": {
+                                  "contentMetadataViewModel": {
+                                    "metadataRows": [
+                                      {
+                                        "metadataParts": [
+                                          {
+                                            "text": {
+                                              "content": "Anuel AA"
+                                            }
+                                          }
+                                        ]
+                                      },
+                                      {
+                                        "metadataParts": [
+                                          {
+                                            "text": {
+                                              "content": "14M"
+                                            }
+                                          },
+                                          {
+                                            "text": {
+                                              "content": "6d ago"
+                                            }
+                                          }
+                                        ]
+                                      }
+                                    ]
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "lockupViewModel": {
+                            "contentId": "p0-pdE1GmUA",
+                            "contentType": "LOCKUP_CONTENT_TYPE_VIDEO",
+                            "contentImage": {
+                              "thumbnailViewModel": {
+                                "image": {
+                                  "sources": [
+                                    {
+                                      "url": "https://i.ytimg.com/vi/p0-pdE1GmUA/hqdefault.jpg?sqp=-oaymwEfCKgBEF5IVfKriqkDEggBFQAAiEIYAXABwAEGuALzGA==&rs=AOn4CLBBTAaYgW1rM57Z3_KeSzHHnN8lBQ",
+                                      "width": 168,
+                                      "height": 94
+                                    },
+                                    {
+                                      "url": "https://i.ytimg.com/vi/p0-pdE1GmUA/hqdefault.jpg?sqp=-oaymwEfCMQBEG5IVfKriqkDEggBFQAAiEIYAXABwAEGuALzGA==&rs=AOn4CLBBzvGnfNDh5b3bNf298WLQ2ewSIg",
+                                      "width": 196,
+                                      "height": 110
+                                    }
+                                  ]
+                                },
+                                "overlays": [
+                                  {
+                                    "thumbnailBottomOverlayViewModel": {
+                                      "badges": [
+                                        {
+                                          "thumbnailBadgeViewModel": {
+                                            "text": "4:10"
+                                          }
+                                        }
+                                      ]
+                                    }
+                                  }
+                                ]
+                              }
+                            },
+                            "metadata": {
+                              "lockupMetadataViewModel": {
+                                "title": {
+                                  "content": "girl in red - blue (Official Video)"
+                                },
+                                "metadata": {
+                                  "contentMetadataViewModel": {
+                                    "metadataRows": [
+                                      {
+                                        "metadataParts": [
+                                          {
+                                            "text": {
+                                              "content": "girl in red"
+                                            }
+                                          }
+                                        ]
+                                      },
+                                      {
+                                        "metadataParts": [
+                                          {
+                                            "text": {
+                                              "content": "994K"
+                                            }
+                                          },
+                                          {
+                                            "text": {
+                                              "content": "7d ago"
+                                            }
+                                          }
+                                        ]
+                                      }
+                                    ]
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "lockupViewModel": {
+                            "contentId": "0U-dWoBc4rE",
+                            "contentType": "LOCKUP_CONTENT_TYPE_VIDEO",
+                            "contentImage": {
+                              "thumbnailViewModel": {
+                                "image": {
+                                  "sources": [
+                                    {
+                                      "url": "https://i.ytimg.com/vi/0U-dWoBc4rE/hqdefault.jpg?sqp=-oaymwEfCKgBEF5IVfKriqkDEggBFQAAiEIYAXABwAEGuALzGA==&rs=AOn4CLD3pEhcJtPWRl_lam9YplDElt_1oA",
+                                      "width": 168,
+                                      "height": 94
+                                    },
+                                    {
+                                      "url": "https://i.ytimg.com/vi/0U-dWoBc4rE/hqdefault.jpg?sqp=-oaymwEfCMQBEG5IVfKriqkDEggBFQAAiEIYAXABwAEGuALzGA==&rs=AOn4CLBX9tT6mA9MpmHLtILMmhZVvMGrcQ",
+                                      "width": 196,
+                                      "height": 110
+                                    }
+                                  ]
+                                },
+                                "overlays": [
+                                  {
+                                    "thumbnailBottomOverlayViewModel": {
+                                      "badges": [
+                                        {
+                                          "thumbnailBadgeViewModel": {
+                                            "text": "3:38"
+                                          }
+                                        }
+                                      ]
+                                    }
+                                  }
+                                ]
+                              }
+                            },
+                            "metadata": {
+                              "lockupMetadataViewModel": {
+                                "title": {
+                                  "content": "Lainey Wilson - Kinda Love It (Official Music Video)"
+                                },
+                                "metadata": {
+                                  "contentMetadataViewModel": {
+                                    "metadataRows": [
+                                      {
+                                        "metadataParts": [
+                                          {
+                                            "text": {
+                                              "content": "Lainey Wilson"
+                                            }
+                                          }
+                                        ]
+                                      },
+                                      {
+                                        "metadataParts": [
+                                          {
+                                            "text": {
+                                              "content": "664K"
+                                            }
+                                          },
+                                          {
+                                            "text": {
+                                              "content": "7d ago"
+                                            }
+                                          }
+                                        ]
+                                      }
+                                    ]
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "lockupViewModel": {
+                            "contentId": "fYaF00OZ69U",
+                            "contentType": "LOCKUP_CONTENT_TYPE_VIDEO",
+                            "contentImage": {
+                              "thumbnailViewModel": {
+                                "image": {
+                                  "sources": [
+                                    {
+                                      "url": "https://i.ytimg.com/vi/fYaF00OZ69U/hqdefault.jpg?sqp=-oaymwEfCKgBEF5IVfKriqkDEggBFQAAiEIYAXABwAEGuALzGA==&rs=AOn4CLDX2_q8npBh6nPu4kbtOuekPt3IcQ",
+                                      "width": 168,
+                                      "height": 94
+                                    },
+                                    {
+                                      "url": "https://i.ytimg.com/vi/fYaF00OZ69U/hqdefault.jpg?sqp=-oaymwEfCMQBEG5IVfKriqkDEggBFQAAiEIYAXABwAEGuALzGA==&rs=AOn4CLBoy2DYamI5-KHjXwFzV4C7GpOOaA",
+                                      "width": 196,
+                                      "height": 110
+                                    }
+                                  ]
+                                },
+                                "overlays": [
+                                  {
+                                    "thumbnailBottomOverlayViewModel": {
+                                      "badges": [
+                                        {
+                                          "thumbnailBadgeViewModel": {
+                                            "text": "4:52"
+                                          }
+                                        }
+                                      ]
+                                    }
+                                  }
+                                ]
+                              }
+                            },
+                            "metadata": {
+                              "lockupMetadataViewModel": {
+                                "title": {
+                                  "content": "Troye Sivan - FF (Official Music Video)"
+                                },
+                                "metadata": {
+                                  "contentMetadataViewModel": {
+                                    "metadataRows": [
+                                      {
+                                        "metadataParts": [
+                                          {
+                                            "text": {
+                                              "content": "Troye Sivan"
+                                            }
+                                          }
+                                        ]
+                                      },
+                                      {
+                                        "metadataParts": [
+                                          {
+                                            "text": {
+                                              "content": "2.5M"
+                                            }
+                                          },
+                                          {
+                                            "text": {
+                                              "content": "7d ago"
+                                            }
+                                          }
+                                        ]
+                                      }
+                                    ]
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "header": {
+    "playlistHeaderRenderer": {
+      "title": {
+        "simpleText": "New This Week"
+      }
+    }
+  },
+  "metadata": {
+    "playlistMetadataRenderer": {
+      "title": "New This Week"
+    }
+  }
+}
