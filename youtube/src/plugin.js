@@ -9,8 +9,11 @@ import { trackDetailRequest, parseTrackDetail } from './track_detail.js';
 import { isAllowedHttps } from './urls.js';
 import { callResults } from './host_request.js';
 import { chartList as chartListOf, chartRequest, parseChartResponse } from './chart.js';
-import { browseRequest, cursorFor, interpret, playlistFromUrl as parsePlaylistUrl } from './playlist.js';
+import { browseRequest, cursorFor, importable, interpret, playlistFromUrl as parsePlaylistUrl } from './playlist.js';
 import { libraryRequest, parseLibraryResponse } from './library.js';
+import {
+  ABORT_KINDS, MAX_SCAN_PAGES, addBody, checkPlaylistId, createBody, failedResult, removeBody, scanPage, videoIdOf, writeFailure,
+} from './library_write.js';
 
 // ---------------------------------------------------------------- platform
 // Cache over fmp.storage (values are ArrayBuffers; storage takes strings).
@@ -261,10 +264,15 @@ export function playlistFromUrl(input) {
 let callSeq = 0;
 
 /** 一次 browse。2xx 回 {status, data, credentialsAttached}；4xx／5xx 回 {status, error, credentialsAttached}（不丟）。 */
-async function browse(yt, body, auth) {
-  const id = `browse-${++callSeq}`;
+function browse(yt, body, auth) {
+  return innertubeCall(yt, '/browse', body, auth);
+}
+
+/** 同 browse，路徑可換（`/browse/edit_playlist`、`/playlist/create` 也走這裡）。 */
+async function innertubeCall(yt, path, body, auth) {
+  const id = `call-${++callSeq}`;
   try {
-    const response = await yt.session.http.fetch('/browse', {
+    const response = await yt.session.http.fetch(path, {
       method: 'POST',
       body: JSON.stringify(body),
       headers: { 'Content-Type': 'application/json', 'x-fmp-call': `${id}|${auth}` },
@@ -318,6 +326,165 @@ export async function libraryPlaylists(input) {
   const { playlists, cursor } = parseLibraryResponse(res.data, { continuation: body.continuation !== undefined });
   fmp.log.debug('library playlists', { count: playlists.length, hasCursor: cursor !== null, ms: now() - t0 });
   return { playlists, cursor };
+}
+
+// ---------------------------------------------------------------- libraryWrite
+// 寫入請求一律 required。YouTube 的 edit_playlist 一次可以帶多個 action，但回應只有一個 status、分不出哪一項失敗，
+// 所以像舊版一樣一項一個請求，換得逐項的結果。
+
+/**
+ * 逐頁掃描 `VL<playlistId>`，收 videoId → {setVideoId}（同一支影片出現多次取第一個，同舊版 getSetVideoId）。
+ * 所有 targets 都找到就提早停。讀不到（結構化錯誤）往外丟，由呼叫端把每一項標成失敗。
+ */
+async function scanPlaylist(yt, playlistId, targets) {
+  const found = new Map();
+  let body = { browseId: `VL${playlistId}` };
+  for (let page = 0; page < MAX_SCAN_PAGES; page++) {
+    const res = await browse(yt, body, 'required');
+    if (res.status >= 400) throw writeFailure(res);
+    const { entries, token } = scanPage(res.data, { continuation: page > 0 });
+    for (const { videoId, setVideoId } of entries) {
+      if (targets.has(videoId) && !found.has(videoId)) found.set(videoId, { setVideoId });
+    }
+    if (found.size === targets.size || token === null) return found;
+    body = { continuation: token };
+  }
+  throw error('UnexpectedError', `playlist scan: more than ${MAX_SCAN_PAGES} pages`);
+}
+
+/** 讀不到歌單 → 每一項都標同一個失敗。整個請求層級的錯誤（ABORT_KINDS、NetworkError）與非結構化的例外原樣往外丟。 */
+function allFailed(e, count) {
+  if (e && ABORT_KINDS.includes(e.fmpError) && e.fmpError !== 'AuthRequired') throw e;
+  const result = failedResult(e);
+  return { results: Array.from({ length: count }, () => result) };
+}
+
+/** 一個項目一次寫入。成功回 null，失敗回結構化錯誤；網路類與非結構化例外往外丟。 */
+async function edit(yt, body) {
+  return writeFailure(await innertubeCall(yt, '/browse/edit_playlist', body, 'required'));
+}
+
+export async function createPlaylist(input) {
+  const body = createBody((input || {}).title);
+  const yt = await innertube();
+  const res = await innertubeCall(yt, '/playlist/create', body, 'required');
+  const failure = writeFailure(res);
+  if (failure) throw failure;
+  const playlistId = res.data && res.data.playlistId;
+  if (!importable(playlistId)) throw error('ParseError', 'playlist create: no playlistId in the response');
+  fmp.log.debug('playlist created');
+  return { playlistId };
+}
+
+/** 一個項目的寫入結果：失敗是 failed，需要停下來的錯誤另外記在 state.abort。 */
+async function writeOne(yt, body, okStatus, state) {
+  try {
+    const failure = await edit(yt, body);
+    if (!failure) return { status: okStatus };
+    if (ABORT_KINDS.includes(failure.fmpError)) state.abort = failure;
+    return failedResult(failure);
+  } catch (e) {
+    const result = failedResult(e);
+    if (ABORT_KINDS.includes(e.fmpError)) state.abort = e;
+    return result;
+  }
+}
+
+export async function addToPlaylist(input) {
+  const { playlistId, tracks } = input || {};
+  checkPlaylistId(playlistId, 'add');
+  if (!Array.isArray(tracks)) throw error('ParseError', 'playlist add: tracks is not an array');
+  const ids = tracks.map(videoIdOf);
+  const targets = new Set(ids.filter((id) => id !== null));
+  const yt = await innertube();
+  const t0 = now();
+  // 舊版的 getVideoIdsInPlaylist：先掃一遍，已經在清單裡的不再加（edit_playlist 不去重，會多一份）。
+  let present = new Map();
+  if (targets.size > 0) {
+    try {
+      present = await scanPlaylist(yt, playlistId, targets);
+    } catch (e) {
+      return allFailed(e, tracks.length);
+    }
+  }
+  const results = [];
+  const done = new Map(); // videoId → 第一次的結果
+  const state = { abort: null };
+  for (const id of ids) {
+    let result;
+    if (id === null) {
+      result = { status: 'failed', error: error('ParseError', 'playlist add: invalid video id') };
+    } else if (done.has(id)) {
+      const first = done.get(id);
+      result = first.status === 'failed' ? first : { status: 'alreadyPresent' };
+    } else if (present.has(id)) {
+      result = { status: 'alreadyPresent' };
+    } else if (state.abort !== null) {
+      result = failedResult(state.abort);
+    } else {
+      result = await writeOne(yt, addBody(playlistId, id), 'added', state);
+    }
+    if (id !== null && !done.has(id)) done.set(id, result);
+    results.push(result);
+  }
+  if (state.abort !== null && results.every((r) => r.status === 'failed')) throw state.abort;
+  fmp.log.debug('playlist add', { requested: tracks.length, added: results.filter((r) => r.status === 'added').length, ms: now() - t0 });
+  return { results };
+}
+
+export async function removeFromPlaylist(input) {
+  const { playlistId, items } = input || {};
+  checkPlaylistId(playlistId, 'remove');
+  if (!Array.isArray(items)) throw error('ParseError', 'playlist remove: items is not an array');
+  const ids = items.map(videoIdOf);
+  const remoteIds = items.map((item) => (item && typeof item.remoteItemId === 'string' && item.remoteItemId !== '' ? item.remoteItemId : null));
+  // 移除要 setVideoId：宿主給了 remoteItemId 就直接用，沒有的才掃清單找（舊版 getSetVideoId）。
+  const lookup = new Set(ids.filter((id, i) => id !== null && remoteIds[i] === null));
+  const yt = await innertube();
+  const t0 = now();
+  let found = new Map();
+  if (lookup.size > 0) {
+    try {
+      found = await scanPlaylist(yt, playlistId, lookup);
+    } catch (e) {
+      return allFailed(e, items.length);
+    }
+  }
+  const results = [];
+  // 以 setVideoId（清單裡的那一格）去重，不以 videoId：同一支影片在清單裡出現兩次、宿主給了兩個不同的
+  // remoteItemId 時兩格都要移除；同一格（含掃到的與宿主給的相同）只送一次，之後是 notPresent。
+  const done = new Map(); // setVideoId（找不到時 `video:<videoId>`）→ 第一次的結果
+  const state = { abort: null };
+  for (let i = 0; i < items.length; i++) {
+    const id = ids[i];
+    if (id === null) {
+      results.push({ status: 'failed', error: error('ParseError', 'playlist remove: invalid video id') });
+      continue;
+    }
+    if (remoteIds[i] === null && !found.has(id)) {
+      results.push({ status: 'notPresent' });
+      continue;
+    }
+    const setVideoId = remoteIds[i] !== null ? remoteIds[i] : found.get(id).setVideoId;
+    const key = setVideoId === null ? `video:${id}` : setVideoId;
+    let result;
+    if (done.has(key)) {
+      const first = done.get(key);
+      result = first.status === 'failed' ? first : { status: 'notPresent' };
+    } else if (setVideoId === null) {
+      // 清單裡有這支影片、回應卻沒有 setVideoId（版面變了）：不猜，這一項失敗。
+      result = { status: 'failed', error: error('UnexpectedError', 'playlist remove: the video is in the playlist but the response has no setVideoId') };
+    } else if (state.abort !== null) {
+      result = failedResult(state.abort);
+    } else {
+      result = await writeOne(yt, removeBody(playlistId, id, setVideoId), 'removed', state);
+    }
+    if (!done.has(key)) done.set(key, result);
+    results.push(result);
+  }
+  if (state.abort !== null && results.every((r) => r.status === 'failed')) throw state.abort;
+  fmp.log.debug('playlist remove', { requested: items.length, removed: results.filter((r) => r.status === 'removed').length, ms: now() - t0 });
+  return { results };
 }
 
 // ---------------------------------------------------------------- charts

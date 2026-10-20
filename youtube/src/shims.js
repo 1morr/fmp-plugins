@@ -167,8 +167,10 @@ async function fetchShim(input, init = {}) {
       throw new TypeError('fetch shim: binary request bodies are not supported by fmp.http.request');
     } else body = String(body);
   }
-  // innertube 的 POST 都是查詢（語意冪等），標 idempotent 讓宿主在暫時失敗時重試（ADR 0028）。
-  const idempotent = req.method === 'POST' && req.url.includes('/youtubei/') ? true : null;
+  // innertube 的 POST 多半是查詢（語意冪等），標 idempotent 讓宿主在暫時失敗時重試（ADR 0028）；
+  // 寫入（edit_playlist、playlist/create）重試可能多建歌單，不標。
+  const isWrite = /\/youtubei\/v1\/(?:browse\/edit_playlist|playlist\/create)(?:\?|$)/.test(req.url);
+  const idempotent = req.method === 'POST' && req.url.includes('/youtubei/') && !isWrite ? true : null;
   const res = await hostRequest({ url: req.url, method: req.method, headers, body: body == null ? null : body, idempotent });
   const h = new HeadersShim();
   for (const k of Object.keys(res.headers)) for (const v of res.headers[k]) h.append(k, v);

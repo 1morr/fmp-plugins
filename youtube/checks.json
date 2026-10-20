@@ -62,5 +62,11 @@
     "input": {},
     "expect": { "minItems": 1, "nonEmpty": ["playlistId", "title"] },
     "requiresLogin": true
+  },
+  "libraryWrite": {
+    "input": { "playlistId": "PLfmpTestFakePlaylistId000000000001", "tracks": [{ "sourceId": "aaaaaaaaaa1" }] },
+    "expect": { "minItems": 1 },
+    "requiresLogin": true,
+    "mutates": true
   }
 }

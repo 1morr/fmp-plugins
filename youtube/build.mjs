@@ -6,11 +6,11 @@ import { writeFileSync, statSync } from 'node:fs';
 const manifest = {
   id: 'youtube',
   name: 'YouTube',
-  version: '1.5.0',
+  version: '1.6.0',
   author: 'FMP',
   description: '搜尋 YouTube 影片並播放其音訊，可匯入播放清單與瀏覽「本週新歌」榜單。',
   apiVersion: 1,
-  capabilities: ['search', 'resolveStream', 'mix', 'trackDetail', 'importPlaylist', 'libraryRead', 'charts', 'login'],
+  capabilities: ['search', 'resolveStream', 'mix', 'trackDetail', 'importPlaylist', 'libraryRead', 'libraryWrite', 'charts', 'login'],
   // accounts.google.com：登入頁（webView.url）；ggpht.com：帳號頭像。
   allowedHosts: ['youtube.com', 'googlevideo.com', 'ytimg.com', 'ggpht.com', 'accounts.google.com'],
   login: {
