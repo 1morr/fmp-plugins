@@ -69,17 +69,17 @@ function form(fields) {
 const MAINLAND_IP_HEADERS = { 'X-Real-IP': '118.88.88.88' };
 
 /**
- * 查詢類 POST，語意冪等，暫時失敗時由網路層重試（FMP ADR 0028）。回 {json, credentialsAttached}；
+ * 查詢類 POST，語意冪等，暫時失敗時由網路層重試（FMP ADR 0028；寫入傳 idempotent false）。回 {json, credentialsAttached}；
  * 頂層 `code` 留給呼叫端判斷（importPlaylist 要分辨「讀不到」）。
  */
-async function postRaw(url, body, context, extraHeaders, auth = 'userPreference') {
+async function postRaw(url, body, context, extraHeaders, auth = 'userPreference', idempotent = true) {
   const response = await fmp.http.request({
     url,
     method: 'POST',
     headers: { ...API_HEADERS, ...extraHeaders },
     body,
     auth, // ADR 0012：搜尋與取流依「以登入身分瀏覽與播放」帶憑證
-    idempotent: true,
+    idempotent,
   });
   if (response.status !== 200) throw statusError(response.status, context);
   let json;
@@ -585,4 +585,146 @@ export async function libraryPlaylists(input) {
   }
   fmp.log.debug('user playlists page', { offset, playlists: playlists.length });
   return { playlists, cursor: json.more === true && json.playlist.length > 0 ? `v1:${offset + json.playlist.length}` : null };
+}
+
+// ---------------------------------------------------------------- libraryWrite
+
+// 規格是舊專案 netease_playlist_service.dart：createPlaylist（linux forward 的 `playlist/create`，私人加 `privacy: '10'`）、
+// getTrackIdsInPlaylist（`v6/playlist/detail` 的 trackIds，加入與移除前的預讀）、addTracksToPlaylist／removeTracksFromPlaylist
+// （`playlist/manipulate/tracks`，`op` add／del，一次帶整批 trackIds）。同 libraryRead 走 linux forward，請求一律 required。
+// 舊版每個請求都帶 `X-Real-IP: 118.88.88.88`、Cookie 加 `os=linux`；這裡都不帶（design §4.5：先測不帶，不行才只在必要的請求加），
+// 與 libraryPlaylists 一致。
+const SONG_ID = /^[1-9]\d{0,17}$/;
+
+/** linux forward 的寫入或讀取（required）。回 JSON；頂層 `code` 留給呼叫端判斷。傳輸、HTTP、憑證無效的錯誤直接往外丟。 */
+async function linuxForward(path, params, context, idempotent) {
+  const payload = JSON.stringify({ method: 'POST', url: `${MUSIC}/api/${path}`, params });
+  const eparams = hexUpper(aes128EcbEncrypt(utf8Bytes(LINUX_API_KEY), utf8Bytes(payload)));
+  const { json } = await postRaw(
+    `${MUSIC}/api/linux/forward`,
+    form({ eparams }),
+    context,
+    { 'User-Agent': LINUX_USER_AGENT },
+    'required',
+    idempotent,
+  );
+  return json;
+}
+
+function checkWriteInput(playlistId, list, name) {
+  if (typeof playlistId !== 'string' || !PLAYLIST_ID.test(playlistId)) {
+    throw error('ParseError', `playlist ${name}: invalid playlistId: ${playlistId}`);
+  }
+  if (!Array.isArray(list)) throw error('ParseError', `playlist ${name}: list is not an array`);
+}
+
+function songIdOf(entry) {
+  const id = entry !== null && typeof entry === 'object' ? entry.sourceId : undefined;
+  return typeof id === 'string' && SONG_ID.test(id) ? id : null;
+}
+
+/** 歌單目前的歌曲 id（字串集合）。讀不到的錯誤（NotFound 等）往外丟。 */
+async function trackIdsOf(playlistId) {
+  const json = await linuxForward('v6/playlist/detail', { id: playlistId }, 'playlist detail', true);
+  if (json.code === 404) throw error('NotFound', `playlist detail: code 404 ${json.message || json.msg || ''}`.trim());
+  if (json.code !== 200) throw responseCodeError(json.code, json.message || json.msg, 'playlist detail');
+  const info = json.playlist;
+  if (info === null || typeof info !== 'object' || !Array.isArray(info.trackIds)) throw error('ParseError', 'playlist detail: no trackIds');
+  return new Set(info.trackIds.map((t) => (t !== null && typeof t === 'object' && t.id !== undefined && t.id !== null ? String(t.id) : '')));
+}
+
+/** manipulate 的回應 → 整批的結果（200 是成功，其餘整批失敗）。 */
+function manipulated(json, ok, context) {
+  if (json.code === 200) return ok;
+  return { status: 'failed', error: responseCodeError(json.code, json.message || json.msg, context) };
+}
+
+/**
+ * 讀不到歌單（NotFound 等）→ 每一項都標同一個失敗；整個請求層級的錯誤（網路、憑證無效、風控）與非結構化的例外原樣往外丟。
+ * `error` 只留 FmpError 的欄位：宿主丟的錯誤另帶 `hostErrorId`，放進 results 是不認得的欄位，整個回傳值會被拒（ParseError）。
+ */
+function allFailed(e, count) {
+  const requestLevel = ['NetworkError', 'CredentialInvalid', 'VerificationRequired', 'RateLimited'];
+  if (e === null || typeof e !== 'object' || typeof e.fmpError !== 'string' || requestLevel.includes(e.fmpError)) throw e;
+  const shape = { fmpError: e.fmpError };
+  if (typeof e.message === 'string' && e.message !== '') shape.message = e.message;
+  if (typeof e.reason === 'string') shape.reason = e.reason;
+  if (typeof e.retryAfterSeconds === 'number') shape.retryAfterSeconds = e.retryAfterSeconds;
+  return { results: Array.from({ length: count }, () => ({ status: 'failed', error: shape })) };
+}
+
+export async function createPlaylist(input) {
+  const { title } = input || {};
+  if (typeof title !== 'string' || title.trim() === '') throw error('ParseError', 'playlist create: empty title');
+  // 預設私人（privacy '10'）。舊專案的新增對話框預設公開，見 README。
+  const json = await linuxForward('playlist/create', { name: title.trim(), privacy: '10' }, 'playlist create', false);
+  if (json.code !== 200) throw responseCodeError(json.code, json.message || json.msg, 'playlist create');
+  const created = json.playlist !== null && typeof json.playlist === 'object' ? json.playlist : {};
+  const id = created.id !== undefined && created.id !== null ? created.id : json.id; // 舊專案同樣兩處都找
+  const playlistId = id === undefined || id === null ? '' : String(id);
+  if (!PLAYLIST_ID.test(playlistId)) throw error('ParseError', 'playlist create: no playlist id in the response');
+  return { playlistId };
+}
+
+export async function addToPlaylist(input) {
+  const { playlistId, tracks } = input || {};
+  checkWriteInput(playlistId, tracks, 'add');
+  const ids = tracks.map(songIdOf);
+  const valid = [...new Set(ids.filter((id) => id !== null))];
+  let present = new Set();
+  if (valid.length > 0) {
+    try {
+      present = await trackIdsOf(playlistId);
+    } catch (e) {
+      return allFailed(e, tracks.length);
+    }
+  }
+  const toAdd = valid.filter((id) => !present.has(id));
+  let batch = null;
+  if (toAdd.length > 0) {
+    const json = await linuxForward('playlist/manipulate/tracks', { trackIds: toAdd, pid: playlistId, op: 'add' }, 'playlist add', false);
+    batch = manipulated(json, { status: 'added' }, 'playlist add');
+  }
+  const seen = new Set();
+  const results = ids.map((id) => {
+    if (id === null) return { status: 'failed', error: error('ParseError', 'playlist add: invalid song id') };
+    const first = !seen.has(id);
+    seen.add(id);
+    if (present.has(id)) return { status: 'alreadyPresent' };
+    // 整批同進同退：失敗時重複的項目也是同一個失敗，成功時第一次之後是 alreadyPresent。
+    return first || batch.status === 'failed' ? batch : { status: 'alreadyPresent' };
+  });
+  fmp.log.debug('playlist add', { requested: tracks.length, sent: toAdd.length, present: valid.length - toAdd.length });
+  return { results };
+}
+
+export async function removeFromPlaylist(input) {
+  const { playlistId, items } = input || {};
+  checkWriteInput(playlistId, items, 'remove');
+  const ids = items.map(songIdOf);
+  const valid = [...new Set(ids.filter((id) => id !== null))];
+  let present = new Set();
+  if (valid.length > 0) {
+    try {
+      present = await trackIdsOf(playlistId);
+    } catch (e) {
+      return allFailed(e, items.length);
+    }
+  }
+  const toDelete = valid.filter((id) => present.has(id));
+  let batch = null;
+  if (toDelete.length > 0) {
+    const json = await linuxForward('playlist/manipulate/tracks', { trackIds: toDelete, pid: playlistId, op: 'del' }, 'playlist remove', false);
+    batch = manipulated(json, { status: 'removed' }, 'playlist remove');
+  }
+  const seen = new Set();
+  const results = ids.map((id) => {
+    if (id === null) return { status: 'failed', error: error('ParseError', 'playlist remove: invalid song id') };
+    const first = !seen.has(id);
+    seen.add(id);
+    if (!present.has(id)) return { status: 'notPresent' };
+    return first || batch.status === 'failed' ? batch : { status: 'notPresent' };
+  });
+  fmp.log.debug('playlist remove', { requested: items.length, sent: toDelete.length });
+  return { results };
 }
