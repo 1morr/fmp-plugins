@@ -1,0 +1,29 @@
+{
+  "meta": {
+    "edited": "mutates：手寫。模擬加入歌曲（playlist/manipulate/tracks，op add）成功：只有 code 200。不是錄製：這個案例會改動遠端歌單，不能真的跑；請求網址與順序是插件用 checks.json 的 libraryWrite 輸入（假歌單 id、假歌曲 id）實際送出的（兩個請求都是 linux forward，body 的 eparams 是加密後的內容，遮蔽成 ***），回應全是假資料，欄位只有插件讀的那些，網易真實回應未驗證。"
+  },
+  "request": {
+    "method": "POST",
+    "url": "https://music.163.com/api/linux/forward",
+    "headers": {
+      "accept": "application/json, text/plain, */*",
+      "content-type": "application/x-www-form-urlencoded",
+      "cookie": "***",
+      "origin": "https://music.163.com",
+      "referer": "https://music.163.com/",
+      "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.90 Safari/537.36"
+    },
+    "body": "eparams=***"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": [
+        "application/json;charset=UTF-8"
+      ]
+    },
+    "jsonBody": {
+      "code": 200
+    }
+  }
+}

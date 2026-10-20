@@ -1,0 +1,70 @@
+{
+  "meta": {
+    "edited": "mutates：手寫。模擬寫入前的掃描（browse，browseId VL<id>）：播放清單只有一支假影片 aaaaaaaaaa2，所以要加的 aaaaaaaaaa1 不在裡面。不是錄製：這個案例會改動遠端播放清單，不能真的跑；請求網址與順序是插件用 checks.json 的 libraryWrite 輸入（假播放清單 id、假 videoId）與 login 案例的假憑證實際送出的（sw.js_data、config 是工作階段初始化，先於 browse），回應全是假資料，欄位只有插件讀的那些，YouTube 真實回應未驗證。"
+  },
+  "request": {
+    "method": "POST",
+    "url": "https://www.youtube.com/youtubei/v1/browse?prettyPrint=false&alt=json",
+    "headers": {
+      "accept": "*/*",
+      "accept-language": "*",
+      "authorization": "***",
+      "content-length": "4022",
+      "content-type": "application/json",
+      "cookie": "***",
+      "origin": "https://www.youtube.com",
+      "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36",
+      "x-goog-visitor-id": "***",
+      "x-origin": "***",
+      "x-youtube-client-name": "1",
+      "x-youtube-client-version": "2.20261019.01.00"
+    },
+    "body": "{\"context\":{\"client\":{\"hl\":\"en\",\"gl\":\"US\",\"clientName\":\"WEB\",\"clientVersion\":\"***\"}},\"browseId\":\"VLPLfmpTestFakePlaylistId000000000001\"}"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": [
+        "application/json; charset=UTF-8"
+      ]
+    },
+    "jsonBody": {
+      "contents": {
+        "twoColumnBrowseResultsRenderer": {
+          "tabs": [
+            {
+              "tabRenderer": {
+                "content": {
+                  "sectionListRenderer": {
+                    "contents": [
+                      {
+                        "itemSectionRenderer": {
+                          "contents": [
+                            {
+                              "playlistVideoListRenderer": {
+                                "contents": [
+                                  {
+                                    "playlistVideoRenderer": {
+                                      "videoId": "aaaaaaaaaa2",
+                                      "setVideoId": "fake-set-video-id-2",
+                                      "lengthSeconds": "100",
+                                      "isPlayable": true
+                                    }
+                                  }
+                                ]
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+}

@@ -22,6 +22,7 @@ export function businessError(code, message, context) {
     case 62004: // 稿件審核中
     case 62012: // 僅 UP 主自己可見
     case 60004: // 直播間不存在（room_init）
+    case 11010: // 收藏的內容不存在（fav/resource/deal，舊專案 contentNotFound）
       return error('NotFound', detail);
     case -10403: // 地區限制
       return error('Unavailable', detail, { reason: 'region' });

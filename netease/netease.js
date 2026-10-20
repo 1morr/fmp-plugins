@@ -2,7 +2,7 @@
 {
   "id": "netease",
   "name": "網易雲音樂",
-  "version": "1.6.0",
+  "version": "1.7.0",
   "author": "FMP",
   "description": "搜尋網易雲音樂的歌曲並播放、匯入歌單、瀏覽熱歌榜，可用 QR 碼登入。",
   "apiVersion": 1,
@@ -12,6 +12,7 @@
     "trackDetail",
     "importPlaylist",
     "libraryRead",
+    "libraryWrite",
     "charts",
     "login"
   ],
@@ -3304,7 +3305,7 @@ function form(fields) {
   return Object.entries(fields).map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(String(v))}`).join("&");
 }
 var MAINLAND_IP_HEADERS = { "X-Real-IP": "118.88.88.88" };
-async function postRaw(url, body, context, extraHeaders, auth = "userPreference") {
+async function postRaw(url, body, context, extraHeaders, auth = "userPreference", idempotent = true) {
   const response = await fmp.http.request({
     url,
     method: "POST",
@@ -3312,7 +3313,7 @@ async function postRaw(url, body, context, extraHeaders, auth = "userPreference"
     body,
     auth,
     // ADR 0012：搜尋與取流依「以登入身分瀏覽與播放」帶憑證
-    idempotent: true
+    idempotent
   });
   if (response.status !== 200) throw statusError(response.status, context);
   let json;
@@ -3707,15 +3708,134 @@ async function libraryPlaylists(input) {
   fmp.log.debug("user playlists page", { offset, playlists: playlists.length });
   return { playlists, cursor: json.more === true && json.playlist.length > 0 ? `v1:${offset + json.playlist.length}` : null };
 }
+var SONG_ID = /^[1-9]\d{0,17}$/;
+async function linuxForward(path, params, context, idempotent) {
+  const payload = JSON.stringify({ method: "POST", url: `${MUSIC}/api/${path}`, params });
+  const eparams = hexUpper(aes128EcbEncrypt(utf8Bytes(LINUX_API_KEY), utf8Bytes(payload)));
+  const { json } = await postRaw(
+    `${MUSIC}/api/linux/forward`,
+    form({ eparams }),
+    context,
+    { "User-Agent": LINUX_USER_AGENT },
+    "required",
+    idempotent
+  );
+  return json;
+}
+function checkWriteInput(playlistId, list, name) {
+  if (typeof playlistId !== "string" || !PLAYLIST_ID.test(playlistId)) {
+    throw error("ParseError", `playlist ${name}: invalid playlistId: ${playlistId}`);
+  }
+  if (!Array.isArray(list)) throw error("ParseError", `playlist ${name}: list is not an array`);
+}
+function songIdOf(entry) {
+  const id = entry !== null && typeof entry === "object" ? entry.sourceId : void 0;
+  return typeof id === "string" && SONG_ID.test(id) ? id : null;
+}
+async function trackIdsOf(playlistId) {
+  const json = await linuxForward("v6/playlist/detail", { id: playlistId }, "playlist detail", true);
+  if (json.code === 404) throw error("NotFound", `playlist detail: code 404 ${json.message || json.msg || ""}`.trim());
+  if (json.code !== 200) throw responseCodeError(json.code, json.message || json.msg, "playlist detail");
+  const info = json.playlist;
+  if (info === null || typeof info !== "object" || !Array.isArray(info.trackIds)) throw error("ParseError", "playlist detail: no trackIds");
+  return new Set(info.trackIds.map((t) => t !== null && typeof t === "object" && t.id !== void 0 && t.id !== null ? String(t.id) : ""));
+}
+function manipulated(json, ok, context) {
+  if (json.code === 200) return ok;
+  return { status: "failed", error: responseCodeError(json.code, json.message || json.msg, context) };
+}
+function allFailed(e, count) {
+  const requestLevel = ["NetworkError", "CredentialInvalid", "VerificationRequired", "RateLimited"];
+  if (e === null || typeof e !== "object" || typeof e.fmpError !== "string" || requestLevel.includes(e.fmpError)) throw e;
+  const shape = { fmpError: e.fmpError };
+  if (typeof e.message === "string" && e.message !== "") shape.message = e.message;
+  if (typeof e.reason === "string") shape.reason = e.reason;
+  if (typeof e.retryAfterSeconds === "number") shape.retryAfterSeconds = e.retryAfterSeconds;
+  return { results: Array.from({ length: count }, () => ({ status: "failed", error: shape })) };
+}
+async function createPlaylist(input) {
+  const { title } = input || {};
+  if (typeof title !== "string" || title.trim() === "") throw error("ParseError", "playlist create: empty title");
+  const json = await linuxForward("playlist/create", { name: title.trim(), privacy: "10" }, "playlist create", false);
+  if (json.code !== 200) throw responseCodeError(json.code, json.message || json.msg, "playlist create");
+  const created = json.playlist !== null && typeof json.playlist === "object" ? json.playlist : {};
+  const id = created.id !== void 0 && created.id !== null ? created.id : json.id;
+  const playlistId = id === void 0 || id === null ? "" : String(id);
+  if (!PLAYLIST_ID.test(playlistId)) throw error("ParseError", "playlist create: no playlist id in the response");
+  return { playlistId };
+}
+async function addToPlaylist(input) {
+  const { playlistId, tracks } = input || {};
+  checkWriteInput(playlistId, tracks, "add");
+  const ids = tracks.map(songIdOf);
+  const valid = [...new Set(ids.filter((id) => id !== null))];
+  let present = /* @__PURE__ */ new Set();
+  if (valid.length > 0) {
+    try {
+      present = await trackIdsOf(playlistId);
+    } catch (e) {
+      return allFailed(e, tracks.length);
+    }
+  }
+  const toAdd = valid.filter((id) => !present.has(id));
+  let batch = null;
+  if (toAdd.length > 0) {
+    const json = await linuxForward("playlist/manipulate/tracks", { trackIds: toAdd, pid: playlistId, op: "add" }, "playlist add", false);
+    batch = manipulated(json, { status: "added" }, "playlist add");
+  }
+  const seen = /* @__PURE__ */ new Set();
+  const results = ids.map((id) => {
+    if (id === null) return { status: "failed", error: error("ParseError", "playlist add: invalid song id") };
+    const first = !seen.has(id);
+    seen.add(id);
+    if (present.has(id)) return { status: "alreadyPresent" };
+    return first || batch.status === "failed" ? batch : { status: "alreadyPresent" };
+  });
+  fmp.log.debug("playlist add", { requested: tracks.length, sent: toAdd.length, present: valid.length - toAdd.length });
+  return { results };
+}
+async function removeFromPlaylist(input) {
+  const { playlistId, items } = input || {};
+  checkWriteInput(playlistId, items, "remove");
+  const ids = items.map(songIdOf);
+  const valid = [...new Set(ids.filter((id) => id !== null))];
+  let present = /* @__PURE__ */ new Set();
+  if (valid.length > 0) {
+    try {
+      present = await trackIdsOf(playlistId);
+    } catch (e) {
+      return allFailed(e, items.length);
+    }
+  }
+  const toDelete = valid.filter((id) => present.has(id));
+  let batch = null;
+  if (toDelete.length > 0) {
+    const json = await linuxForward("playlist/manipulate/tracks", { trackIds: toDelete, pid: playlistId, op: "del" }, "playlist remove", false);
+    batch = manipulated(json, { status: "removed" }, "playlist remove");
+  }
+  const seen = /* @__PURE__ */ new Set();
+  const results = ids.map((id) => {
+    if (id === null) return { status: "failed", error: error("ParseError", "playlist remove: invalid song id") };
+    const first = !seen.has(id);
+    seen.add(id);
+    if (!present.has(id)) return { status: "notPresent" };
+    return first || batch.status === "failed" ? batch : { status: "notPresent" };
+  });
+  fmp.log.debug("playlist remove", { requested: items.length, sent: toDelete.length });
+  return { results };
+}
 export {
+  addToPlaylist,
   chart,
   chartList,
+  createPlaylist,
   importPlaylist,
   libraryPlaylists,
   loginQrPoll,
   loginQrStart,
   loginVerify,
   playlistFromUrl,
+  removeFromPlaylist,
   resolveStream,
   search,
   trackDetail

@@ -1,0 +1,35 @@
+{
+  "meta": {
+    "edited": "mutates：手寫。模擬加入影片（browse/edit_playlist，ACTION_ADD_VIDEO）成功：回應只有 status STATUS_SUCCEEDED。不是錄製：這個案例會改動遠端播放清單，不能真的跑；請求網址與順序是插件用 checks.json 的 libraryWrite 輸入（假播放清單 id、假 videoId）與 login 案例的假憑證實際送出的（sw.js_data、config 是工作階段初始化，先於 browse），回應全是假資料，欄位只有插件讀的那些，YouTube 真實回應未驗證。"
+  },
+  "request": {
+    "method": "POST",
+    "url": "https://www.youtube.com/youtubei/v1/browse/edit_playlist?prettyPrint=false&alt=json",
+    "headers": {
+      "accept": "*/*",
+      "accept-language": "*",
+      "authorization": "***",
+      "content-length": "4022",
+      "content-type": "application/json",
+      "cookie": "***",
+      "origin": "https://www.youtube.com",
+      "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36",
+      "x-goog-visitor-id": "***",
+      "x-origin": "***",
+      "x-youtube-client-name": "1",
+      "x-youtube-client-version": "2.20261019.01.00"
+    },
+    "body": "{\"context\":{\"client\":{\"hl\":\"en\",\"gl\":\"US\",\"clientName\":\"WEB\",\"clientVersion\":\"***\"}},\"playlistId\":\"PLfmpTestFakePlaylistId000000000001\",\"actions\":[{\"addedVideoId\":\"aaaaaaaaaa1\",\"action\":\"ACTION_ADD_VIDEO\"}]}"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": [
+        "application/json; charset=UTF-8"
+      ]
+    },
+    "jsonBody": {
+      "status": "STATUS_SUCCEEDED"
+    }
+  }
+}

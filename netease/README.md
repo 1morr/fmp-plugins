@@ -34,6 +34,14 @@
   - **與舊版不同**：不送 `X-Real-IP`（M4 design §4.5 的做法：先不帶，實測不行才加），也不自己設 `os=linux` 的 Cookie（Cookie 由宿主在 `required` 時注入）。2026-10-20 以登入帳號實測（FMP M4 PR 13）：不帶這兩個也成功。
   - `uid`：舊版取登入時存的帳號；這裡的憑證只有 cookie、沒有 uid，所以每次先打 `account/get`（與 `loginVerify` 同一個端點，但 `auth: 'required'`、由宿主注入憑證；`loginVerify` 才自組 Cookie）取 `profile.userId`，所以一次呼叫是 2 個請求。
   - `playlistId` 是 `playlist[].id` 的字串（`importPlaylist` 收的 id）；`title` 是 `name`（空白時退回 id）；`artwork` 是 `coverImgUrl`（格式同 `search`）；`trackCount` 是 `trackCount`（非負整數才給）。
+- `libraryWrite`：`createPlaylist`、`addToPlaylist`、`removeFromPlaylist`（FMP ADR 0032 §決定 4，必須同時宣告 `libraryRead`）。規格是舊專案 `netease_playlist_service.dart`。**整個能力沒有實測**，要等擁有者的真實測試；`checks.json` 的 `libraryWrite` 案例標 `mutates`，fixture 是手寫的（`meta.edited`）。請求都走 `libraryRead` 同一個 linux forward（`POST music.163.com/api/linux/forward`，form `eparams=<hex>`，`auth: 'required'`，同樣的 `User-Agent`），寫入不標 `idempotent`（預讀標）。
+  - **`X-Real-IP`：不送**（M4 design §4.5：先測不帶，不行才只在必要的請求加）；舊版每個請求都帶 `118.88.88.88` 與 `os=linux` 的 Cookie，這裡都沒有，與 `libraryPlaylists` 一致。真實測試若被擋（常見是 `-460`／地區碼），才在寫入請求加，並更新本節與 `test/library_write.test.js`（它斷言沒有這個 header）。
+  - `createPlaylist({title})`：內層 `playlist/create`，params `{name, privacy: '10'}`，回 `playlist.id`（沒有就取頂層 `id`，舊版同）。**預設私人**（`privacy: '10'`）；舊專案的新增對話框預設公開（`initialPrivacy: false`），宿主契約沒有隱私欄位，所以這是插件的選擇。
+  - `addToPlaylist({playlistId, tracks})`：先預讀 `v6/playlist/detail`（params `{id}`，舊版 `getTrackIdsInPlaylist`）取 `playlist.trackIds`，已在歌單裡的是 `alreadyPresent`；其餘不重複的 `sourceId` 一次送 `playlist/manipulate/tracks`，params `{trackIds: [...], pid, op: 'add'}`（舊版 `addTracksToPlaylist`，整批；舊版 `normalizeTrackIds` 同樣去重）。回應 `code` 200 → 整批 `added`。同一次請求內重複的 `sourceId`，第一次之後是 `alreadyPresent`。**不靠回應碼偵測重複**：舊版沒有處理重複加入的碼（網易對整批都重複的加入可能回 `502`，沒有驗證），這裡 `502` 與其他非 200 的碼一樣讓整批失敗（`UnexpectedError`，訊息帶碼）；預讀之後的競態才會碰到。
+  - `removeFromPlaylist({playlistId, items})`：同一個預讀；不在歌單裡的是 `notPresent`，在的一次送 `playlist/manipulate/tracks`，params `{trackIds, pid, op: 'del'}`（舊版 `removeTracksFromPlaylist`），`code` 200 → 整批 `removed`。以 `sourceId`（歌曲 id）認項目，`remoteItemId` 與 `cid` 忽略（網易的 `importPlaylist` 本來就不給 `remoteItemId`）。舊版移除前會多打一次 `user/playlist`，把「不是自己的歌單」的 `playlist not exist` 改成沒有權限；這裡不做（`libraryPlaylists` 的 `writable` 已經擋掉別人的歌單），非 200 的碼一律整批失敗。
+  - **錯誤**：預讀或寫入的 `code` 非 200 的對應沿用 `responseCodeError`（`-460` → `VerificationRequired`、`301` 沒帶憑證 → `AuthRequired`，其餘 `UnexpectedError`）；歌單不存在（預讀 `404`）→ 每一項都是 `NotFound`，不送寫入。帶了憑證的 `301` 是 `CredentialInvalid`（判定表），與網路／HTTP 錯誤、`-460` 一樣整個請求往外丟（預讀階段還沒寫入任何東西）；寫入是一個整批請求，整批失敗就是每一項同一個失敗。`sourceId` 不是正整數字串 → 該項 `failed`（`ParseError`），其餘照做。`results` 裡的 `error` 只留 FmpError 的欄位（`fmpError`、`message`、`reason`、`retryAfterSeconds`）：宿主丟的錯誤（例如 429 的 `RateLimited`）另帶 `hostErrorId`，原樣放進 `results` 宿主會以不認得的欄位拒收整個回傳值（`ParseError`）；整個請求拋出時則原樣拋出。
+  - **實測**（2026-10-20，擁有者帳號，Windows，FMP M4 PR 14）：對私人歌單「FMP 測試」加入一首、再移除同一首，各是預讀加 `manipulate/tracks` 兩個請求，都成功；**不帶 `X-Real-IP` 與 `os=linux` 可以**，`trackIds` 用字串可以；寫後立刻讀就一致。
+  - **未驗證**：`manipulate/tracks` 成功回應裡有沒有 `count`、部分重複時的行為、重複加入的碼。
   - **`writable`**：`creator.userId` 等於登入者的 `uid`（舊版 `isMine`）。回應同時含自己建立的與收藏的歌單，後者 `writable` 為 `false`。
   - **分頁**：`limit` 1000（舊版）；`cursor` 是 `v1:<下一個 offset>`，回應的 `more` 為真且這頁有項目才給，否則 `null`。
   - 錯誤：`account/get` 或列表的 `301` 在帶憑證時是 `CredentialInvalid`（判定表），沒帶憑證是 `AuthRequired`；`-460` → `VerificationRequired`；`playlist` 不是陣列 → `ParseError`。
@@ -111,7 +119,7 @@ manifest 宣告 `login: { methods: ['qr'] }`（網易的 `MUSIC_U` 有效期長�
 ## 已知限制
 
 - 不登入時 VIP 歌與匿名拿不到網址的歌播不了。匿名時 VIP 歌（`fee` 1）連試聽片段都沒有（`code` -110、沒有 `freeTrialInfo`），`previewOnly` 只會在登入後出現（登入後的取流行為還沒有實測），由 `test/resolve.test.js` 以手寫回應守。
-- 一個 `checks.json` 每個能力只有一條案例，所以契約測試只重播成功的 `search`、`resolveStream`、`trackDetail`、`importPlaylist`、`charts` 與 `login`（錄製後刪減的 fixture）；上表的錯誤對應由 `test/errors.test.js` 以網易實際給的欄位守（`npm test`）。
+- 一個 `checks.json` 每個能力只有一條案例，所以契約測試只重播成功的 `search`、`resolveStream`、`trackDetail`、`importPlaylist`、`charts`、`libraryWrite`（手寫 fixture）與 `login`（錄製後刪減的 fixture）；上表的錯誤對應由 `test/errors.test.js` 以網易實際給的欄位守（`npm test`）。
 - fixture 裡的 `NMTID` 等 Cookie 值已被 FMP 的遮蔽名單遮掉；錄製者的 IP 由錄製器換成文件用位址。
 
 ## 打包
@@ -120,7 +128,7 @@ manifest 宣告 `login: { methods: ['qr'] }`（網易的 `MUSIC_U` 有效期長�
 cd netease
 npm ci
 node build.mjs   # 輸出 netease.js（不壓縮，內容固定）
-npm test         # 錯誤對應表、AES／weapi、登入流程、取流、搜尋、trackDetail、importPlaylist 與 libraryPlaylists 的測試（node:test）
+npm test         # 錯誤對應表、AES／weapi、登入流程、取流、搜尋、trackDetail、importPlaylist、libraryPlaylists 與 libraryWrite（預讀去重、整批請求形狀、沒有 `X-Real-IP`、逐項結果、錯誤、`results` 裡的宿主錯誤去掉 `hostErrorId`）的測試（node:test）
 ```
 
 用 esbuild 把 `src/` 與 `bn.js` 打成單一檔，`netease.js` 與原始碼、`package-lock.json` 一起提交；index 只認這一個 `.js`。`manifest` 寫在 `build.mjs`。

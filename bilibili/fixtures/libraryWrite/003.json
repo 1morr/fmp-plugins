@@ -1,0 +1,32 @@
+{
+  "meta": {
+    "edited": "mutates：手寫。模擬加入收藏夾 x/v3/fav/resource/deal 成功：code 0、data 為 null（成功回應的 data 內容未驗證）。不是錄製：這個案例會改動遠端收藏夾，不能真的跑；請求網址是插件用 checks.json 的 libraryWrite 輸入（假收藏夾 id、假 bvid）與 login 案例的假憑證實際送出的，簽名參數 wts、w_rid 遮蔽成 ***，csrf 在 body（遮蔽成 ***）；回應全是假資料，欄位只有插件讀的那些，B 站真實回應未驗證。"
+  },
+  "request": {
+    "method": "POST",
+    "url": "https://api.bilibili.com/x/v3/fav/resource/deal",
+    "headers": {
+      "accept": "application/json, text/plain, */*",
+      "cookie": "***",
+      "origin": "https://www.bilibili.com",
+      "referer": "https://www.bilibili.com/",
+      "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+      "content-type": "application/x-www-form-urlencoded"
+    },
+    "body": "rid=1000001&type=2&add_media_ids=4000000001&del_media_ids=&csrf=***"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": [
+        "application/json; charset=utf-8"
+      ]
+    },
+    "jsonBody": {
+      "code": 0,
+      "message": "0",
+      "ttl": 1,
+      "data": null
+    }
+  }
+}
