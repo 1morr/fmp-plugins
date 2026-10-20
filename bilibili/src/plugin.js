@@ -138,8 +138,8 @@ async function getResponse(url, headers, context, auth = 'userPreference') {
   return { json: parseJson(response, context), credentialsAttached: response.credentialsAttached === true };
 }
 
-async function get(url, headers, context) {
-  return (await getResponse(url, headers, context)).json;
+async function get(url, headers, context, auth) {
+  return (await getResponse(url, headers, context, auth)).json;
 }
 
 function query(params) {
@@ -531,6 +531,49 @@ export async function importPlaylist(input) {
   fmp.log.debug('fav list page', { page, medias: medias.length, items: items.length, retried });
   // 不給 total：media_count 含失效與略過的項目，多 P 展開後筆數也不同。
   return { playlist, items, cursor: data.has_more === true && medias.length > 0 ? `v1:${page + 1}:${required ? 1 : 0}` : null };
+}
+
+// ---------------------------------------------------------------- libraryRead
+
+// 規格是舊專案 bilibili_favorites_service.dart 的 getFavFolders（`fav/folder/created/list`）。舊版只列自己建立的收藏夾、
+// 沒有列「收藏的收藏夾」，這裡也不列，所以 writable 一律 true。`id` 是完整的 media_id，等於 importPlaylist 收的 playlistId。
+const FOLDER_PAGE_SIZE = 20; // 舊版的 ps
+const FOLDER_CURSOR = /^v1:([1-9]\d{0,5})$/;
+
+export async function libraryPlaylists(input) {
+  const { cursor } = input || {};
+  let page = 1;
+  if (cursor !== undefined && cursor !== null) {
+    const m = typeof cursor === 'string' ? FOLDER_CURSOR.exec(cursor) : null;
+    if (m === null) throw error('ParseError', 'fav folders: malformed cursor');
+    page = Number(m[1]);
+  }
+  const credentials = await fmp.credentials.get();
+  const mid = credentials && credentials.cookies ? credentials.cookies.DedeUserID : undefined;
+  // 宿主對 required 請求沒登入就先拋；這裡是憑證裡沒有 mid 的情況（舊版同樣當成未登入）。
+  if (typeof mid !== 'string' || !/^[1-9]\d{0,17}$/.test(mid)) {
+    throw error('AuthRequired', 'fav folders: credentials have no DedeUserID');
+  }
+  const url = `${API}/x/v3/fav/folder/created/list?${query({ up_mid: mid, type: 2, pn: page, ps: FOLDER_PAGE_SIZE })}`;
+  const data = checkCode(await get(url, API_HEADERS, 'fav folders', 'required'), 'fav folders');
+  const list = Array.isArray(data.list) ? data.list : [];
+  const playlists = [];
+  const seen = new Set();
+  for (const folder of list) {
+    if (folder === null || typeof folder !== 'object') continue;
+    if (!Number.isInteger(folder.id) || folder.id <= 0) continue;
+    const playlistId = String(folder.id);
+    if (seen.has(playlistId)) continue;
+    seen.add(playlistId);
+    const title = typeof folder.title === 'string' && folder.title.trim() !== '' ? folder.title.trim() : `ml${playlistId}`;
+    const entry = { playlistId, title, writable: true };
+    const art = artwork(folder.cover);
+    if (art.length > 0) entry.artwork = art;
+    if (Number.isInteger(folder.media_count) && folder.media_count >= 0) entry.trackCount = folder.media_count;
+    playlists.push(entry);
+  }
+  fmp.log.debug('fav folders page', { page, folders: list.length, playlists: playlists.length });
+  return { playlists, cursor: data.has_more === true && list.length > 0 ? `v1:${page + 1}` : null };
 }
 
 // ---------------------------------------------------------------- resolveStream
