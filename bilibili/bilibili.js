@@ -2,7 +2,7 @@
 {
   "id": "bilibili",
   "name": "Bilibili",
-  "version": "1.7.0",
+  "version": "1.8.0",
   "author": "FMP",
   "description": "搜尋 Bilibili 影片並播放其音訊，也能搜尋與收聽直播間、匯入收藏夾、瀏覽音樂排行榜，可用 QR 碼登入。",
   "apiVersion": 1,
@@ -13,6 +13,7 @@
     "trackDetail",
     "live",
     "importPlaylist",
+    "libraryRead",
     "charts",
     "login"
   ],
@@ -3331,8 +3332,8 @@ async function getResponse(url, headers, context, auth = "userPreference") {
   });
   return { json: parseJson(response, context), credentialsAttached: response.credentialsAttached === true };
 }
-async function get(url, headers, context) {
-  return (await getResponse(url, headers, context)).json;
+async function get(url, headers, context, auth) {
+  return (await getResponse(url, headers, context, auth)).json;
 }
 function query(params) {
   return Object.keys(params).map((key) => `${encodeURIComponent(key)}=${encodeURIComponent(String(params[key]))}`).join("&");
@@ -3685,6 +3686,42 @@ async function importPlaylist(input) {
   }
   fmp.log.debug("fav list page", { page, medias: medias.length, items: items.length, retried });
   return { playlist, items, cursor: data.has_more === true && medias.length > 0 ? `v1:${page + 1}:${required ? 1 : 0}` : null };
+}
+var FOLDER_PAGE_SIZE = 20;
+var FOLDER_CURSOR = /^v1:([1-9]\d{0,5})$/;
+async function libraryPlaylists(input) {
+  const { cursor } = input || {};
+  let page = 1;
+  if (cursor !== void 0 && cursor !== null) {
+    const m = typeof cursor === "string" ? FOLDER_CURSOR.exec(cursor) : null;
+    if (m === null) throw error("ParseError", "fav folders: malformed cursor");
+    page = Number(m[1]);
+  }
+  const credentials = await fmp.credentials.get();
+  const mid = credentials && credentials.cookies ? credentials.cookies.DedeUserID : void 0;
+  if (typeof mid !== "string" || !/^[1-9]\d{0,17}$/.test(mid)) {
+    throw error("AuthRequired", "fav folders: credentials have no DedeUserID");
+  }
+  const url = `${API}/x/v3/fav/folder/created/list?${query({ up_mid: mid, type: 2, pn: page, ps: FOLDER_PAGE_SIZE })}`;
+  const data = checkCode(await get(url, API_HEADERS, "fav folders", "required"), "fav folders");
+  const list = Array.isArray(data.list) ? data.list : [];
+  const playlists = [];
+  const seen = /* @__PURE__ */ new Set();
+  for (const folder of list) {
+    if (folder === null || typeof folder !== "object") continue;
+    if (!Number.isInteger(folder.id) || folder.id <= 0) continue;
+    const playlistId = String(folder.id);
+    if (seen.has(playlistId)) continue;
+    seen.add(playlistId);
+    const title = typeof folder.title === "string" && folder.title.trim() !== "" ? folder.title.trim() : `ml${playlistId}`;
+    const entry = { playlistId, title, writable: true };
+    const art = artwork(folder.cover);
+    if (art.length > 0) entry.artwork = art;
+    if (Number.isInteger(folder.media_count) && folder.media_count >= 0) entry.trackCount = folder.media_count;
+    playlists.push(entry);
+  }
+  fmp.log.debug("fav folders page", { page, folders: list.length, playlists: playlists.length });
+  return { playlists, cursor: data.has_more === true && list.length > 0 ? `v1:${page + 1}` : null };
 }
 function hostOf(url) {
   const match = /^https:\/\/([^/?#:]+)(?::\d+)?(?:[/?#]|$)/i.exec(url);
@@ -4207,6 +4244,7 @@ export {
   chartList,
   decodeHtmlEntities,
   importPlaylist,
+  libraryPlaylists,
   liveRoomFromUrl,
   liveSearch,
   liveStatus,

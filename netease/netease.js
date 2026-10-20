@@ -2,7 +2,7 @@
 {
   "id": "netease",
   "name": "網易雲音樂",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "author": "FMP",
   "description": "搜尋網易雲音樂的歌曲並播放、匯入歌單、瀏覽熱歌榜，可用 QR 碼登入。",
   "apiVersion": 1,
@@ -11,6 +11,7 @@
     "resolveStream",
     "trackDetail",
     "importPlaylist",
+    "libraryRead",
     "charts",
     "login"
   ],
@@ -3631,21 +3632,21 @@ async function loginQrPoll(token) {
   return { status, credentials: qrCredentials(headers["set-cookie"], json.cookie) };
 }
 async function accountRequest(method, path, cookie) {
+  const headers = {
+    Referer: API_HEADERS.Referer,
+    Origin: API_HEADERS.Origin,
+    Accept: API_HEADERS.Accept,
+    "User-Agent": API_HEADERS["User-Agent"]
+  };
+  if (cookie !== void 0) headers.Cookie = cookie;
   return fmp.http.request({
     url: `${MUSIC}${path}`,
     method,
-    headers: {
-      Referer: API_HEADERS.Referer,
-      Origin: API_HEADERS.Origin,
-      Accept: API_HEADERS.Accept,
-      "User-Agent": API_HEADERS["User-Agent"],
-      Cookie: cookie
-    },
-    auth: "never"
+    headers,
+    auth: cookie === void 0 ? "required" : "never"
   });
 }
-async function loginVerify(credentials) {
-  const cookie = verifyCookie(credentials);
+async function fetchAccount(cookie) {
   let response = await accountRequest("GET", "/api/nuser/account/get", cookie);
   if (response.status !== 200) {
     response = await accountRequest("POST", "/api/w/nuser/account/get", cookie);
@@ -3659,10 +3660,58 @@ async function loginVerify(credentials) {
   }
   return accountOf(json, responseCodeError, artwork);
 }
+async function loginVerify(credentials) {
+  return fetchAccount(verifyCookie(credentials));
+}
+var LINUX_API_KEY = "rFgB&h#%2?^eDg:Q";
+var LINUX_USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.90 Safari/537.36";
+var LIBRARY_PAGE_SIZE = 1e3;
+var LIBRARY_CURSOR = /^v1:([1-9]\d{0,6})$/;
+async function libraryPlaylists(input) {
+  const { cursor } = input || {};
+  let offset = 0;
+  if (cursor !== void 0 && cursor !== null) {
+    const m = typeof cursor === "string" ? LIBRARY_CURSOR.exec(cursor) : null;
+    if (m === null) throw error("ParseError", "user playlists: malformed cursor");
+    offset = Number(m[1]);
+  }
+  const credentials = await fmp.credentials.get();
+  if (credentials === null || credentials === void 0) throw error("AuthRequired", "user playlists: not logged in");
+  const { userId: uid } = await fetchAccount();
+  const payload = JSON.stringify({ method: "POST", url: `${MUSIC}/api/user/playlist`, params: { uid, limit: LIBRARY_PAGE_SIZE, offset } });
+  const eparams = hexUpper(aes128EcbEncrypt(utf8Bytes(LINUX_API_KEY), utf8Bytes(payload)));
+  const { json } = await postRaw(
+    `${MUSIC}/api/linux/forward`,
+    form({ eparams }),
+    "user playlists",
+    { "User-Agent": LINUX_USER_AGENT },
+    "required"
+  );
+  if (json.code !== 200) throw responseCodeError(json.code, json.message || json.msg, "user playlists");
+  if (!Array.isArray(json.playlist)) throw error("ParseError", "user playlists: no playlist list");
+  const playlists = [];
+  const seen = /* @__PURE__ */ new Set();
+  for (const item of json.playlist) {
+    if (item === null || typeof item !== "object" || item.id === void 0 || item.id === null) continue;
+    const playlistId = String(item.id);
+    if (!PLAYLIST_ID.test(playlistId) || seen.has(playlistId)) continue;
+    seen.add(playlistId);
+    const title = typeof item.name === "string" && item.name.trim() !== "" ? item.name.trim() : playlistId;
+    const creator = item.creator !== null && typeof item.creator === "object" ? item.creator : {};
+    const entry = { playlistId, title, writable: creator.userId !== void 0 && creator.userId !== null && String(creator.userId) === uid };
+    const art = artwork(item.coverImgUrl);
+    if (art.length > 0) entry.artwork = art;
+    if (Number.isInteger(item.trackCount) && item.trackCount >= 0) entry.trackCount = item.trackCount;
+    playlists.push(entry);
+  }
+  fmp.log.debug("user playlists page", { offset, playlists: playlists.length });
+  return { playlists, cursor: json.more === true && json.playlist.length > 0 ? `v1:${offset + json.playlist.length}` : null };
+}
 export {
   chart,
   chartList,
   importPlaylist,
+  libraryPlaylists,
   loginQrPoll,
   loginQrStart,
   loginVerify,

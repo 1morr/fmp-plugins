@@ -1,0 +1,85 @@
+{
+  "meta": {
+    "recordedAt": "2026-10-20T05:45:31.889247Z",
+    "edited": "App 內以擁有者登入的帳號錄製（2026-10-20，FMP M4 PR 13），再手動刪減：回應只留 accountOf 讀的欄位（code、account.id、profile 的 userId、nickname、avatarUrl）；id 與名稱是錄製時換值的 ***，頭像換成假路徑（第一段路徑寫成遮蔽後的 ***），其他帳號欄位都刪了。請求與回應標頭沿用錄製結果。"
+  },
+  "request": {
+    "method": "GET",
+    "url": "https://music.163.com/api/nuser/account/get",
+    "headers": {
+      "accept": "application/json, text/plain, */*",
+      "cookie": "***",
+      "origin": "https://music.163.com",
+      "referer": "https://music.163.com/",
+      "user-agent": "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Safari/537.36 Chrome/91.0.4472.164 NeteaseMusicDesktop/3.0.18.203152"
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "cache-control": [
+        "no-cache",
+        "no-store"
+      ],
+      "connection": [
+        "keep-alive"
+      ],
+      "content-type": [
+        "application/json;charset=UTF-8"
+      ],
+      "date": [
+        "Tue, 20 Oct 2026 05:45:33 GMT"
+      ],
+      "expires": [
+        "Thu, 01 Jan 1970 00:00:00 GMT"
+      ],
+      "gw-thread": [
+        "-214572"
+      ],
+      "gw-time": [
+        "1792475133149"
+      ],
+      "mconfig-bucket": [
+        "548676"
+      ],
+      "server": [
+        "nginx"
+      ],
+      "set-cookie": [
+        "NMTID=***; Max-Age=315360000; Expires=Fri, 17 Oct 2036 05:45:33 GMT; Path=/; Domain=music.163.com"
+      ],
+      "vary": [
+        "Accept-Encoding"
+      ],
+      "x-cv": [
+        "1792475133159"
+      ],
+      "x-from-src": [
+        "203.0.113.1"
+      ],
+      "x-httpcache-status": [
+        "NML-L3"
+      ],
+      "x-traceid": [
+        "000001a157d7f4d907a50a7bb5c50007"
+      ],
+      "x-traceid-v2": [
+        "d2a2cbcbc564c188c523c3aeb46b037c^1789894068201^-12692769017"
+      ],
+      "x-via": [
+        "MusicServer"
+      ]
+    },
+    "jsonBody": {
+      "code": 200,
+      "account": {
+        "id": "***"
+      },
+      "profile": {
+        "userId": "***",
+        "nickname": "***",
+        "avatarUrl": "https://p1.music.126.net/***/109951000000000000.jpg"
+      }
+    }
+  }
+}

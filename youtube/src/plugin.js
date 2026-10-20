@@ -10,6 +10,7 @@ import { isAllowedHttps } from './urls.js';
 import { callResults } from './host_request.js';
 import { chartList as chartListOf, chartRequest, parseChartResponse } from './chart.js';
 import { browseRequest, cursorFor, interpret, playlistFromUrl as parsePlaylistUrl } from './playlist.js';
+import { libraryRequest, parseLibraryResponse } from './library.js';
 
 // ---------------------------------------------------------------- platform
 // Cache over fmp.storage (values are ArrayBuffers; storage takes strings).
@@ -301,6 +302,22 @@ export async function importPlaylist(input) {
   const { playlist, items, token } = outcome.page;
   fmp.log.debug('playlist page', { count: items.length, hasCursor: token !== null, retried: usedRequired !== required, ms: now() - t0 });
   return { playlist, items, cursor: cursorFor(playlist, token, usedRequired) };
+}
+
+// ---------------------------------------------------------------- libraryRead
+export async function libraryPlaylists(input) {
+  const body = libraryRequest(input);
+  const yt = await innertube();
+  const t0 = now();
+  // 帳號資料：一律 required（宿主沒登入就先拋 AuthRequired）。
+  const res = await browse(yt, body, 'required');
+  if (res.status >= 400) {
+    if (!res.credentialsAttached && (res.status === 401 || res.status === 403)) throw error('AuthRequired', `library: HTTP ${res.status}`);
+    throw res.error;
+  }
+  const { playlists, cursor } = parseLibraryResponse(res.data, { continuation: body.continuation !== undefined });
+  fmp.log.debug('library playlists', { count: playlists.length, hasCursor: cursor !== null, ms: now() - t0 });
+  return { playlists, cursor };
 }
 
 // ---------------------------------------------------------------- charts

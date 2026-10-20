@@ -1,0 +1,96 @@
+{
+  "meta": {
+    "recordedAt": "2026-10-20T05:42:49.820615Z",
+    "edited": "App 內以擁有者登入的帳號錄製（2026-10-20，FMP M4 PR 13），再手動刪減：回應只留插件讀的欄位（data.has_more、data.list 的 id、title、cover、media_count），收藏夾換成兩個假的（假 id、假標題、假封面路徑），原本的 20 個收藏夾與其他欄位都刪了；請求的 up_mid 與 cookie 已遮蔽成 ***。請求與回應標頭沿用錄製結果。"
+  },
+  "request": {
+    "method": "GET",
+    "url": "https://api.bilibili.com/x/v3/fav/folder/created/list?up_mid=***&type=2&pn=1&ps=20",
+    "headers": {
+      "accept": "application/json, text/plain, */*",
+      "cookie": "***",
+      "origin": "https://www.bilibili.com",
+      "referer": "https://www.bilibili.com/",
+      "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "access-control-allow-credentials": [
+        "true"
+      ],
+      "access-control-allow-headers": [
+        "origin,no-cache,x-requested-with,if-modified-since,pragma,last-modified,cache-control,expires,content-type,access-control-allow-credentials,dnt,x-customheader,keep-alive,user-agent,x-cache-webcdn,x-bilibili-key-real-ip,x-backend-bili-real-ip,x-risk-header,x-event-traceid"
+      ],
+      "access-control-allow-methods": [
+        "GET,POST,PUT,DELETE,PATCH"
+      ],
+      "access-control-allow-origin": [
+        "https://www.bilibili.com"
+      ],
+      "access-control-expose-headers": [
+        "x-bili-gaia-vvoucher,x-bili-metadata-legal-region,x-bili-metadata-ip-region,x-bili-metadata-idc-region,x-bili-idc-redirect,bili-status-code,x-bili-metadata-recent-region,x-bili-trace-id,x-bili-gaia-param"
+      ],
+      "bili-status-code": [
+        "0"
+      ],
+      "bili-trace-id": [
+        "586bb3c17c6ad6ff"
+      ],
+      "cache-control": [
+        "no-cache"
+      ],
+      "connection": [
+        "keep-alive"
+      ],
+      "content-type": [
+        "application/json; charset=utf-8"
+      ],
+      "cpu_usage": [
+        "107"
+      ],
+      "cross-origin-resource-policy": [
+        "cross-origin"
+      ],
+      "date": [
+        "Tue, 20 Oct 2026 05:42:51 GMT"
+      ],
+      "expires": [
+        "Tue, 20 Oct 2026 05:42:50 GMT"
+      ],
+      "vary": [
+        "Origin"
+      ],
+      "x-bili-trace-id": [
+        "4191d56e193d5bfe586bb3c17c6ad6ff"
+      ],
+      "x-cache-webcdn": [
+        "BYPASS from blzone09"
+      ]
+    },
+    "jsonBody": {
+      "code": 0,
+      "message": "0",
+      "ttl": 1,
+      "data": {
+        "count": 2,
+        "has_more": true,
+        "list": [
+          {
+            "id": 1000000101,
+            "title": "Test folder A",
+            "cover": "https://i0.hdslb.com/bfs/archive/fake-cover-a.jpg",
+            "media_count": 2
+          },
+          {
+            "id": 1000000202,
+            "title": "Test folder B",
+            "cover": "https://i0.hdslb.com/bfs/archive/fake-cover-b.jpg",
+            "media_count": 0
+          }
+        ]
+      }
+    }
+  }
+}
