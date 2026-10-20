@@ -6,11 +6,11 @@ import { writeFileSync, statSync } from 'node:fs';
 const manifest = {
   id: 'netease',
   name: '網易雲音樂',
-  version: '1.5.0',
+  version: '1.6.0',
   author: 'FMP',
   description: '搜尋網易雲音樂的歌曲並播放、匯入歌單、瀏覽熱歌榜，可用 QR 碼登入。',
   apiVersion: 1,
-  capabilities: ['search', 'resolveStream', 'trackDetail', 'importPlaylist', 'charts', 'login'],
+  capabilities: ['search', 'resolveStream', 'trackDetail', 'importPlaylist', 'libraryRead', 'charts', 'login'],
   allowedHosts: ['music.163.com', 'music.126.net', '163cn.tv'],
   login: { methods: ['qr'] },
   rateLimit: { maxConcurrentRequests: 2, minRequestIntervalMs: 300 },

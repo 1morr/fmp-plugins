@@ -23,12 +23,20 @@
   - **短網址**：`163cn.tv`（舊版 `neteaseShortHosts`，`allowedHosts` 為此加了它）是唯一會發請求的情況：`GET https://163cn.tv/<碼>`（`auth: 'never'`，宿主跟隨轉址），用回應的最終網址（`response.url`）照上面的規則認；最終網址不是網易的歌單網址回 `null`，短網址已失效（HTTP 404）回 `NotFound`，其他非 200 照〈錯誤對應〉。舊版先 HEAD 再 GET，這裡只 GET（宿主 `HttpRequest` 沒說 HEAD 的轉址行為，頁面本身是小的殼）。**未實測**：沒有現成可用的 `163cn.tv` 網址，轉址形狀（最終網址的網域與路徑）是照舊版的轉址白名單（`music.163.com`、`y.music.163.com`）推的，`test/import_playlist.test.js` 以手寫的轉址結果守。
   - `importPlaylist({playlistId, cursor?})`：`POST music.163.com/api/v6/playlist/detail`（明文 form `id=<id>`，舊版同），拿歌單資料與**全部** `trackIds`；詳情自己附的 `tracks` 只有前幾首完整資料，這一頁要的 id 裡不在其中的，再以 `POST api/v3/song/detail`（`c=[{"id":…}]`，與 `trackDetail` 同一個端點）**一次**補齊。兩個請求都標 `auth: 'userPreference'`、`idempotent: true`，不帶 `X-Real-IP`。`playlistId` 不是正整數字串、`cursor` 格式不對 → `ParseError`，不發請求。
   - **分頁**：一頁 400 個 id（舊版 `_songDetailBatchSize`，一批就是一頁）；`cursor` 是 `v1:<起點>:<0|1>`，起點必須是 400 的倍數，後者是「以 `required` 送」。**每一頁都重新取 detail**（歌單資料與完整的 `trackIds` 都在裡面），所以 cursor 不用背歌單資料或 id 清單；代價是每頁多一個 detail 請求，而且歌單在兩頁之間被改過時，頁界會跟著移（少數重複或漏掉；`total` 對不上時宿主不套用移除）。`items` 依 `trackIds` 的順序；`song/detail` 沒回的 id（歌曲資料取不到）略過。
-  - `playlist`：`title`（`name`，缺或空 → `ParseError`）、`description`（空不給）、`artwork`（`coverImgUrl`，格式同 `search` 的封面，方形 120、200、400）、`ownerName`（`creator.nickname`）。**不給 `writable`**：回應沒有「這張是登入者自己的」旗標，要比 `creator.userId` 得先知道登入者的 uid（只在 `loginVerify` 取得），留到 FMP M4 PR 13（`libraryPlaylists`）一起決定。
+  - `playlist`：`title`（`name`，缺或空 → `ParseError`）、`description`（空不給）、`artwork`（`coverImgUrl`，格式同 `search` 的封面，方形 120、200、400）、`ownerName`（`creator.nickname`）。**不給 `writable`**：回應沒有「這張是登入者自己的」旗標，要比 `creator.userId` 得先知道登入者的 uid（只在 `loginVerify` 取得）；由 `libraryRead` 的 `libraryPlaylists` 給。
   - `items`：`track` 欄位同 `search`（共用同一個映射，`test/import_playlist.test.js` 守）。**`unavailable`**：`privileges` 裡該首的 `st` 為 `-200` 才標 `true`（舊版 `isAvailable = (st != -200)`）；**實測的榜單歌單沒有 `-200`**（沒驗過），倒是匿名時 100 首裡有 77 首 `st` 是 `-100`（歌單是官方榜單，不可能多數下架），所以不當失效。
   - **`total`**：給歌單 `trackIds` 的長度（每頁相同，實測等於 `trackCount`）。`song/detail` 沒回的 id 會讓回傳筆數少於它，宿主就當不完整、不套用移除；寧可如此也不讓缺的歌被當成已完整。
   - **不給 `remoteItemId`**：網易歌單的新增與移除（`playlist/manipulate/tracks`）直接用歌曲 id，沒有獨立的項目 id（舊版 `netease_playlist_service.dart` 的 `_manipulateTracks`；這次沒有實測）。
   - **私人歌單**：請求一律 `userPreference`。detail 的 `code` 為 301、401、403、404，或 200 卻沒有 `playlist`（舊版 "Playlist data not found"）視為讀不到；這次沒帶憑證（`credentialsAttached` 為假）且 `fmp.credentials.get()` 不是 `null` 時，以 `required` 重送一次；已帶憑證被拒、或重送後還被拒都不再送。靠重送讀到的歌單，後續頁的 detail 也以 `required` 送（記在 cursor）；`song/detail` 一律 `userPreference`（歌曲資料是公開的）。最後還讀不到：沒帶憑證的 301、401、403 → `AuthRequired`，其餘（404、沒有 `playlist`、已帶憑證被拒）→ `NotFound`；帶了憑證的 301 是 `CredentialInvalid`（既有的判定表）。**未實測**：匿名讀私人歌單與不存在的歌單的實際回應（`code` 與訊息），上面的碼是照舊版 `_checkResponse` 與網易網頁行為推的，`test/import_playlist.test.js` 用手寫的碼守邏輯。
   - **實測**（2026-10-15，匿名，Windows，FMP 的錄製器）：官方帳號（`creator.nickname` 為「网易云音乐」）的榜單歌單「飙升榜」，`id` `19723756`，網址 `https://music.163.com/#/playlist?id=19723756`。`trackCount` 100、`trackIds` 100 個；**詳情一次給 10 首完整資料**（`tracks` 10 筆），其餘 90 首以一批 `song/detail` 補齊（1 批，90 首都回來了；`privileges` detail 與 `song/detail` 各 10、90 筆，合計 100），所以一頁收完、`cursor` 為 `null`、`total` 100。`code` 全是 200，沒有觸發風控。錄製發了 2 個請求（detail 一個、`song/detail` 一個）。`163cn.tv` 沒有實測（見上）。分頁（超過 400 首）只有單元測試。
+- `libraryRead`：`libraryPlaylists({cursor?})`，列出登入帳號的歌單（FMP ADR 0032 §決定 3）。規格是舊專案 `netease_playlist_service.dart` 的 `getPlaylists`。
+  - 請求：`POST music.163.com/api/linux/forward`，`auth: 'required'`，body 是 form `eparams=<hex>`；`eparams` 是 `{method:'POST', url:'https://music.163.com/api/user/playlist', params:{uid, limit:1000, offset}}` 的 JSON 以 AES-128-ECB 加密（金鑰 `rFgB&h#%2?^eDg:Q`，舊版的 `_linuxApiKey`，大寫 hex；`test/library_read.test.js` 以 `node:crypto` 獨立解開驗）。`User-Agent` 用舊版的 Linux 值。
+  - **與舊版不同**：不送 `X-Real-IP`（M4 design §4.5 的做法：先不帶，實測不行才加），也不自己設 `os=linux` 的 Cookie（Cookie 由宿主在 `required` 時注入）。2026-10-20 以登入帳號實測（FMP M4 PR 13）：不帶這兩個也成功。
+  - `uid`：舊版取登入時存的帳號；這裡的憑證只有 cookie、沒有 uid，所以每次先打 `account/get`（與 `loginVerify` 同一個端點，但 `auth: 'required'`、由宿主注入憑證；`loginVerify` 才自組 Cookie）取 `profile.userId`，所以一次呼叫是 2 個請求。
+  - `playlistId` 是 `playlist[].id` 的字串（`importPlaylist` 收的 id）；`title` 是 `name`（空白時退回 id）；`artwork` 是 `coverImgUrl`（格式同 `search`）；`trackCount` 是 `trackCount`（非負整數才給）。
+  - **`writable`**：`creator.userId` 等於登入者的 `uid`（舊版 `isMine`）。回應同時含自己建立的與收藏的歌單，後者 `writable` 為 `false`。
+  - **分頁**：`limit` 1000（舊版）；`cursor` 是 `v1:<下一個 offset>`，回應的 `more` 為真且這頁有項目才給，否則 `null`。
+  - 錯誤：`account/get` 或列表的 `301` 在帶憑證時是 `CredentialInvalid`（判定表），沒帶憑證是 `AuthRequired`；`-460` → `VerificationRequired`；`playlist` 不是陣列 → `ParseError`。
 - `charts`：一個榜單 `hot`（「熱歌榜」），兩個匯出（FMP ADR 0032 §決定 5）。規格是舊專案 `netease_source.dart` 的 `getHotRankingTracks`：官方熱歌榜歌單 `3778678`，取前 50 個 `trackIds`，順序就是歌單的順序（不排序）。
   - `chartList()`：常數，不發請求。`chart({chartId})`：`POST api/v6/playlist/detail`（`id=3778678`）取 `trackIds`，歌曲資料的取法同 `importPlaylist`（共用 `songsOf`：詳情自帶的前幾首，其餘的以一個 `song/detail` 補，50 個 id 遠小於一批 400），`track` 欄位同 `search`。`song/detail` 的回傳順序不保證，所以依榜單的 id 順序排；沒回來的 id 略過。兩個請求都標 `auth: 'userPreference'`、`idempotent: true`，不帶 `X-Real-IP`；榜單沒有「下架」的概念，`privileges` 不看。
   - `chartId` 不認得 → `NotFound`，不發請求；detail 的 `code` 不是 200 照〈錯誤對應〉，沒有 `playlist.trackIds` 或 id 不是正整數 → `ParseError`。
@@ -112,7 +120,7 @@ manifest 宣告 `login: { methods: ['qr'] }`（網易的 `MUSIC_U` 有效期長�
 cd netease
 npm ci
 node build.mjs   # 輸出 netease.js（不壓縮，內容固定）
-npm test         # 錯誤對應表、AES／weapi、登入流程、取流、搜尋、trackDetail 與 importPlaylist 的測試（node:test）
+npm test         # 錯誤對應表、AES／weapi、登入流程、取流、搜尋、trackDetail、importPlaylist 與 libraryPlaylists 的測試（node:test）
 ```
 
 用 esbuild 把 `src/` 與 `bn.js` 打成單一檔，`netease.js` 與原始碼、`package-lock.json` 一起提交；index 只認這一個 `.js`。`manifest` 寫在 `build.mjs`。

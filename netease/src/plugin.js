@@ -494,23 +494,28 @@ export async function loginQrPoll(token) {
 }
 
 /** 用傳入的憑證自己組 Cookie、不讓宿主注入（auth: never）。 */
+// cookie 給了：loginVerify，自己組 Cookie、標 never（宿主規定的注入方式）。沒給：libraryPlaylists 查自己的 uid，
+// 憑證交給宿主注入（required），網路紀錄才記得到 credentials。
 async function accountRequest(method, path, cookie) {
+  const headers = {
+    Referer: API_HEADERS.Referer,
+    Origin: API_HEADERS.Origin,
+    Accept: API_HEADERS.Accept,
+    'User-Agent': API_HEADERS['User-Agent'],
+  };
+  if (cookie !== undefined) headers.Cookie = cookie;
   return fmp.http.request({
     url: `${MUSIC}${path}`,
     method,
-    headers: {
-      Referer: API_HEADERS.Referer,
-      Origin: API_HEADERS.Origin,
-      Accept: API_HEADERS.Accept,
-      'User-Agent': API_HEADERS['User-Agent'],
-      Cookie: cookie,
-    },
-    auth: 'never',
+    headers,
+    auth: cookie === undefined ? 'required' : 'never',
   });
 }
 
-export async function loginVerify(credentials) {
-  const cookie = verifyCookie(credentials);
+/**
+ * account/get → LoginAccount（舊專案 GET 失敗就改打 POST）。loginVerify 給 cookie；libraryPlaylists 不給，由宿主注入。
+ */
+async function fetchAccount(cookie) {
   let response = await accountRequest('GET', '/api/nuser/account/get', cookie);
   // 舊專案 GET 失敗就改打 POST /api/w/nuser/account/get。
   if (response.status !== 200) {
@@ -524,4 +529,60 @@ export async function loginVerify(credentials) {
     throw error('ParseError', 'verify: not JSON');
   }
   return accountOf(json, responseCodeError, artwork);
+}
+
+export async function loginVerify(credentials) {
+  return fetchAccount(verifyCookie(credentials));
+}
+
+// ---------------------------------------------------------------- libraryRead
+
+// 規格是舊專案 netease_playlist_service.dart 的 getPlaylists：linux forward 的 `user/playlist`（payload 為
+// {method, url, params} 以 AES-128-ECB 加密成 eparams，金鑰是舊專案的 _linuxApiKey），回自己建立的與收藏的歌單；
+// 建立者是自己的才可寫（舊版 isMine）。舊版 uid 來自登入時存的帳號；這裡的憑證沒有 uid，所以每次先打 account/get。
+const LINUX_API_KEY = 'rFgB&h#%2?^eDg:Q';
+const LINUX_USER_AGENT =
+  'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.90 Safari/537.36';
+const LIBRARY_PAGE_SIZE = 1000; // 舊版的 limit
+const LIBRARY_CURSOR = /^v1:([1-9]\d{0,6})$/;
+
+export async function libraryPlaylists(input) {
+  const { cursor } = input || {};
+  let offset = 0;
+  if (cursor !== undefined && cursor !== null) {
+    const m = typeof cursor === 'string' ? LIBRARY_CURSOR.exec(cursor) : null;
+    if (m === null) throw error('ParseError', 'user playlists: malformed cursor');
+    offset = Number(m[1]);
+  }
+  const credentials = await fmp.credentials.get();
+  if (credentials === null || credentials === undefined) throw error('AuthRequired', 'user playlists: not logged in');
+  const { userId: uid } = await fetchAccount();
+  const payload = JSON.stringify({ method: 'POST', url: `${MUSIC}/api/user/playlist`, params: { uid, limit: LIBRARY_PAGE_SIZE, offset } });
+  const eparams = hexUpper(aes128EcbEncrypt(utf8Bytes(LINUX_API_KEY), utf8Bytes(payload)));
+  const { json } = await postRaw(
+    `${MUSIC}/api/linux/forward`,
+    form({ eparams }),
+    'user playlists',
+    { 'User-Agent': LINUX_USER_AGENT },
+    'required',
+  );
+  if (json.code !== 200) throw responseCodeError(json.code, json.message || json.msg, 'user playlists');
+  if (!Array.isArray(json.playlist)) throw error('ParseError', 'user playlists: no playlist list');
+  const playlists = [];
+  const seen = new Set();
+  for (const item of json.playlist) {
+    if (item === null || typeof item !== 'object' || item.id === undefined || item.id === null) continue;
+    const playlistId = String(item.id);
+    if (!PLAYLIST_ID.test(playlistId) || seen.has(playlistId)) continue;
+    seen.add(playlistId);
+    const title = typeof item.name === 'string' && item.name.trim() !== '' ? item.name.trim() : playlistId;
+    const creator = item.creator !== null && typeof item.creator === 'object' ? item.creator : {};
+    const entry = { playlistId, title, writable: creator.userId !== undefined && creator.userId !== null && String(creator.userId) === uid };
+    const art = artwork(item.coverImgUrl);
+    if (art.length > 0) entry.artwork = art;
+    if (Number.isInteger(item.trackCount) && item.trackCount >= 0) entry.trackCount = item.trackCount;
+    playlists.push(entry);
+  }
+  fmp.log.debug('user playlists page', { offset, playlists: playlists.length });
+  return { playlists, cursor: json.more === true && json.playlist.length > 0 ? `v1:${offset + json.playlist.length}` : null };
 }

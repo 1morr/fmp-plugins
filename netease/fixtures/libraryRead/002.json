@@ -1,0 +1,70 @@
+{
+  "meta": {
+    "recordedAt": "2026-10-20T05:45:31.993055Z",
+    "edited": "App 內以擁有者登入的帳號錄製（2026-10-20，FMP M4 PR 13），再手動刪減：回應只留插件讀的欄位（code、more、playlist 的 id、name、coverImgUrl、trackCount、creator.userId），歌單換成兩張假的：一張建立者是自己（userId 為錄製時換值的 ***），一張是收藏別人的（假 userId），封面是假路徑（第一段路徑寫成遮蔽後的 ***）；原本的歌單與其他欄位都刪了。請求的 eparams 與 cookie 已遮蔽成 ***。請求與回應標頭沿用錄製結果。"
+  },
+  "request": {
+    "method": "POST",
+    "url": "https://music.163.com/api/linux/forward",
+    "headers": {
+      "accept": "application/json, text/plain, */*",
+      "content-length": "264",
+      "content-type": "application/x-www-form-urlencoded",
+      "cookie": "***",
+      "origin": "https://music.163.com",
+      "referer": "https://music.163.com/",
+      "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.90 Safari/537.36"
+    },
+    "body": "eparams=***"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "connection": [
+        "keep-alive"
+      ],
+      "content-type": [
+        "application/json;charset=UTF-8"
+      ],
+      "date": [
+        "Tue, 20 Oct 2026 05:45:33 GMT"
+      ],
+      "server": [
+        "nginx"
+      ],
+      "vary": [
+        "Accept-Encoding"
+      ],
+      "x-from-src": [
+        "203.0.113.1"
+      ],
+      "x-via": [
+        "MusicServer"
+      ]
+    },
+    "jsonBody": {
+      "code": 200,
+      "more": false,
+      "playlist": [
+        {
+          "id": 9000000101,
+          "name": "Test playlist A",
+          "coverImgUrl": "https://p1.music.126.net/***/109951000000000001.jpg",
+          "trackCount": 2,
+          "creator": {
+            "userId": "***"
+          }
+        },
+        {
+          "id": 9000000202,
+          "name": "Test playlist B",
+          "coverImgUrl": "https://p1.music.126.net/***/109951000000000002.jpg",
+          "trackCount": 5,
+          "creator": {
+            "userId": 1000002
+          }
+        }
+      ]
+    }
+  }
+}
