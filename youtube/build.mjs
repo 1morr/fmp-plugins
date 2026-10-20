@@ -6,11 +6,11 @@ import { writeFileSync, statSync } from 'node:fs';
 const manifest = {
   id: 'youtube',
   name: 'YouTube',
-  version: '1.4.0',
+  version: '1.5.0',
   author: 'FMP',
   description: '搜尋 YouTube 影片並播放其音訊，可匯入播放清單與瀏覽「本週新歌」榜單。',
   apiVersion: 1,
-  capabilities: ['search', 'resolveStream', 'mix', 'trackDetail', 'importPlaylist', 'charts', 'login'],
+  capabilities: ['search', 'resolveStream', 'mix', 'trackDetail', 'importPlaylist', 'libraryRead', 'charts', 'login'],
   // accounts.google.com：登入頁（webView.url）；ggpht.com：帳號頭像。
   allowedHosts: ['youtube.com', 'googlevideo.com', 'ytimg.com', 'ggpht.com', 'accounts.google.com'],
   login: {
@@ -22,6 +22,8 @@ const manifest = {
     },
     automationRisk: true,
   },
+  // visitorData 與 X-Goog-Visitor-Id 的內容編碼了錄製地的國家碼，宿主的名單沒有（匿名識別，不是憑證）。
+  redaction: { headerNames: ['X-Goog-Visitor-Id'], keyNames: ['visitorData'] },
 };
 
 const result = await build({

@@ -60,14 +60,22 @@ function obj(x) {
   return x && typeof x === 'object' && !Array.isArray(x) ? x : null;
 }
 
+/**
+ * importPlaylist 收不收這個 id：Mix 由 playlistFromUrl 回 mixSeed、走 mix 能力，對 VLRD… 做 browse 沒有意義。
+ * libraryPlaylists 用同一個判斷，列出來的歌單一定匯入得了。
+ */
+export function importable(playlistId) {
+  return typeof playlistId === 'string' && playlistId !== '' && playlistId.length <= MAX_PLAYLIST_ID_LENGTH
+    && ID.test(playlistId) && !playlistId.startsWith('RD');
+}
+
 /** 輸入 → {body, meta, required}：meta 在第一頁是 null，續取時是 cursor 帶的歌單資料。輸入不合法丟 ParseError。 */
 export function browseRequest(input) {
   const { playlistId, cursor } = input || {};
   if (typeof playlistId !== 'string' || playlistId === '' || playlistId.length > MAX_PLAYLIST_ID_LENGTH || !ID.test(playlistId)) {
     throw error('ParseError', `invalid playlistId: ${playlistId}`);
   }
-  // Mix 由 playlistFromUrl 回 mixSeed、走 mix 能力；對 VLRD… 做 browse 沒有意義。
-  if (playlistId.startsWith('RD')) throw error('ParseError', `Mix is not a playlist: ${playlistId}`);
+  if (!importable(playlistId)) throw error('ParseError', `Mix is not a playlist: ${playlistId}`);
   if (cursor === undefined || cursor === null) return { body: { browseId: `VL${playlistId}` }, meta: null, required: false };
   if (typeof cursor !== 'string' || cursor === '') throw error('ParseError', 'cursor must be a non-empty string');
   const m = CURSOR.exec(cursor);
@@ -115,7 +123,7 @@ export function firstPageContents(data) {
 }
 
 /** 續取回應的項目：onResponseReceivedActions[].appendContinuationItemsAction.continuationItems。 */
-function continuationItems(data) {
+export function continuationItems(data) {
   for (const key of ['onResponseReceivedActions', 'onResponseReceivedEndpoints']) {
     for (const action of Array.isArray(data[key]) ? data[key] : []) {
       const items = obj(action) && obj(action.appendContinuationItemsAction) && action.appendContinuationItemsAction.continuationItems;
@@ -126,7 +134,7 @@ function continuationItems(data) {
 }
 
 /** 一批 contents 裡的下一頁 token：continuationItemViewModel（新）或 continuationItemRenderer（舊）。 */
-function nextToken(contents) {
+export function nextToken(contents) {
   for (const item of contents) {
     if (!obj(item)) continue;
     const vm = obj(item.continuationItemViewModel);
@@ -144,7 +152,7 @@ function nextToken(contents) {
   return null;
 }
 
-function artworkOf(sources) {
+export function artworkOf(sources) {
   return (Array.isArray(sources) ? sources : [])
     .filter((t) => t && isAllowedHttps(t.url, ['ytimg.com']))
     .map((t) => ({ url: t.url, width: t.width || null }));

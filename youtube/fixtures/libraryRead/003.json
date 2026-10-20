@@ -1,0 +1,363 @@
+{
+  "meta": {
+    "recordedAt": "2026-10-20T05:47:56.170578Z",
+    "edited": "App 內以擁有者的 Google 測試帳號錄製（2026-10-20，FMP M4 PR 13），再手動重建：回應只留插件讀的路徑——responseContext.mainAppWebResponseContext.loggedOut、richGridRenderer 底下三個 lockupViewModel 的 contentId、contentType、縮圖（一個尺寸）、筆數角標、標題、metadataRows，以及自己的清單的選單裡 deletePlaylistEndpoint 的完整巢狀路徑（照實測的層次，約 20 層；端點內容留空：FMP 的遮蔽對這麼深的值一律換成 <nested too deep>，插件只看鍵在不在）。自己的清單換成假 id 與假標題，縮圖換成假影片 id；Watch later、Liked videos 保留系統 id 與英文標題。topbar（帳號頭像）、header、datasyncId 等帳號欄位都刪了。請求 body 換成手寫的最小 body（原本帶帳號的 context）；請求與回應標頭沿用錄製結果（cookie、authorization 已遮蔽）。"
+  },
+  "request": {
+    "method": "POST",
+    "url": "https://www.youtube.com/youtubei/v1/browse?prettyPrint=false&alt=json",
+    "headers": {
+      "accept": "*/*",
+      "accept-language": "*",
+      "authorization": "***",
+      "content-length": "4022",
+      "content-type": "application/json",
+      "cookie": "***",
+      "origin": "https://www.youtube.com",
+      "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36",
+      "x-goog-visitor-id": "***",
+      "x-origin": "***",
+      "x-youtube-client-name": "1",
+      "x-youtube-client-version": "2.20261019.01.00"
+    },
+    "body": "{\"context\": {\"client\": {\"hl\": \"en\", \"gl\": \"US\", \"clientName\": \"WEB\", \"clientVersion\": \"***\"}}, \"browseId\": \"FEplaylist_aggregation\"}"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "alt-svc": [
+        "h3=\":443\"; ma=2592000,h3-29=\":443\"; ma=2592000"
+      ],
+      "content-type": [
+        "application/json; charset=UTF-8"
+      ],
+      "date": [
+        "Tue, 20 Oct 2026 05:47:57 GMT"
+      ],
+      "server": [
+        "scaffolding on HTTPServer2"
+      ],
+      "vary": [
+        "Origin",
+        "X-Origin",
+        "Referer"
+      ],
+      "x-content-type-options": [
+        "nosniff"
+      ],
+      "x-frame-options": [
+        "SAMEORIGIN"
+      ],
+      "x-xss-protection": [
+        "0"
+      ]
+    },
+    "jsonBody": {
+      "responseContext": {
+        "mainAppWebResponseContext": {
+          "loggedOut": false
+        }
+      },
+      "contents": {
+        "twoColumnBrowseResultsRenderer": {
+          "tabs": [
+            {
+              "tabRenderer": {
+                "content": {
+                  "richGridRenderer": {
+                    "contents": [
+                      {
+                        "richItemRenderer": {
+                          "content": {
+                            "lockupViewModel": {
+                              "contentImage": {
+                                "collectionThumbnailViewModel": {
+                                  "primaryThumbnail": {
+                                    "thumbnailViewModel": {
+                                      "image": {
+                                        "sources": [
+                                          {
+                                            "url": "https://i.ytimg.com/vi/aaaaaaaaaa1/hqdefault.jpg",
+                                            "width": 480,
+                                            "height": 270
+                                          }
+                                        ]
+                                      },
+                                      "overlays": [
+                                        {
+                                          "thumbnailOverlayBadgeViewModel": {
+                                            "thumbnailBadges": [
+                                              {
+                                                "thumbnailBadgeViewModel": {
+                                                  "text": "2 videos"
+                                                }
+                                              }
+                                            ]
+                                          }
+                                        }
+                                      ]
+                                    }
+                                  }
+                                }
+                              },
+                              "metadata": {
+                                "lockupMetadataViewModel": {
+                                  "title": {
+                                    "content": "Test playlist A"
+                                  },
+                                  "metadata": {
+                                    "contentMetadataViewModel": {
+                                      "metadataRows": [
+                                        {
+                                          "metadataParts": [
+                                            {
+                                              "text": {
+                                                "content": "Private"
+                                              }
+                                            },
+                                            {
+                                              "text": {
+                                                "content": "Playlist"
+                                              }
+                                            }
+                                          ]
+                                        },
+                                        {
+                                          "metadataParts": [
+                                            {
+                                              "text": {
+                                                "content": "Updated today"
+                                              }
+                                            }
+                                          ]
+                                        },
+                                        {
+                                          "metadataParts": [
+                                            {
+                                              "text": {
+                                                "content": "View full playlist"
+                                              }
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  },
+                                  "menuButton": {
+                                    "buttonViewModel": {
+                                      "onTap": {
+                                        "innertubeCommand": {
+                                          "showSheetCommand": {
+                                            "panelLoadingStrategy": {
+                                              "inlineContent": {
+                                                "sheetViewModel": {
+                                                  "content": {
+                                                    "listViewModel": {
+                                                      "listItems": [
+                                                        {
+                                                          "listItemViewModel": {
+                                                            "title": {
+                                                              "content": "Delete"
+                                                            },
+                                                            "rendererContext": {
+                                                              "commandContext": {
+                                                                "onTap": {
+                                                                  "innertubeCommand": {
+                                                                    "deletePlaylistEndpoint": {}
+                                                                  }
+                                                                }
+                                                              }
+                                                            }
+                                                          }
+                                                        }
+                                                      ]
+                                                    }
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              },
+                              "contentId": "PLfmpTestFakePlaylistId000000000001",
+                              "contentType": "LOCKUP_CONTENT_TYPE_PLAYLIST"
+                            }
+                          }
+                        }
+                      },
+                      {
+                        "richItemRenderer": {
+                          "content": {
+                            "lockupViewModel": {
+                              "contentImage": {
+                                "collectionThumbnailViewModel": {
+                                  "primaryThumbnail": {
+                                    "thumbnailViewModel": {
+                                      "image": {
+                                        "sources": [
+                                          {
+                                            "url": "https://i.ytimg.com/vi/aaaaaaaaaa2/hqdefault.jpg",
+                                            "width": 480,
+                                            "height": 270
+                                          }
+                                        ]
+                                      },
+                                      "overlays": [
+                                        {
+                                          "thumbnailOverlayBadgeViewModel": {
+                                            "thumbnailBadges": [
+                                              {
+                                                "thumbnailBadgeViewModel": {
+                                                  "text": "2 videos"
+                                                }
+                                              }
+                                            ]
+                                          }
+                                        }
+                                      ]
+                                    }
+                                  }
+                                }
+                              },
+                              "metadata": {
+                                "lockupMetadataViewModel": {
+                                  "title": {
+                                    "content": "Watch later"
+                                  },
+                                  "metadata": {
+                                    "contentMetadataViewModel": {
+                                      "metadataRows": [
+                                        {
+                                          "metadataParts": [
+                                            {
+                                              "text": {
+                                                "content": "Private"
+                                              }
+                                            },
+                                            {
+                                              "text": {
+                                                "content": "Playlist"
+                                              }
+                                            }
+                                          ]
+                                        },
+                                        {
+                                          "metadataParts": [
+                                            {
+                                              "text": {
+                                                "content": "Updated today"
+                                              }
+                                            }
+                                          ]
+                                        },
+                                        {
+                                          "metadataParts": [
+                                            {
+                                              "text": {
+                                                "content": "View full playlist"
+                                              }
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  }
+                                }
+                              },
+                              "contentId": "WL",
+                              "contentType": "LOCKUP_CONTENT_TYPE_PLAYLIST"
+                            }
+                          }
+                        }
+                      },
+                      {
+                        "richItemRenderer": {
+                          "content": {
+                            "lockupViewModel": {
+                              "contentImage": {
+                                "collectionThumbnailViewModel": {
+                                  "primaryThumbnail": {
+                                    "thumbnailViewModel": {
+                                      "image": {
+                                        "sources": [
+                                          {
+                                            "url": "https://i.ytimg.com/vi/aaaaaaaaaa3/hqdefault.jpg",
+                                            "width": 480,
+                                            "height": 270
+                                          }
+                                        ]
+                                      },
+                                      "overlays": [
+                                        {
+                                          "thumbnailOverlayBadgeViewModel": {
+                                            "thumbnailBadges": [
+                                              {
+                                                "thumbnailBadgeViewModel": {
+                                                  "text": "6 videos"
+                                                }
+                                              }
+                                            ]
+                                          }
+                                        }
+                                      ]
+                                    }
+                                  }
+                                }
+                              },
+                              "metadata": {
+                                "lockupMetadataViewModel": {
+                                  "title": {
+                                    "content": "Liked videos"
+                                  },
+                                  "metadata": {
+                                    "contentMetadataViewModel": {
+                                      "metadataRows": [
+                                        {
+                                          "metadataParts": [
+                                            {
+                                              "text": {
+                                                "content": "Private"
+                                              }
+                                            },
+                                            {
+                                              "text": {
+                                                "content": "Playlist"
+                                              }
+                                            }
+                                          ]
+                                        },
+                                        {
+                                          "metadataParts": [
+                                            {
+                                              "text": {
+                                                "content": "View full playlist"
+                                              }
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  }
+                                }
+                              },
+                              "contentId": "LL",
+                              "contentType": "LOCKUP_CONTENT_TYPE_PLAYLIST"
+                            }
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+}
