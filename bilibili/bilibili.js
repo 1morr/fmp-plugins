@@ -2,7 +2,7 @@
 {
   "id": "bilibili",
   "name": "Bilibili",
-  "version": "1.8.0",
+  "version": "1.9.0",
   "author": "FMP",
   "description": "搜尋 Bilibili 影片並播放其音訊，也能搜尋與收聽直播間、匯入收藏夾、瀏覽音樂排行榜，可用 QR 碼登入。",
   "apiVersion": 1,
@@ -14,6 +14,7 @@
     "live",
     "importPlaylist",
     "libraryRead",
+    "libraryWrite",
     "charts",
     "login"
   ],
@@ -3025,6 +3026,8 @@ function businessError(code, message, context) {
     case 62012:
     // 僅 UP 主自己可見
     case 60004:
+    // 直播間不存在（room_init）
+    case 11010:
       return error("NotFound", detail);
     case -10403:
       return error("Unavailable", detail, { reason: "region" });
@@ -3424,7 +3427,7 @@ function keyFromUrl(url) {
   const name = url.slice(url.lastIndexOf("/") + 1).split(".")[0];
   return WBI_KEY.test(name) ? name : null;
 }
-async function wbiKeys() {
+async function wbiKeys(auth) {
   const today = chinaDay(Date.now());
   const stored = await fmp.storage.get("wbiKeys");
   if (stored !== null) {
@@ -3437,7 +3440,7 @@ async function wbiKeys() {
       fmp.log.warn("discarding an unreadable WBI key cache");
     }
   }
-  const json = await get(`${API}/x/web-interface/nav`, API_HEADERS, "nav");
+  const json = await get(`${API}/x/web-interface/nav`, API_HEADERS, "nav", auth);
   const image = json && json.data && json.data.wbi_img;
   const imgKey = keyFromUrl(image && image.img_url);
   const subKey = keyFromUrl(image && image.sub_url);
@@ -3723,6 +3726,156 @@ async function libraryPlaylists(input) {
   fmp.log.debug("fav folders page", { page, folders: list.length, playlists: playlists.length });
   return { playlists, cursor: data.has_more === true && list.length > 0 ? `v1:${page + 1}` : null };
 }
+var FAV_ALREADY_CODE = 11201;
+var FAV_RESOURCE_TYPE = 2;
+var WRITE_ABORT_KINDS = ["CredentialInvalid", "AuthRequired", "RateLimited"];
+async function csrfOf() {
+  const credentials = await fmp.credentials.get();
+  const jct = credentials && credentials.cookies ? credentials.cookies.bili_jct : void 0;
+  if (typeof jct !== "string" || jct === "") throw error("AuthRequired", "fav write: credentials have no bili_jct");
+  return jct;
+}
+async function postForm(path, fields, context) {
+  const cookie = await anonymousCookie();
+  const response = await fmp.http.request({
+    url: `${API}${path}`,
+    method: "POST",
+    headers: { ...API_HEADERS, "Content-Type": "application/x-www-form-urlencoded", Cookie: cookie },
+    body: query(fields),
+    auth: "required"
+  });
+  return parseJson(response, context);
+}
+function checkWritten(json, context) {
+  if (json === null || typeof json !== "object") throw error("ParseError", `${context}: not an object`);
+  if (json.code !== 0) throw businessError(json.code, json.message, context);
+}
+function failedResult(e) {
+  if (e === null || typeof e !== "object" || typeof e.fmpError !== "string" || e.fmpError === "NetworkError") throw e;
+  const shape = { fmpError: e.fmpError };
+  if (typeof e.message === "string" && e.message !== "") shape.message = e.message;
+  if (typeof e.reason === "string") shape.reason = e.reason;
+  if (typeof e.retryAfterSeconds === "number") shape.retryAfterSeconds = e.retryAfterSeconds;
+  return { status: "failed", error: shape };
+}
+async function aidOf(bvid) {
+  const data = await viewData(bvid, "required");
+  if (!Number.isSafeInteger(data.aid) || data.aid <= 0) throw error("ParseError", `view: no aid for ${bvid}`);
+  return data.aid;
+}
+function checkWriteInput(playlistId, list, name) {
+  if (typeof playlistId !== "string" || !MEDIA_ID.test(playlistId)) {
+    throw error("ParseError", `fav ${name}: invalid playlistId: ${playlistId}`);
+  }
+  if (!Array.isArray(list)) throw error("ParseError", `fav ${name}: list is not an array`);
+}
+function bvidOf(entry) {
+  const bvid = entry !== null && typeof entry === "object" ? entry.sourceId : void 0;
+  return typeof bvid === "string" && BVID_PATTERN.test(bvid) ? bvid : null;
+}
+async function createPlaylist(input) {
+  const { title } = input || {};
+  if (typeof title !== "string" || title.trim() === "") throw error("ParseError", "fav create: empty title");
+  const csrf = await csrfOf();
+  const json = await postForm("/x/v3/fav/folder/add", { title: title.trim(), intro: "", privacy: 1, csrf }, "fav create");
+  const data = checkCode(json, "fav create");
+  if (!Number.isSafeInteger(data.id) || data.id <= 0) throw error("ParseError", "fav create: no id");
+  return { playlistId: String(data.id) };
+}
+async function addToPlaylist(input) {
+  const { playlistId, tracks } = input || {};
+  checkWriteInput(playlistId, tracks, "add");
+  const csrf = await csrfOf();
+  const results = [];
+  const done = /* @__PURE__ */ new Map();
+  let abort = null;
+  for (const track of tracks) {
+    const bvid = bvidOf(track);
+    if (bvid === null) {
+      results.push({ status: "failed", error: error("ParseError", "fav add: invalid bvid") });
+    } else if (done.has(bvid)) {
+      const first = done.get(bvid);
+      results.push(first.status === "failed" ? first : { status: "alreadyPresent" });
+    } else if (abort !== null) {
+      results.push(failedResult(abort));
+    } else {
+      let result;
+      try {
+        const aid = await aidOf(bvid);
+        const json = await postForm(
+          "/x/v3/fav/resource/deal",
+          { rid: aid, type: FAV_RESOURCE_TYPE, add_media_ids: playlistId, del_media_ids: "", csrf },
+          "fav add"
+        );
+        if (json !== null && typeof json === "object" && json.code === FAV_ALREADY_CODE) {
+          result = { status: "alreadyPresent" };
+        } else {
+          checkWritten(json, "fav add");
+          result = { status: "added" };
+        }
+      } catch (e) {
+        result = failedResult(e);
+        if (WRITE_ABORT_KINDS.includes(e.fmpError)) abort = e;
+      }
+      done.set(bvid, result);
+      results.push(result);
+    }
+  }
+  if (abort !== null && results.every((r) => r.status === "failed")) throw abort;
+  fmp.log.debug("fav add", { requested: tracks.length, added: results.filter((r) => r.status === "added").length });
+  return { results };
+}
+async function removeFromPlaylist(input) {
+  const { playlistId, items } = input || {};
+  checkWriteInput(playlistId, items, "remove");
+  const csrf = await csrfOf();
+  const results = new Array(items.length).fill(null);
+  const firstOf = /* @__PURE__ */ new Map();
+  const aids = /* @__PURE__ */ new Map();
+  let abort = null;
+  for (let i = 0; i < items.length; i++) {
+    const bvid = bvidOf(items[i]);
+    if (bvid === null) {
+      results[i] = { status: "failed", error: error("ParseError", "fav remove: invalid bvid") };
+    } else if (!firstOf.has(bvid)) {
+      firstOf.set(bvid, i);
+      if (abort !== null) {
+        results[i] = failedResult(abort);
+        continue;
+      }
+      try {
+        aids.set(bvid, await aidOf(bvid));
+      } catch (e) {
+        results[i] = failedResult(e);
+        if (WRITE_ABORT_KINDS.includes(e.fmpError)) abort = e;
+      }
+    }
+  }
+  if (aids.size > 0) {
+    const resources = [...aids.values()].map((aid) => `${aid}:${FAV_RESOURCE_TYPE}`).join(",");
+    let outcome;
+    if (abort !== null) {
+      outcome = failedResult(abort);
+    } else {
+      try {
+        checkWritten(await postForm("/x/v3/fav/resource/batch-del", { media_id: playlistId, resources, csrf }, "fav remove"), "fav remove");
+        outcome = { status: "removed" };
+      } catch (e) {
+        outcome = failedResult(e);
+        if (WRITE_ABORT_KINDS.includes(e.fmpError)) abort = e;
+      }
+    }
+    for (const bvid of aids.keys()) results[firstOf.get(bvid)] = outcome;
+  }
+  for (let i = 0; i < items.length; i++) {
+    if (results[i] !== null) continue;
+    const first = results[firstOf.get(bvidOf(items[i]))];
+    results[i] = first.status === "failed" ? first : { status: "notPresent" };
+  }
+  if (abort !== null && results.every((r) => r.status === "failed")) throw abort;
+  fmp.log.debug("fav remove", { requested: items.length, batch: aids.size });
+  return { results };
+}
 function hostOf(url) {
   const match = /^https:\/\/([^/?#:]+)(?::\d+)?(?:[/?#]|$)/i.exec(url);
   return match ? match[1].toLowerCase() : null;
@@ -3755,10 +3908,10 @@ function candidatesFor(urls, fields, dropped) {
   }
   return out;
 }
-async function viewData(bvid) {
-  const keys = await wbiKeys();
+async function viewData(bvid, auth) {
+  const keys = await wbiKeys(auth);
   const signed = wbiSign({ bvid }, keys, Math.round(Date.now() / 1e3), fmp.crypto.md5);
-  const json = await get(`${API}/x/web-interface/wbi/view?${signed}`, API_HEADERS, "view");
+  const json = await get(`${API}/x/web-interface/wbi/view?${signed}`, API_HEADERS, "view", auth);
   return checkCode(json, "view");
 }
 async function cidOf(bvid) {
@@ -4239,9 +4392,11 @@ async function loginRefresh(credentials) {
   return { cookies: merged, extra: { refresh_token: refreshedData.refresh_token } };
 }
 export {
+  addToPlaylist,
   artwork,
   chart,
   chartList,
+  createPlaylist,
   decodeHtmlEntities,
   importPlaylist,
   libraryPlaylists,
@@ -4258,6 +4413,7 @@ export {
   qrCredentials,
   rankingTrack,
   refreshCsrfOf,
+  removeFromPlaylist,
   resolveLive,
   resolveStream,
   search,

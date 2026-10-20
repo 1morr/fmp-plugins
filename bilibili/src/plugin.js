@@ -193,7 +193,7 @@ function keyFromUrl(url) {
 }
 
 /** WBI 的 img_key、sub_key：當天的存在 storage，否則問 nav（未登入回 -101，但照樣帶 wbi_img）。 */
-async function wbiKeys() {
+async function wbiKeys(auth) {
   const today = chinaDay(Date.now());
   const stored = await fmp.storage.get('wbiKeys');
   if (stored !== null) {
@@ -207,7 +207,7 @@ async function wbiKeys() {
       fmp.log.warn('discarding an unreadable WBI key cache');
     }
   }
-  const json = await get(`${API}/x/web-interface/nav`, API_HEADERS, 'nav');
+  const json = await get(`${API}/x/web-interface/nav`, API_HEADERS, 'nav', auth);
   const image = json && json.data && json.data.wbi_img;
   const imgKey = keyFromUrl(image && image.img_url);
   const subKey = keyFromUrl(image && image.sub_url);
@@ -576,6 +576,186 @@ export async function libraryPlaylists(input) {
   return { playlists, cursor: data.has_more === true && list.length > 0 ? `v1:${page + 1}` : null };
 }
 
+// ---------------------------------------------------------------- libraryWrite
+
+// 規格是舊專案 bilibili_favorites_service.dart：createFavFolder（`fav/folder/add`）、updateVideoFavorites（`fav/resource/deal`，
+// 一次一支影片）、batchRemoveFromFolder（`fav/resource/batch-del`，resources 為 `<aid>:2` 以逗號連接）、getVideoAid（wbi/view 取 aid；
+// 舊專案沒有 bvid→aid 的演算法）。全部是表單 POST，csrf 取自憑證的 bili_jct cookie，請求一律 required。
+// 收藏是整支影片：分 P 曲目（cid）一律當成整支影片加入或移除，同一個 bvid 的多個 cid 在一次請求內只處理一次。
+const FAV_ALREADY_CODE = 11201; // 舊專案 alreadyFavorited：影片已在這個收藏夾
+const FAV_RESOURCE_TYPE = 2; // 影片
+// 這些錯誤對之後的項目也成立：停止送請求，剩下的項目標同一個失敗（已完成的結果保留）；
+// 一項都沒完成時（整個請求失敗）改成拋出，由宿主轉換。
+const WRITE_ABORT_KINDS = ['CredentialInvalid', 'AuthRequired', 'RateLimited'];
+
+/** 憑證的 bili_jct；沒有就是 AuthRequired（宿主對沒登入的 required 請求會先拋，這裡是憑證不完整）。 */
+async function csrfOf() {
+  const credentials = await fmp.credentials.get();
+  const jct = credentials && credentials.cookies ? credentials.cookies.bili_jct : undefined;
+  if (typeof jct !== 'string' || jct === '') throw error('AuthRequired', 'fav write: credentials have no bili_jct');
+  return jct;
+}
+
+/** 表單 POST（required）。回 JSON；code 留給呼叫端判斷。不標 idempotent：寫入不讓網路層重試。 */
+async function postForm(path, fields, context) {
+  const cookie = await anonymousCookie();
+  const response = await fmp.http.request({
+    url: `${API}${path}`,
+    method: 'POST',
+    headers: { ...API_HEADERS, 'Content-Type': 'application/x-www-form-urlencoded', Cookie: cookie },
+    body: query(fields),
+    auth: 'required',
+  });
+  return parseJson(response, context);
+}
+
+/** 寫入回應的 code 不是 0 就拋；成功的 data 可以是 null，所以不用 checkCode。 */
+function checkWritten(json, context) {
+  if (json === null || typeof json !== 'object') throw error('ParseError', `${context}: not an object`);
+  if (json.code !== 0) throw businessError(json.code, json.message, context);
+}
+
+/**
+ * 單項失敗的結果；網路類錯誤與非結構化的例外整個請求往外丟（宿主轉換）。
+ * `error` 只留 FmpError 的欄位（fmpError、message、reason、retryAfterSeconds）：宿主丟的錯誤另帶 `hostErrorId`，
+ * 拋出時宿主靠它認回原本的錯誤，放進 results 則是不認得的欄位，整個回傳值會被拒（ParseError）。
+ */
+function failedResult(e) {
+  if (e === null || typeof e !== 'object' || typeof e.fmpError !== 'string' || e.fmpError === 'NetworkError') throw e;
+  const shape = { fmpError: e.fmpError };
+  if (typeof e.message === 'string' && e.message !== '') shape.message = e.message;
+  if (typeof e.reason === 'string') shape.reason = e.reason;
+  if (typeof e.retryAfterSeconds === 'number') shape.retryAfterSeconds = e.retryAfterSeconds;
+  return { status: 'failed', error: shape };
+}
+
+async function aidOf(bvid) {
+  const data = await viewData(bvid, 'required');
+  if (!Number.isSafeInteger(data.aid) || data.aid <= 0) throw error('ParseError', `view: no aid for ${bvid}`);
+  return data.aid;
+}
+
+function checkWriteInput(playlistId, list, name) {
+  if (typeof playlistId !== 'string' || !MEDIA_ID.test(playlistId)) {
+    throw error('ParseError', `fav ${name}: invalid playlistId: ${playlistId}`);
+  }
+  if (!Array.isArray(list)) throw error('ParseError', `fav ${name}: list is not an array`);
+}
+
+function bvidOf(entry) {
+  const bvid = entry !== null && typeof entry === 'object' ? entry.sourceId : undefined;
+  return typeof bvid === 'string' && BVID_PATTERN.test(bvid) ? bvid : null;
+}
+
+export async function createPlaylist(input) {
+  const { title } = input || {};
+  if (typeof title !== 'string' || title.trim() === '') throw error('ParseError', 'fav create: empty title');
+  const csrf = await csrfOf();
+  // 預設私人（privacy 1）。舊專案的新增對話框預設公開，見 README。
+  const json = await postForm('/x/v3/fav/folder/add', { title: title.trim(), intro: '', privacy: 1, csrf }, 'fav create');
+  const data = checkCode(json, 'fav create');
+  if (!Number.isSafeInteger(data.id) || data.id <= 0) throw error('ParseError', 'fav create: no id');
+  return { playlistId: String(data.id) };
+}
+
+export async function addToPlaylist(input) {
+  const { playlistId, tracks } = input || {};
+  checkWriteInput(playlistId, tracks, 'add');
+  const csrf = await csrfOf();
+  const results = [];
+  const done = new Map(); // bvid → 第一次的結果
+  let abort = null;
+  for (const track of tracks) {
+    const bvid = bvidOf(track);
+    if (bvid === null) {
+      results.push({ status: 'failed', error: error('ParseError', 'fav add: invalid bvid') });
+    } else if (done.has(bvid)) {
+      const first = done.get(bvid);
+      results.push(first.status === 'failed' ? first : { status: 'alreadyPresent' });
+    } else if (abort !== null) {
+      results.push(failedResult(abort));
+    } else {
+      let result;
+      try {
+        const aid = await aidOf(bvid);
+        const json = await postForm(
+          '/x/v3/fav/resource/deal',
+          { rid: aid, type: FAV_RESOURCE_TYPE, add_media_ids: playlistId, del_media_ids: '', csrf },
+          'fav add',
+        );
+        if (json !== null && typeof json === 'object' && json.code === FAV_ALREADY_CODE) {
+          result = { status: 'alreadyPresent' };
+        } else {
+          checkWritten(json, 'fav add');
+          result = { status: 'added' };
+        }
+      } catch (e) {
+        result = failedResult(e);
+        if (WRITE_ABORT_KINDS.includes(e.fmpError)) abort = e;
+      }
+      done.set(bvid, result);
+      results.push(result);
+    }
+  }
+  if (abort !== null && results.every((r) => r.status === 'failed')) throw abort;
+  fmp.log.debug('fav add', { requested: tracks.length, added: results.filter((r) => r.status === 'added').length });
+  return { results };
+}
+
+export async function removeFromPlaylist(input) {
+  const { playlistId, items } = input || {};
+  checkWriteInput(playlistId, items, 'remove');
+  const csrf = await csrfOf();
+  const results = new Array(items.length).fill(null);
+  const firstOf = new Map(); // bvid → 第一次出現的索引
+  const aids = new Map(); // bvid → aid
+  let abort = null;
+  for (let i = 0; i < items.length; i++) {
+    const bvid = bvidOf(items[i]);
+    if (bvid === null) {
+      results[i] = { status: 'failed', error: error('ParseError', 'fav remove: invalid bvid') };
+    } else if (!firstOf.has(bvid)) {
+      firstOf.set(bvid, i);
+      if (abort !== null) {
+        results[i] = failedResult(abort);
+        continue;
+      }
+      try {
+        aids.set(bvid, await aidOf(bvid));
+      } catch (e) {
+        results[i] = failedResult(e);
+        if (WRITE_ABORT_KINDS.includes(e.fmpError)) abort = e;
+      }
+    }
+  }
+  if (aids.size > 0) {
+    const resources = [...aids.values()].map((aid) => `${aid}:${FAV_RESOURCE_TYPE}`).join(',');
+    let outcome;
+    if (abort !== null) {
+      // 換 aid 時已經碰到要停下來的錯誤：batch-del 也不送，已換好的項目標同一個失敗。
+      outcome = failedResult(abort);
+    } else {
+      try {
+        checkWritten(await postForm('/x/v3/fav/resource/batch-del', { media_id: playlistId, resources, csrf }, 'fav remove'), 'fav remove');
+        outcome = { status: 'removed' }; // 回應不分項：code 0 就是整批成功，不知道哪些原本不在收藏夾
+      } catch (e) {
+        outcome = failedResult(e);
+        if (WRITE_ABORT_KINDS.includes(e.fmpError)) abort = e;
+      }
+    }
+    for (const bvid of aids.keys()) results[firstOf.get(bvid)] = outcome;
+  }
+  // 同一個 bvid 重複出現的項目：第一次成功就是 notPresent（已被前一項移除），失敗則同一個失敗。
+  for (let i = 0; i < items.length; i++) {
+    if (results[i] !== null) continue;
+    const first = results[firstOf.get(bvidOf(items[i]))];
+    results[i] = first.status === 'failed' ? first : { status: 'notPresent' };
+  }
+  if (abort !== null && results.every((r) => r.status === 'failed')) throw abort;
+  fmp.log.debug('fav remove', { requested: items.length, batch: aids.size });
+  return { results };
+}
+
 // ---------------------------------------------------------------- resolveStream
 
 function hostOf(url) {
@@ -627,10 +807,10 @@ function candidatesFor(urls, fields, dropped) {
 }
 
 /** WBI 簽名的 `view`：resolveStream 取預設分 P 的 cid，trackDetail 取詳細，共用一份。 */
-async function viewData(bvid) {
-  const keys = await wbiKeys();
+async function viewData(bvid, auth) {
+  const keys = await wbiKeys(auth);
   const signed = wbiSign({ bvid }, keys, Math.round(Date.now() / 1000), fmp.crypto.md5);
-  const json = await get(`${API}/x/web-interface/wbi/view?${signed}`, API_HEADERS, 'view');
+  const json = await get(`${API}/x/web-interface/wbi/view?${signed}`, API_HEADERS, 'view', auth);
   return checkCode(json, 'view');
 }
 

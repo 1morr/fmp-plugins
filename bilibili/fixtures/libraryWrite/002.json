@@ -1,0 +1,33 @@
+{
+  "meta": {
+    "edited": "mutates：手寫。模擬 bvid 換 aid（x/web-interface/wbi/view）：只留 aid、bvid 兩個欄位，假 bvid BV1fmpTest01 對應假 aid 1000001。不是錄製：這個案例會改動遠端收藏夾，不能真的跑；請求網址是插件用 checks.json 的 libraryWrite 輸入（假收藏夾 id、假 bvid）與 login 案例的假憑證實際送出的，簽名參數 wts、w_rid 遮蔽成 ***，csrf 在 body（遮蔽成 ***）；回應全是假資料，欄位只有插件讀的那些，B 站真實回應未驗證。"
+  },
+  "request": {
+    "method": "GET",
+    "url": "https://api.bilibili.com/x/web-interface/wbi/view?bvid=BV1fmpTest01&wts=***&w_rid=***",
+    "headers": {
+      "accept": "application/json, text/plain, */*",
+      "cookie": "***",
+      "origin": "https://www.bilibili.com",
+      "referer": "https://www.bilibili.com/",
+      "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": [
+        "application/json; charset=utf-8"
+      ]
+    },
+    "jsonBody": {
+      "code": 0,
+      "message": "0",
+      "ttl": 1,
+      "data": {
+        "aid": 1000001,
+        "bvid": "BV1fmpTest01"
+      }
+    }
+  }
+}
