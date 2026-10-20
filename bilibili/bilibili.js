@@ -2,7 +2,7 @@
 {
   "id": "bilibili",
   "name": "Bilibili",
-  "version": "1.9.0",
+  "version": "1.10.0",
   "author": "FMP",
   "description": "搜尋 Bilibili 影片並播放其音訊，也能搜尋與收聽直播間、匯入收藏夾、瀏覽音樂排行榜，可用 QR 碼登入。",
   "apiVersion": 1,
@@ -3692,6 +3692,14 @@ async function importPlaylist(input) {
 }
 var FOLDER_PAGE_SIZE = 20;
 var FOLDER_CURSOR = /^v1:([1-9]\d{0,5})$/;
+async function loginMid(context) {
+  const credentials = await fmp.credentials.get();
+  const mid = credentials && credentials.cookies ? credentials.cookies.DedeUserID : void 0;
+  if (typeof mid !== "string" || !/^[1-9]\d{0,17}$/.test(mid)) {
+    throw error("AuthRequired", `${context}: credentials have no DedeUserID`);
+  }
+  return mid;
+}
 async function libraryPlaylists(input) {
   const { cursor } = input || {};
   let page = 1;
@@ -3700,11 +3708,7 @@ async function libraryPlaylists(input) {
     if (m === null) throw error("ParseError", "fav folders: malformed cursor");
     page = Number(m[1]);
   }
-  const credentials = await fmp.credentials.get();
-  const mid = credentials && credentials.cookies ? credentials.cookies.DedeUserID : void 0;
-  if (typeof mid !== "string" || !/^[1-9]\d{0,17}$/.test(mid)) {
-    throw error("AuthRequired", "fav folders: credentials have no DedeUserID");
-  }
+  const mid = await loginMid("fav folders");
   const url = `${API}/x/v3/fav/folder/created/list?${query({ up_mid: mid, type: 2, pn: page, ps: FOLDER_PAGE_SIZE })}`;
   const data = checkCode(await get(url, API_HEADERS, "fav folders", "required"), "fav folders");
   const list = Array.isArray(data.list) ? data.list : [];
@@ -4222,6 +4226,57 @@ async function resolveLive({ roomId }) {
   }
   return { candidates };
 }
+var MEDAL_UID_BATCH = 50;
+async function libraryLiveRooms() {
+  const mid = await loginMid("medal wall");
+  const wall = checkCode(
+    await get(`${LIVE_API}/xlive/web-ucenter/user/MedalWall?${query({ target_id: mid })}`, LIVE_API_HEADERS, "medal wall", "required"),
+    "medal wall"
+  );
+  const list = Array.isArray(wall.list) ? wall.list : [];
+  const anchors = /* @__PURE__ */ new Map();
+  for (const item of list) {
+    if (!isRecord(item) || !isRecord(item.medal_info)) continue;
+    const uid = nonNegativeInt(item.medal_info.target_id);
+    if (uid === null || uid === 0 || anchors.has(uid)) continue;
+    anchors.set(uid, { name: personName(item.target_name), icon: item.target_icon });
+  }
+  const uids = [...anchors.keys()];
+  const rooms = [];
+  const seen = /* @__PURE__ */ new Set();
+  for (let start = 0; start < uids.length; start += MEDAL_UID_BATCH) {
+    const chunk = uids.slice(start, start + MEDAL_UID_BATCH);
+    const context = "get_status_info_by_uids";
+    const params = chunk.map((uid) => `${encodeURIComponent("uids[]")}=${uid}`).join("&");
+    const batch = checkCode(
+      await get(`${LIVE_API}/room/v1/Room/get_status_info_by_uids?${params}`, LIVE_API_HEADERS, context, "required"),
+      context
+    );
+    if (!isRecord(batch)) continue;
+    for (const uid of chunk) {
+      const entry = batch[String(uid)];
+      if (!isRecord(entry)) continue;
+      const id = nonNegativeInt(entry.room_id);
+      if (id === null || id === 0) continue;
+      const roomId = String(id);
+      if (seen.has(roomId)) continue;
+      seen.add(roomId);
+      const anchor = anchors.get(uid);
+      rooms.push({
+        roomId,
+        title: roomTitle(entry.title || "", context),
+        hostName: anchor.name || personName(entry.uname),
+        // 沒有直播封面時退回勳章牆的主播頭像（舊版匯入候選顯示的就是頭像）。
+        artwork: artwork(entry.cover_from_user || entry.keyframe || anchor.icon),
+        // 與舊版 liveStatus 相同：1 才是開播中；0、2（輪播）與其他值都當未開播（宿主匯入後不再呼叫 liveStatus）。
+        status: entry.live_status === 1 ? "live" : "offline",
+        online: nonNegativeInt(entry.online)
+      });
+    }
+  }
+  fmp.log.debug("medal wall live rooms", { medals: list.length, anchors: uids.length, rooms: rooms.length });
+  return { rooms };
+}
 var PASSPORT = "https://passport.bilibili.com";
 var CREDENTIAL_COOKIES = ["SESSDATA", "bili_jct", "DedeUserID", "DedeUserID__ckMd5"];
 var REQUIRED_COOKIES = ["SESSDATA", "bili_jct", "DedeUserID"];
@@ -4399,6 +4454,7 @@ export {
   createPlaylist,
   decodeHtmlEntities,
   importPlaylist,
+  libraryLiveRooms,
   libraryPlaylists,
   liveRoomFromUrl,
   liveSearch,

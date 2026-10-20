@@ -540,6 +540,16 @@ export async function importPlaylist(input) {
 const FOLDER_PAGE_SIZE = 20; // 舊版的 ps
 const FOLDER_CURSOR = /^v1:([1-9]\d{0,5})$/;
 
+/** 登入帳號的 mid（憑證的 DedeUserID cookie，舊版 getUserMid）；宿主對 required 請求沒登入就先拋，這裡是憑證裡沒有 mid 的情況（舊版同樣當成未登入）。 */
+async function loginMid(context) {
+  const credentials = await fmp.credentials.get();
+  const mid = credentials && credentials.cookies ? credentials.cookies.DedeUserID : undefined;
+  if (typeof mid !== 'string' || !/^[1-9]\d{0,17}$/.test(mid)) {
+    throw error('AuthRequired', `${context}: credentials have no DedeUserID`);
+  }
+  return mid;
+}
+
 export async function libraryPlaylists(input) {
   const { cursor } = input || {};
   let page = 1;
@@ -548,12 +558,7 @@ export async function libraryPlaylists(input) {
     if (m === null) throw error('ParseError', 'fav folders: malformed cursor');
     page = Number(m[1]);
   }
-  const credentials = await fmp.credentials.get();
-  const mid = credentials && credentials.cookies ? credentials.cookies.DedeUserID : undefined;
-  // 宿主對 required 請求沒登入就先拋；這裡是憑證裡沒有 mid 的情況（舊版同樣當成未登入）。
-  if (typeof mid !== 'string' || !/^[1-9]\d{0,17}$/.test(mid)) {
-    throw error('AuthRequired', 'fav folders: credentials have no DedeUserID');
-  }
+  const mid = await loginMid('fav folders');
   const url = `${API}/x/v3/fav/folder/created/list?${query({ up_mid: mid, type: 2, pn: page, ps: FOLDER_PAGE_SIZE })}`;
   const data = checkCode(await get(url, API_HEADERS, 'fav folders', 'required'), 'fav folders');
   const list = Array.isArray(data.list) ? data.list : [];
@@ -1196,6 +1201,69 @@ export async function resolveLive({ roomId }) {
     throw error('Unavailable', `live playUrl: no stream URL inside allowedHosts for room ${real}`);
   }
   return { candidates };
+}
+
+// ---------------------------------------------------------------- libraryLiveRooms
+
+// 規格是舊專案 bilibili_account_service.dart 的 fetchMedalWall（line 522）與 bilibili_live_client.dart 的 getMedalWallRooms
+// （line 339）：`GET api.live.bilibili.com/xlive/web-ucenter/user/MedalWall?target_id=<mid>`，不分頁，一次回完整的勳章牆；
+// 每個勳章的 `medal_info.target_id` 是主播 uid，`target_name`／`target_icon` 是主播名與頭像。
+// 舊版再對每個 uid 問一次 `getRoomInfoOld`（N+1）取房號，沒有直播間（`roomid` 空或 0）的略過；這裡改成每 50 個 uid 一次
+// `get_status_info_by_uids`（liveAnchorSearch 用的同一個端點），同時拿到房號、標題、封面與開播狀態，匯入後宿主不會再呼叫 liveStatus。
+// radio_controller.dart 的 loadAccountImportCandidates／importAccountStations 只用 roomId 建電台，重複的房號略過。
+const MEDAL_UID_BATCH = 50;
+
+export async function libraryLiveRooms() {
+  const mid = await loginMid('medal wall');
+  const wall = checkCode(
+    await get(`${LIVE_API}/xlive/web-ucenter/user/MedalWall?${query({ target_id: mid })}`, LIVE_API_HEADERS, 'medal wall', 'required'),
+    'medal wall',
+  );
+  const list = Array.isArray(wall.list) ? wall.list : [];
+  // uid → 勳章牆上的主播名與頭像（同一個主播只留第一個勳章）。
+  const anchors = new Map();
+  for (const item of list) {
+    if (!isRecord(item) || !isRecord(item.medal_info)) continue;
+    const uid = nonNegativeInt(item.medal_info.target_id);
+    if (uid === null || uid === 0 || anchors.has(uid)) continue;
+    anchors.set(uid, { name: personName(item.target_name), icon: item.target_icon });
+  }
+  const uids = [...anchors.keys()];
+  const rooms = [];
+  const seen = new Set();
+  for (let start = 0; start < uids.length; start += MEDAL_UID_BATCH) {
+    const chunk = uids.slice(start, start + MEDAL_UID_BATCH);
+    const context = 'get_status_info_by_uids';
+    const params = chunk.map((uid) => `${encodeURIComponent('uids[]')}=${uid}`).join('&');
+    const batch = checkCode(
+      await get(`${LIVE_API}/room/v1/Room/get_status_info_by_uids?${params}`, LIVE_API_HEADERS, context, 'required'),
+      context,
+    );
+    // 沒有任何人有直播間時 data 可能是空陣列（PHP 的空 map），同舊版：沒有直播間的略過。
+    if (!isRecord(batch)) continue;
+    for (const uid of chunk) {
+      const entry = batch[String(uid)];
+      if (!isRecord(entry)) continue;
+      const id = nonNegativeInt(entry.room_id);
+      if (id === null || id === 0) continue;
+      const roomId = String(id);
+      if (seen.has(roomId)) continue;
+      seen.add(roomId);
+      const anchor = anchors.get(uid);
+      rooms.push({
+        roomId,
+        title: roomTitle(entry.title || '', context),
+        hostName: anchor.name || personName(entry.uname),
+        // 沒有直播封面時退回勳章牆的主播頭像（舊版匯入候選顯示的就是頭像）。
+        artwork: artwork(entry.cover_from_user || entry.keyframe || anchor.icon),
+        // 與舊版 liveStatus 相同：1 才是開播中；0、2（輪播）與其他值都當未開播（宿主匯入後不再呼叫 liveStatus）。
+        status: entry.live_status === 1 ? 'live' : 'offline',
+        online: nonNegativeInt(entry.online),
+      });
+    }
+  }
+  fmp.log.debug('medal wall live rooms', { medals: list.length, anchors: uids.length, rooms: rooms.length });
+  return { rooms };
 }
 
 // ---------------------------------------------------------------- login (QR)
