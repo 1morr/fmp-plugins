@@ -82,6 +82,26 @@
       "checksSha256": "4dc0fcc186ce51639212606a1be1c13429a5cea879bab7b59358037312da0134"
     },
     {
+      "id": "spotify",
+      "name": "Spotify",
+      "author": "FMP",
+      "description": "匯入 Spotify 公開歌單的曲目清單（不需登入）；Spotify 的曲目不能直接播放，只用來到其他音源匹配。",
+      "version": "1.0.0",
+      "apiVersion": 1,
+      "capabilities": [
+        "importPlaylist"
+      ],
+      "allowedHosts": [
+        "open.spotify.com",
+        "spotify.link",
+        "scdn.co"
+      ],
+      "url": "https://raw.githubusercontent.com/1morr/fmp-plugins/main/spotify/spotify.js",
+      "sha256": "2adfb2a3f6e42ad73eee137cead4c682dd615f1b26d5af0360e92c93eee2d2eb",
+      "checksUrl": "https://raw.githubusercontent.com/1morr/fmp-plugins/main/spotify/checks.json",
+      "checksSha256": "6646f13333c76014ad83eda3fe810f019e66d4724ab6c33f8362bb3f85c539c7"
+    },
+    {
       "id": "youtube",
       "name": "YouTube",
       "author": "FMP",
