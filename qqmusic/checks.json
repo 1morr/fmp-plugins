@@ -1,0 +1,6 @@
+{
+  "importPlaylist": {
+    "input": { "url": "https://y.qq.com/n/ryqq/playlist/9780162922" },
+    "expect": { "minItems": 10, "nonEmpty": ["track"] }
+  }
+}
