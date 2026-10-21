@@ -1,0 +1,340 @@
+{
+  "meta": {
+    "recordedAt": "2026-10-21T02:39:03.724118Z",
+    "edited": "回應是 2026-10-21 匿名實測的真實回應（QQ音乐官方帳號的公開歌單「0921·王俊凯生日快乐」，15 首），刪減到只剩插件讀的欄位：頂層與 req_0 的 code、data 的 code、dirinfo 的 id、title、picurl、desc、songnum、host_nick、creator.nick，以及 songlist 的 id、mid、name、interval、singer（id、mid、name）、album（id、mid、name）、data 的 total_song_num 與 hasmore；其餘欄位刪了（原始回應 32 KB），包含 encrypt_uin 與各種頭像網址。請求與回應標頭沿用錄製結果，只刪了回應的 u-location（兩個數字，看起來是編碼過的 IPv4，插件不讀）。"
+  },
+  "request": {
+    "method": "POST",
+    "url": "https://u6.y.qq.com/cgi-bin/musics.fcg?sign=zzbc16138b6s3baxnx7dagimhlralqybae8d5f08e",
+    "headers": {
+      "content-length": "265",
+      "content-type": "application/json",
+      "referer": "https://y.qq.com/",
+      "user-agent": "Mozilla/5.0 (Linux; Android 10) AppleWebKit/537.36"
+    },
+    "body": "{\"req_0\":{\"module\":\"music.srfDissInfo.aiDissInfo\",\"method\":\"uniform_get_Dissinfo\",\"param\":{\"disstid\":9780162922,\"enc_host_uin\":\"\",\"tag\":1,\"userinfo\":1,\"song_begin\":0,\"song_num\":1000}},\"comm\":{\"g_tk\":5381,\"uin\":0,\"format\":\"json\",\"platform\":\"android\",\"ct\":24,\"cv\":0}}"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "area": [
+        "sz",
+        "sz"
+      ],
+      "connection": [
+        "keep-alive"
+      ],
+      "content-type": [
+        "text/plain; charset=utf-8;"
+      ],
+      "date": [
+        "Wed, 21 Oct 2026 02:39:03 GMT"
+      ],
+      "server": [
+        "qm"
+      ],
+      "u-traceid": [
+        "48dd7761f4f4b3ec"
+      ],
+      "vary": [
+        "Accept-Encoding"
+      ]
+    },
+    "jsonBody": {
+      "code": 0,
+      "ts": 1792550343969,
+      "traceid": "48dd7761f4f4b3ec",
+      "req_0": {
+        "code": 0,
+        "data": {
+          "code": 0,
+          "dirinfo": {
+            "id": 9780162922,
+            "title": "0921·王俊凯生日快乐",
+            "picurl": "https://music-file.y.qq.com/songlist/u/Nenzoen57K4/22ece/32ba7995504ba91fa914aa5ca55e7405417142b0_4ed8d.jpg?imageView2/4/w/600/h/600",
+            "desc": "山城少年踏浪而行，于喧嚣时代中坚守初心。今年，王俊凯将时代情绪与成长中的内心感悟，尽数写进他的音乐之中。「当·潮汐漫溢」巡回演出，让大家再度见证他兼具张力与少年感的舞台魅力，从重庆场开始奔赴到北京，散场后仍萦绕耳边的旋律，既是是蓝海的潮汐之音，也是我们温暖的回忆。\n \n在9月21日当天， 让我们一起祝王俊凯生日快乐！\n他翻开了人生的第27页，也与我们一起续写成长的《那页夏天》。",
+            "songnum": 15,
+            "host_nick": "QQ音乐",
+            "creator": {
+              "nick": "QQ音乐"
+            }
+          },
+          "songlist": [
+            {
+              "id": 726554373,
+              "mid": "002ungyc33fb7x",
+              "name": "那页夏天",
+              "interval": 246,
+              "singer": [
+                {
+                  "id": 91580,
+                  "mid": "004E2BBy3X9xne",
+                  "name": "王俊凯"
+                }
+              ],
+              "album": {
+                "id": 88202788,
+                "mid": "001Dp4r216cqJL",
+                "name": "WJK"
+              }
+            },
+            {
+              "id": 690924478,
+              "mid": "0041rMW52UcUDL",
+              "name": "Steal The Moon",
+              "interval": 216,
+              "singer": [
+                {
+                  "id": 91580,
+                  "mid": "004E2BBy3X9xne",
+                  "name": "王俊凯"
+                }
+              ],
+              "album": {
+                "id": 88202788,
+                "mid": "001Dp4r216cqJL",
+                "name": "WJK"
+              }
+            },
+            {
+              "id": 696865190,
+              "mid": "002OhQnJ2tqnT6",
+              "name": "无声潮汐",
+              "interval": 204,
+              "singer": [
+                {
+                  "id": 91580,
+                  "mid": "004E2BBy3X9xne",
+                  "name": "王俊凯"
+                }
+              ],
+              "album": {
+                "id": 88202788,
+                "mid": "001Dp4r216cqJL",
+                "name": "WJK"
+              }
+            },
+            {
+              "id": 552776178,
+              "mid": "003LPFhF0VYoFC",
+              "name": "大概",
+              "interval": 280,
+              "singer": [
+                {
+                  "id": 91580,
+                  "mid": "004E2BBy3X9xne",
+                  "name": "王俊凯"
+                }
+              ],
+              "album": {
+                "id": 88202788,
+                "mid": "001Dp4r216cqJL",
+                "name": "WJK"
+              }
+            },
+            {
+              "id": 705544282,
+              "mid": "003DPd5i2qrCU7",
+              "name": "Badi Badi",
+              "interval": 181,
+              "singer": [
+                {
+                  "id": 91580,
+                  "mid": "004E2BBy3X9xne",
+                  "name": "王俊凯"
+                }
+              ],
+              "album": {
+                "id": 88202788,
+                "mid": "001Dp4r216cqJL",
+                "name": "WJK"
+              }
+            },
+            {
+              "id": 696865202,
+              "mid": "000bbwzf2E0nwB",
+              "name": "幻梦",
+              "interval": 205,
+              "singer": [
+                {
+                  "id": 91580,
+                  "mid": "004E2BBy3X9xne",
+                  "name": "王俊凯"
+                }
+              ],
+              "album": {
+                "id": 88202788,
+                "mid": "001Dp4r216cqJL",
+                "name": "WJK"
+              }
+            },
+            {
+              "id": 690924880,
+              "mid": "004WWjMC2Dt1ip",
+              "name": "真相",
+              "interval": 213,
+              "singer": [
+                {
+                  "id": 91580,
+                  "mid": "004E2BBy3X9xne",
+                  "name": "王俊凯"
+                }
+              ],
+              "album": {
+                "id": 88202788,
+                "mid": "001Dp4r216cqJL",
+                "name": "WJK"
+              }
+            },
+            {
+              "id": 696865201,
+              "mid": "003Y82u91ZIDmO",
+              "name": "疑疑疑",
+              "interval": 176,
+              "singer": [
+                {
+                  "id": 91580,
+                  "mid": "004E2BBy3X9xne",
+                  "name": "王俊凯"
+                }
+              ],
+              "album": {
+                "id": 88202788,
+                "mid": "001Dp4r216cqJL",
+                "name": "WJK"
+              }
+            },
+            {
+              "id": 705544281,
+              "mid": "001IXEnW4OmqLF",
+              "name": "破晓",
+              "interval": 212,
+              "singer": [
+                {
+                  "id": 91580,
+                  "mid": "004E2BBy3X9xne",
+                  "name": "王俊凯"
+                }
+              ],
+              "album": {
+                "id": 88202788,
+                "mid": "001Dp4r216cqJL",
+                "name": "WJK"
+              }
+            },
+            {
+              "id": 651444837,
+              "mid": "004BsuOC1hamlB",
+              "name": "无人乐园",
+              "interval": 200,
+              "singer": [
+                {
+                  "id": 91580,
+                  "mid": "004E2BBy3X9xne",
+                  "name": "王俊凯"
+                }
+              ],
+              "album": {
+                "id": 88202788,
+                "mid": "001Dp4r216cqJL",
+                "name": "WJK"
+              }
+            },
+            {
+              "id": 690925000,
+              "mid": "000Ji0xi2WKRll",
+              "name": "从前",
+              "interval": 272,
+              "singer": [
+                {
+                  "id": 91580,
+                  "mid": "004E2BBy3X9xne",
+                  "name": "王俊凯"
+                }
+              ],
+              "album": {
+                "id": 88202788,
+                "mid": "001Dp4r216cqJL",
+                "name": "WJK"
+              }
+            },
+            {
+              "id": 690924479,
+              "mid": "002snOiL3DNzr2",
+              "name": "I Love This Life",
+              "interval": 200,
+              "singer": [
+                {
+                  "id": 91580,
+                  "mid": "004E2BBy3X9xne",
+                  "name": "王俊凯"
+                }
+              ],
+              "album": {
+                "id": 88202788,
+                "mid": "001Dp4r216cqJL",
+                "name": "WJK"
+              }
+            },
+            {
+              "id": 651444707,
+              "mid": "003M1TeS1BV2GQ",
+              "name": "你会找到我",
+              "interval": 252,
+              "singer": [
+                {
+                  "id": 91580,
+                  "mid": "004E2BBy3X9xne",
+                  "name": "王俊凯"
+                }
+              ],
+              "album": {
+                "id": 88202788,
+                "mid": "001Dp4r216cqJL",
+                "name": "WJK"
+              }
+            },
+            {
+              "id": 108030930,
+              "mid": "0049n6hg3wme2w",
+              "name": "树读",
+              "interval": 236,
+              "singer": [
+                {
+                  "id": 91580,
+                  "mid": "004E2BBy3X9xne",
+                  "name": "王俊凯"
+                }
+              ],
+              "album": {
+                "id": 1555606,
+                "mid": "0022vZQA3f1Tuj",
+                "name": "树读"
+              }
+            },
+            {
+              "id": 204173113,
+              "mid": "003c3yNR27RTiK",
+              "name": "焕蓝·未来（Karry On）",
+              "interval": 222,
+              "singer": [
+                {
+                  "id": 91580,
+                  "mid": "004E2BBy3X9xne",
+                  "name": "王俊凯"
+                }
+              ],
+              "album": {
+                "id": 2258764,
+                "mid": "000CDc8Y38tioe",
+                "name": "焕蓝·未来（Karry On）"
+              }
+            }
+          ],
+          "total_song_num": 15,
+          "hasmore": 0
+        }
+      }
+    }
+  }
+}
