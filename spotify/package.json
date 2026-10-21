@@ -1,0 +1,12 @@
+{
+  "name": "fmp-plugin-spotify",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "esbuild": "0.28.2"
+  }
+}
