@@ -63,6 +63,25 @@
       "checksSha256": "8851789f1b7ca2c512127fbfec76fc4dd8cd60543b8a5c2c00a04a9bc7f4a8f8"
     },
     {
+      "id": "qqmusic",
+      "name": "QQ 音樂",
+      "author": "FMP",
+      "description": "匯入 QQ 音樂的公開歌單（只讀曲目資料，用來在其他音源配對播放），不需要登入。",
+      "version": "1.0.0",
+      "apiVersion": 1,
+      "capabilities": [
+        "importPlaylist"
+      ],
+      "allowedHosts": [
+        "y.qq.com",
+        "url.cn"
+      ],
+      "url": "https://raw.githubusercontent.com/1morr/fmp-plugins/main/qqmusic/qqmusic.js",
+      "sha256": "ec5bd87ac92332e04dde40afa4fa29888b25184b9ce98adb279f2fd4d790a853",
+      "checksUrl": "https://raw.githubusercontent.com/1morr/fmp-plugins/main/qqmusic/checks.json",
+      "checksSha256": "4dc0fcc186ce51639212606a1be1c13429a5cea879bab7b59358037312da0134"
+    },
+    {
       "id": "youtube",
       "name": "YouTube",
       "author": "FMP",
