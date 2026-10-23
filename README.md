@@ -60,6 +60,14 @@ FMP_PLUGIN_DIR=<本 repo 的絕對路徑>/bilibili flutter test test/plugins/con
 
 `checks.json` 標了 `requiresLogin` 的案例（目前是各插件的 `login`），fixture 一律經人工處理，並在 `meta.edited` 寫明怎麼處理的：手寫（假帳號、照真實回應的形狀），或在 FMP 的插件開發工具錄製後，刪減到只剩插件讀的欄位。登入後的真實回應帶著遮蔽閘門認不得的帳號資訊（email、手機號、等級、地區之類），不原樣提交。閘門：`test/login_fixtures_test.dart`。
 
+## 宿主的依賴
+
+FMP 有幾處程式碼照著插件的輸出寫死，兩個 repo 之間沒有自動的一致性檢查。改到下面這些輸出時，同時到 FMP 改對應的程式碼與測試：
+
+- **`playlistFromUrl` 認得的網址與回傳的遠端 id**（bilibili、youtube、netease）：FMP 匯入舊版資料時不連網，以 `app/lib/legacy_import/remote_playlist_url.dart` 照抄各插件的判斷，把舊版平台歌單的網址換成（插件 id, 遠端 id）。插件改了接受的網址形式或遠端 id 的格式，匯入的歌單就對不上之後的刷新。對照的插件版本寫在 FMP 的 `app/test/legacy_import/remote_playlist_url_test.dart`。
+- **bilibili 單 P 影片的曲目不帶 `cid`**（只有 `sourceId`；分 P 才帶 `cid`、`partIndex`、`parentTitle`）：舊版替每首 B 站曲目補了 `cid`，FMP 匯入時對單 P 影片把它去掉，鍵才與插件一致（FMP `app/lib/legacy_import/legacy_track_catalog.dart`）。插件改成單 P 也帶 `cid` 的話，匯入的曲目在第一次完整刷新時會被刪掉再重加。
+- **qqmusic、netease 曲目的 `sourceId` 格式**（qqmusic 的歌曲 `mid`、netease 的數字 id）：FMP 只把格式相同的舊版外部匯入來源寫成配對紀錄。
+
 ## 授權
 
 MIT，見 `LICENSE`。
