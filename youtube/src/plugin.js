@@ -6,6 +6,7 @@ import { error, playabilityError } from './errors.js';
 import { CLIENTS } from './clients.js';
 import { mixRequest, parseMixResponse } from './mix.js';
 import { trackDetailRequest, parseTrackDetail } from './track_detail.js';
+import { searchViewCount } from './search_view_count.js';
 import { isAllowedHttps } from './urls.js';
 import { callResults } from './host_request.js';
 import { chartList as chartListOf, chartRequest, parseChartResponse } from './chart.js';
@@ -119,6 +120,7 @@ export async function search({ keyword, page }) {
       artwork: (v.thumbnails || [])
         .filter((t) => isAllowedHttps(t.url, ['ytimg.com']))
         .map((t) => ({ url: t.url, width: t.width || null })),
+      ...searchViewCount(v.view_count),
     });
   }
   const hasMore = !!result.has_continuation;
@@ -252,6 +254,8 @@ export async function trackDetail(input) {
   // 和 mix 一樣讀原始 JSON；WEB client，與 search 同樣標 userPreference。
   const res = await yt.actions.execute('/next', { ...body, parse: false });
   const detail = parseTrackDetail(res.data);
+  // videoId 已被 trackDetailRequest 驗過是 11 個 [A-Za-z0-9_-]；youtube.com 在 allowedHosts（含子網域）。
+  detail.webUrl = `https://www.youtube.com/watch?v=${body.videoId}`;
   fmp.log.debug('track detail', { fields: Object.keys(detail).length, ms: now() - t0 });
   return detail;
 }

@@ -68,7 +68,8 @@ test('trackDetail: maps the recorded WEB /next response with one request', async
   assert.deepEqual(detail.stats, [{ kind: 'view', count: 1826485567 }, { kind: 'like', count: 19488851 }]);
   assert.ok(detail.uploaderAvatar.length >= 1);
   assert.ok(detail.uploaderAvatar.every((a) => a.url.startsWith('https://yt3.ggpht.com/') && a.width > 0));
-  assert.deepEqual(Object.keys(detail).sort(), ['description', 'publishedAt', 'stats', 'uploaderAvatar']);
+  assert.deepEqual(Object.keys(detail).sort(), ['description', 'publishedAt', 'stats', 'uploaderAvatar', 'webUrl']);
+  assert.equal(detail.webUrl, 'https://www.youtube.com/watch?v=dQw4w9WgXcQ');
   assert.equal(nexts.length, 1);
   assert.equal(nexts[0].body.videoId, 'dQw4w9WgXcQ');
   assert.equal(nexts[0].body.playlistId, undefined);

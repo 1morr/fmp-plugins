@@ -24,7 +24,7 @@ function findRenderer(contents, name) {
 }
 
 /** 只含數字（可有千分位逗號）的字串 → 非負整數；其他是 null。 */
-function count(text) {
+export function count(text) {
   if (typeof text !== 'string' || !/^(\d{1,3}(,\d{3})+|\d+)$/.test(text)) return null;
   const n = Number(text.replace(/,/g, ''));
   return Number.isSafeInteger(n) ? n : null;
