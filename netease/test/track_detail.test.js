@@ -25,7 +25,11 @@ const song = (extra = {}) => ({
 
 test('trackDetail maps the album and the song publish time with one request', async () => {
   const requests = host({ body: song() });
-  assert.deepEqual(await trackDetail({ sourceId: '139774' }), { album: '专辑名', publishedAt: 1262275200000 });
+  assert.deepEqual(await trackDetail({ sourceId: '139774' }), {
+    album: '专辑名',
+    publishedAt: 1262275200000,
+    webUrl: 'https://music.163.com/song?id=139774',
+  });
   assert.equal(requests.length, 1);
   assert.equal(requests[0].url, 'https://music.163.com/api/v3/song/detail');
   assert.equal(requests[0].method, 'POST');
@@ -37,9 +41,11 @@ test('trackDetail maps the album and the song publish time with one request', as
 
 test('trackDetail omits fields the endpoint does not provide (publishTime 0, no album)', async () => {
   host({ body: song({ publishTime: 0, al: { id: 0, name: '' } }) });
-  assert.deepEqual(await trackDetail({ sourceId: '139774' }), {});
+  // webUrl 只由 id 組成，不靠回應，所以永遠有。
+  const webUrl = 'https://music.163.com/song?id=139774';
+  assert.deepEqual(await trackDetail({ sourceId: '139774' }), { webUrl });
   host({ body: song({ publishTime: undefined, al: undefined, album: { name: 'alt' } }) });
-  assert.deepEqual(await trackDetail({ sourceId: '139774' }), { album: 'alt' });
+  assert.deepEqual(await trackDetail({ sourceId: '139774' }), { album: 'alt', webUrl });
   host({ body: song({ publishTime: -5 }) });
   assert.equal((await trackDetail({ sourceId: '139774' })).publishedAt, undefined);
 });

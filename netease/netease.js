@@ -2,7 +2,7 @@
 {
   "id": "netease",
   "name": "網易雲音樂",
-  "version": "1.7.0",
+  "version": "1.8.0",
   "author": "FMP",
   "description": "搜尋網易雲音樂的歌曲並播放、匯入歌單、瀏覽熱歌榜，可用 QR 碼登入。",
   "apiVersion": 1,
@@ -3436,6 +3436,7 @@ async function trackDetail({ sourceId }) {
   const name = album && typeof album.name === "string" ? album.name.trim() : "";
   if (name !== "") detail.album = name;
   if (Number.isSafeInteger(song.publishTime) && song.publishTime > 0) detail.publishedAt = song.publishTime;
+  detail.webUrl = `https://music.163.com/song?id=${sourceId}`;
   return detail;
 }
 var NETEASE_HOSTS = ["music.163.com", "y.music.163.com"];
