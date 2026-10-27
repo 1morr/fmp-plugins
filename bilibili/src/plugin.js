@@ -271,6 +271,19 @@ export function artwork(pic) {
   return [...ARTWORK_WIDTHS.map((width) => ({ url: `${url}@${width}w`, width })), { url }];
 }
 
+/** 播放數：非負整數才給（被隱藏時是 `"--"` 之類的字串），否則整個欄位省略。 */
+function viewCountOf(value) {
+  return Number.isInteger(value) && value >= 0 ? { viewCount: value } : {};
+}
+
+/** 分區名：第一個去頭尾空白後不空的字串；都沒有回 `{}`（欄位省略）。 */
+function areaOf(...candidates) {
+  for (const name of candidates) {
+    if (typeof name === 'string' && name.trim() !== '') return { area: name.trim() };
+  }
+  return {};
+}
+
 export async function search({ keyword, page }) {
   const params = {
     keyword,
@@ -299,6 +312,7 @@ export async function search({ keyword, page }) {
       artwork: artwork(item.pic),
       // 搜尋結果的 page 是分 P 數；沒有或不是正整數就不給（舊專案預設 1，這裡省略）。
       ...(Number.isInteger(item.page) && item.page > 0 ? { partCount: item.page } : {}),
+      ...viewCountOf(item.play),
     });
   }
   fmp.log.debug('search results', { count: items.length, total: numResults });
@@ -366,6 +380,7 @@ export function rankingTrack(item) {
     artwork: artwork(item.pic),
     // 分 P 數（同 search 的 page）：宿主當成能展開的提示。
     ...(Number.isInteger(item.videos) && item.videos > 0 ? { partCount: item.videos } : {}),
+    ...viewCountOf(item.stat !== null && typeof item.stat === 'object' ? item.stat.view : undefined),
   };
 }
 
@@ -960,6 +975,8 @@ export async function trackDetail({ sourceId, cid }) {
     }
     if (stats.length > 0) detail.stats = stats;
   }
+  // sourceId 已驗過是 BV 加 10 個英數字；網域 www.bilibili.com 本來就在 allowedHosts。
+  detail.webUrl = `https://www.bilibili.com/video/${sourceId}`;
   return detail;
 }
 
@@ -1077,6 +1094,8 @@ export async function liveStatus({ roomId }) {
     artwork: artwork(info.user_cover || info.keyframe),
     status,
     online: nonNegativeInt(info.online),
+    // get_info 的 area_name 是子分區（parent_area_name 才是大類）。
+    ...areaOf(info.area_name),
   };
 }
 
@@ -1114,6 +1133,8 @@ async function liveRoomSearch(keyword, page) {
       artwork: artwork(item.user_cover),
       status: 'live',
       online: nonNegativeInt(item.online),
+      // live_room 搜尋的 cate_name 是子分區（實測 2026-10：生活杂谈、虚拟日常、沉浸体验）。
+      ...areaOf(item.cate_name),
     });
   }
   fmp.log.debug('live search results', { count: items.length, total: numResults });
@@ -1175,6 +1196,8 @@ async function liveAnchorSearch(keyword, page, status) {
       artwork: artwork(entry.cover_from_user || entry.keyframe),
       status: roomStatus,
       online: nonNegativeInt(entry.online),
+      // area_v2_name 是子分區，area_name 是舊分類系統的大類（實測：颜值、生活娱乐），只在沒有 v2 時退回。
+      ...areaOf(entry.area_v2_name, entry.area_name),
     });
   }
   fmp.log.debug('live anchor search results', { count: items.length, total: numResults });

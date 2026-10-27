@@ -2,7 +2,7 @@
 {
   "id": "bilibili",
   "name": "Bilibili",
-  "version": "1.10.0",
+  "version": "1.11.0",
   "author": "FMP",
   "description": "搜尋 Bilibili 影片並播放其音訊，也能搜尋與收聽直播間、匯入收藏夾、瀏覽音樂排行榜，可用 QR 碼登入。",
   "apiVersion": 1,
@@ -3483,6 +3483,15 @@ function artwork(pic) {
   if (url.includes("@")) return [{ url }];
   return [...ARTWORK_WIDTHS.map((width) => ({ url: `${url}@${width}w`, width })), { url }];
 }
+function viewCountOf(value) {
+  return Number.isInteger(value) && value >= 0 ? { viewCount: value } : {};
+}
+function areaOf(...candidates) {
+  for (const name of candidates) {
+    if (typeof name === "string" && name.trim() !== "") return { area: name.trim() };
+  }
+  return {};
+}
 async function search({ keyword, page }) {
   const params = {
     keyword,
@@ -3510,7 +3519,8 @@ async function search({ keyword, page }) {
       durationMs: colonDurationMs(item.duration),
       artwork: artwork(item.pic),
       // 搜尋結果的 page 是分 P 數；沒有或不是正整數就不給（舊專案預設 1，這裡省略）。
-      ...Number.isInteger(item.page) && item.page > 0 ? { partCount: item.page } : {}
+      ...Number.isInteger(item.page) && item.page > 0 ? { partCount: item.page } : {},
+      ...viewCountOf(item.play)
     });
   }
   fmp.log.debug("search results", { count: items.length, total: numResults });
@@ -3556,7 +3566,8 @@ function rankingTrack(item) {
     durationMs: Number.isInteger(item.duration) && item.duration >= 0 ? item.duration * 1e3 : null,
     artwork: artwork(item.pic),
     // 分 P 數（同 search 的 page）：宿主當成能展開的提示。
-    ...Number.isInteger(item.videos) && item.videos > 0 ? { partCount: item.videos } : {}
+    ...Number.isInteger(item.videos) && item.videos > 0 ? { partCount: item.videos } : {},
+    ...viewCountOf(item.stat !== null && typeof item.stat === "object" ? item.stat.view : void 0)
   };
 }
 async function chart({ chartId }) {
@@ -4027,6 +4038,7 @@ async function trackDetail({ sourceId, cid }) {
     }
     if (stats.length > 0) detail.stats = stats;
   }
+  detail.webUrl = `https://www.bilibili.com/video/${sourceId}`;
   return detail;
 }
 var LIVE_API = "https://api.live.bilibili.com";
@@ -4116,7 +4128,9 @@ async function liveStatus({ roomId }) {
     hostName,
     artwork: artwork(info.user_cover || info.keyframe),
     status,
-    online: nonNegativeInt(info.online)
+    online: nonNegativeInt(info.online),
+    // get_info 的 area_name 是子分區（parent_area_name 才是大類）。
+    ...areaOf(info.area_name)
   };
 }
 async function liveSearch({ keyword, page, status }) {
@@ -4145,7 +4159,9 @@ async function liveRoomSearch(keyword, page) {
       hostName: personName(item.uname),
       artwork: artwork(item.user_cover),
       status: "live",
-      online: nonNegativeInt(item.online)
+      online: nonNegativeInt(item.online),
+      // live_room 搜尋的 cate_name 是子分區（實測 2026-10：生活杂谈、虚拟日常、沉浸体验）。
+      ...areaOf(item.cate_name)
     });
   }
   fmp.log.debug("live search results", { count: items.length, total: numResults });
@@ -4200,7 +4216,9 @@ async function liveAnchorSearch(keyword, page, status) {
       hostName: anchor.name || personName(entry.uname),
       artwork: artwork(entry.cover_from_user || entry.keyframe),
       status: roomStatus,
-      online: nonNegativeInt(entry.online)
+      online: nonNegativeInt(entry.online),
+      // area_v2_name 是子分區，area_name 是舊分類系統的大類（實測：颜值、生活娱乐），只在沒有 v2 時退回。
+      ...areaOf(entry.area_v2_name, entry.area_name)
     });
   }
   fmp.log.debug("live anchor search results", { count: items.length, total: numResults });

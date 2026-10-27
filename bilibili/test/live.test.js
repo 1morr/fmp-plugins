@@ -96,6 +96,7 @@ const searchBody = {
       title: '<em class="keyword">唱歌</em> &quot;夜&quot;',
       user_cover: '//i0.hdslb.com/bfs/live/cover.jpg',
       online: 321,
+      cate_name: ' 虚拟日常 ',
     },
     { roomid: 0, title: 'no room' },
     { title: 'no room id' },
@@ -126,9 +127,12 @@ test('liveSearch maps live_room results, always live, and tags userPreference', 
     ],
     status: 'live',
     online: 321,
+    area: '虚拟日常',
   });
   assert.deepEqual(page.items[1].artwork, []);
   assert.equal(page.items[1].online, null);
+  // 沒有 cate_name 就沒有 area 欄位。
+  assert.equal('area' in page.items[1], false);
 });
 
 test('liveSearch hasMore is false on the last page', async () => {
@@ -161,8 +165,16 @@ test('liveSearch status null: bili_user search + one batch request, live and off
   const requests = fakeHost([
     ok(userBody),
     ok({
-      10: entry({ title: '開播', room_id: 1001, live_status: 1, online: 77, cover_from_user: 'https://i0.hdslb.com/bfs/live/c.jpg' }),
-      20: entry({ title: '沒開', room_id: 1002, live_status: 0 }),
+      10: entry({
+        title: '開播',
+        room_id: 1001,
+        live_status: 1,
+        online: 77,
+        cover_from_user: 'https://i0.hdslb.com/bfs/live/c.jpg',
+        area_name: '生活娱乐',
+        area_v2_name: '颜值',
+      }),
+      20: entry({ title: '沒開', room_id: 1002, live_status: 0, area_name: '网游', area_v2_name: ' ' }),
       // 40 不在批次回應裡：丟掉
     }),
   ]);
@@ -186,6 +198,8 @@ test('liveSearch status null: bili_user search + one batch request, live and off
       ['1002', '沒開', '乙', 'offline', 0],
     ],
   );
+  // 子分區 area_v2_name 優先；它空白時退回舊分類 area_name。
+  assert.deepEqual(page.items.map((r) => r.area), ['颜值', '网游']);
   assert.equal(page.items[0].artwork[2].url, 'https://i0.hdslb.com/bfs/live/c.jpg');
   assert.equal(page.items[1].artwork[2].url, 'https://i0.hdslb.com/bfs/live/k.jpg');
   assert.equal(page.hasMore, true); // 1 * 20 < 25
@@ -299,6 +313,8 @@ const roomInit = ok({ room_id: 21452505, short_id: 0, uid: 1 });
 const roomInfo = (extra) =>
   ok({
     room_id: 21452505,
+    area_name: 'AI应用·机器人',
+    parent_area_name: '知识',
     title: '直播標題',
     user_cover: 'https://i0.hdslb.com/bfs/live/c.jpg',
     keyframe: 'https://i0.hdslb.com/bfs/live/k.jpg',
@@ -327,6 +343,8 @@ test('liveStatus resolves the real room id and maps the room', async () => {
   assert.equal(room.hostName, '主播名');
   assert.equal(room.status, 'live');
   assert.equal(room.online, 1234);
+  // 子分區，不是 parent_area_name。
+  assert.equal(room.area, 'AI应用·机器人');
   assert.equal(room.artwork.length, 3);
   assert.equal(room.artwork[2].url, 'https://i0.hdslb.com/bfs/live/c.jpg');
 });

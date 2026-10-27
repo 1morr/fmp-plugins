@@ -82,6 +82,7 @@ test('chart: asks ranking/v2 for region 1003, keeps the ranking order and maps t
       { url: 'https://i0.hdslb.com/bfs/archive/x.jpg@480w', width: 480 },
       { url: 'https://i0.hdslb.com/bfs/archive/x.jpg' },
     ],
+    viewCount: 100,
   });
   // 榜單標題是純文字：只去頭尾空白，`<…>` 與實體原樣留著（不同於 search 的 HTML 標題）。
   assert.equal(tracks[1].title, 'a &amp; b <c> & d');
@@ -158,6 +159,11 @@ test('rankingTrack: skips entries without a bvid, fills in missing fields', () =
     durationMs: null,
     artwork: [],
   });
+  // stat.view 是非負整數才給 viewCount（被隱藏時是 "--"）；缺 stat 也不炸。
+  assert.equal(rankingTrack(item('BV1aaaaaaaaa', { stat: { view: 0 } })).viewCount, 0);
+  for (const stat of [{ view: '--' }, { view: -1 }, { view: 1.5 }, {}, null, undefined]) {
+    assert.equal('viewCount' in rankingTrack(item('BV1aaaaaaaaa', { stat })), false, JSON.stringify(stat));
+  }
   // 封面不在 hdslb.com 就不給。
   assert.deepEqual(rankingTrack(item('BV1aaaaaaaaa', { pic: 'https://evil.example/x.jpg' })).artwork, []);
   // videos 是分 P 數：正整數才給 partCount。
@@ -203,5 +209,6 @@ test('chart: maps the recorded ranking response in its order', async () => {
     assert.match(t.sourceId, /^BV[0-9A-Za-z]{10}$/);
     assert.ok(t.title !== '');
     assert.ok(t.artwork.length > 0, t.sourceId);
+    assert.ok(Number.isInteger(t.viewCount) && t.viewCount >= 0, t.sourceId);
   }
 });
