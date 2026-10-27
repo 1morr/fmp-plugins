@@ -4,7 +4,7 @@ YouTube 音源，匿名可用，也可以登入。以 [YouTube.js](https://githu
 
 ## 能力
 
-- `search`：搜尋影片（`yt.search`，type 為 video）。只收影片；頻道、播放清單、Shorts 欄位，以及沒有長度的直播與首播都略過，所以一頁可能不到 20 筆。續頁只接得在同一個關鍵字的上一頁後面（continuation 存在記憶體，插件重啟後第 2 頁起回空）。
+- `search`：搜尋影片（`yt.search`，type 為 video）。只收影片；頻道、播放清單、Shorts 欄位，以及沒有長度的直播與首播都略過，所以一頁可能不到 20 筆。續頁只接得在同一個關鍵字的上一頁後面（continuation 存在記憶體，插件重啟後第 2 頁起回空）。`viewCount` 取每筆 `viewCountText` 的完整數字（`1,824,429,303 views`、`1 view`、`No views` → 0；錄到的 20 筆都是這種形式），**不解 `shortViewCountText` 的 `1.8B`、`869K`**（四捨五入過、隨語系變）；直播的 `watching`、非英文或缺的一律省略，不猜。
 - `resolveStream`：不需要 PO token，player 請求一律不帶登入憑證（見「登入」）。依序試 `VISIONOS`、`IOS` 兩個 client，取第一個有音訊的（`ANDROID_VR` 自 2026-08-26 起沒帶 token 只給約 60 秒，不用）。
   - 只取純音訊的 adaptive format；多語言配音的影片只留預設音軌。網址是明文，不需要下載 player JS（`retrieve_player: false`）。
   - 候選依 `formats` 的先後分組（使用者的格式偏好），同一組內依 `quality` 排：選中的在最前面（`high` 最高碼率、`low` 最低、`medium` 取中間 `⌊n / 2⌋`），接著是比它低的（由高到低），最後是比它高的（由低到高）。平台不能播的格式不出現。
@@ -17,7 +17,7 @@ YouTube 音源，匿名可用，也可以登入。以 [YouTube.js](https://githu
   - 曲目欄位同 `search`（只收有長度的影片，直播與首播略過，縮圖只留 `ytimg.com`），一批內以 `sourceId` 去重；跨批去重由宿主做。`title` 取回應的播放清單標題，沒有就是 `Mix`（宿主只在 `mixId` 換了才換標題）。
   - 錯誤：開始時影片沒有 Mix 或第一批一首都不能播 → `NotFound`；續取的回應沒有播放清單不算錯，回空的一批與 `cursor: null`，讓宿主換種子（丟錯的話 cursor 停在原地，宿主不會換種子，Mix 就停了）。輸入不合法（`sourceId` 不是 11 碼、`mixId` 不是 `RD` 開頭、`cursor` 不是 `v1:` 格式）→ `ParseError`，不發請求；回應形狀不對也是 `ParseError`。HTTP 4xx 同 `search`，YouTube.js 丟例外，由宿主轉成 `UnexpectedError`。
   - 2026-10 實機（匿名）：25 首的 Mix 跳到第 24 首，以 `v1:…:24` 續取回 24 首新的、`mixId` 不變、cursor 前進到 `:48`，共 2 個 `/next`。
-- `trackDetail`：影片詳細，POST innertube `/next`（WEB client，`{videoId, racyCheckOk, contentCheckOk}`，不帶 `playlistId`）並讀原始 JSON，**一個請求**（`src/track_detail.js`）。不用 `getInfo`：它是 `/player` 加 `/next` 兩個請求，而 `/player` 沒有頭像與按讚數，`/next` 本來就帶簡介、日期、頭像、觀看與按讚數；`fixtures/mix/003.json` 就是一份真實的 WEB `/next` 回應，欄位路徑照它定。請求與 `search` 一樣標 `idempotent: true` 與 `auth: 'userPreference'`（WEB client 收 cookie），錯誤對應也相同。
+- `trackDetail`：另給 `webUrl`＝`https://www.youtube.com/watch?v=<id>`（`allowedHosts` 的 `youtube.com` 涵蓋子網域，不另加 `www.youtube.com`）。影片詳細，POST innertube `/next`（WEB client，`{videoId, racyCheckOk, contentCheckOk}`，不帶 `playlistId`）並讀原始 JSON，**一個請求**（`src/track_detail.js`）。不用 `getInfo`：它是 `/player` 加 `/next` 兩個請求，而 `/player` 沒有頭像與按讚數，`/next` 本來就帶簡介、日期、頭像、觀看與按讚數；`fixtures/mix/003.json` 就是一份真實的 WEB `/next` 回應，欄位路徑照它定。請求與 `search` 一樣標 `idempotent: true` 與 `auth: 'userPreference'`（WEB client 收 cookie），錯誤對應也相同。
   - `description`：`videoSecondaryInfoRenderer.attributedDescription.content`，沒有時用 `description.runs`，去頭尾空白，空的不給。
   - `uploaderAvatar`：`videoOwnerRenderer.thumbnail.thumbnails`，只留 `https` 且在 `ggpht.com`、`ytimg.com` 的（`allowedHosts` 不變，`yt3.ggpht.com` 在 `ggpht.com` 之下）。
   - `stats`：`view`（`videoViewCountRenderer.originalViewCount`，沒有時讀 `1,234 views` 這種完整數字；直播中（`isLive`）顯示的是正在觀看人數，不給）與 `like`（`likeCountEntity.likeCountIfIndifferentNumber`，沒有時讀 `expandedLikeCountIfIndifferent` 的完整數字；登入且按過讚（`likeStatusEntity.likeStatus` 是 `LIKE`）時改讀 `IfLiked` 那一組，與 YouTube 顯示的相同）。縮寫（`19M`）、`No views`、按讚數被隱藏都略過，不補 0。**沒有 `comment`**：回應裡的留言數只有縮寫（`2.4M`）；`share`、`favorite`、`danmaku`、`coin` YouTube 沒有。

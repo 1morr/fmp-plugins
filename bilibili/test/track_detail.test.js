@@ -87,6 +87,7 @@ test('trackDetail maps description, date, avatar and stats from wbi/view', async
       { kind: 'danmaku', count: 5 },
       { kind: 'coin', count: 3 },
     ],
+    webUrl: `https://www.bilibili.com/video/${BVID}`,
   });
   assert.equal(requests.length, 2);
   const url = new URL(requests[1].url);
@@ -112,7 +113,8 @@ test('trackDetail omits what the endpoint does not provide', async () => {
   fakeHost([ok({ bvid: BVID, desc: '   ', pubdate: 0, owner: { face: 'https://evil.example/a.jpg' }, stat: {} })], {
     storedKeys: true,
   });
-  assert.deepEqual(await trackDetail({ sourceId: BVID }), {});
+  // webUrl 不靠回應，只由 bvid 組成，所以永遠有。
+  assert.deepEqual(await trackDetail({ sourceId: BVID }), { webUrl: `https://www.bilibili.com/video/${BVID}` });
 });
 
 test('trackDetail skips stats that are not non-negative integers', async () => {

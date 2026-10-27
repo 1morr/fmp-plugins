@@ -4,7 +4,7 @@
 
 ## 能力
 
-- `search`：`POST music.163.com/api/cloudsearch/pc`（明文 form），每頁 20 筆。舊專案收了 `order` 卻沒用，這裡不帶。封面是方形，給 120、200、400 三個檔位（`?param=NyN`，舊專案 `thumbnail_url_utils` 的做法）。
+- `search`：`POST music.163.com/api/cloudsearch/pc`（明文 form），每頁 20 筆。舊專案收了 `order` 卻沒用，這裡不帶。封面是方形，給 120、200、400 三個檔位（`?param=NyN`，舊專案 `thumbnail_url_utils` 的做法）。不給 `viewCount`：歌曲資料只有 `pop`（0–100 的熱度分，錄到的都是 100.0），沒有逐曲的播放次數。
 - `resolveStream`：`POST interface3.music.163.com/eapi/song/enhance/player/url/v1`，body 是 eapi 加密的 `params`。
   - 加密：`/api/song/enhance/player/url/v1`、JSON、`md5("nobody" + 路徑 + "use" + JSON + "md5forencrypt")` 以 `-36cd479b6b5-` 相接，AES-128-ECB（PKCS7），大寫 hex。AES 是 `src/aes.js`（自己寫的 FIPS 197 實作，只做加密，`test/aes.test.js` 與 `node:crypto` 逐位元組比對），MD5 用宿主的 `fmp.crypto.md5`。
   - 音質：`high` → `exhigh`；`medium`、`low` → `standard`。不送 `lossless`（VIP 音質）。一個請求只回一個串流，所以只有一個候選。
@@ -13,7 +13,7 @@
   - 網易回 `http://` 的串流網址，插件改成 `https://` 才交給宿主（CDN 兩者都接受；2026-10-08 在 Android 與 Windows 實機播放 `m701`、`m801` 的 https 網址都正常）。
   - `expiresAt` 是收到回應的時間加上 API 回報的有效秒數 `expi`（約 1200 秒）：網址本身沒有期限參數，所以 `checks.json` 沒有 `expiresAtPattern`。
   - 候選的 header 只有 `Origin`、`Referer`、`User-Agent`，不帶 Cookie。
-- `trackDetail`：歌曲詳細，`POST music.163.com/api/v3/song/detail`（明文 form，`c=[{"id":<sourceId>}]`，舊專案 `_getSongDetail` 同一個端點），**一個請求**；與 `search` 一樣標 `auth: 'userPreference'`、`idempotent: true`，不帶 `X-Real-IP`，錯誤對應同上。
+- `trackDetail`：回 `webUrl`＝`https://music.163.com/song?id=<sourceId>`（`music.163.com` 本來就在 `allowedHosts`），其餘見下。歌曲詳細，`POST music.163.com/api/v3/song/detail`（明文 form，`c=[{"id":<sourceId>}]`，舊專案 `_getSongDetail` 同一個端點），**一個請求**；與 `search` 一樣標 `auth: 'userPreference'`、`idempotent: true`，不帶 `X-Real-IP`，錯誤對應同上。
   - 只給回應真的有的欄位：`album`（`songs[0].al.name`，沒有時讀 `album.name`，去頭尾空白，空的不給）、`publishedAt`（`songs[0].publishTime`，已是 epoch 毫秒；多數歌是 `0`，`0`、負數或缺就不給）。
   - **沒有** `description`、`stats`、`uploaderAvatar`：這個端點沒有簡介與統計，`ar[]` 也沒有歌手頭像。舊專案的歌手頭像（`api/artist/head/info/get`）、專輯發行日（`api/v1/album/<id>`，歌曲本身沒有 `publishTime` 時的備援）、留言數與熱門評論都是另外的請求，為了維持一個請求沒有取（熱門評論本來就不做，design §16 第 13 條）。要補頭像或備援發行日時各加一個請求，`music.126.net` 已在 `allowedHosts`。
   - `sourceId` 不是純數字（或大到轉成數字會失真，超過 2^53）→ `ParseError`，不發請求（`resolveStream` 對同樣的輸入回 `NotFound`，是它原本的行為）；回應沒有歌（`songs` 空或缺）→ `NotFound`；`songs[0]` 不是物件 → `ParseError`。

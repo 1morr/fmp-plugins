@@ -238,6 +238,8 @@ export async function trackDetail({ sourceId }) {
   const name = album && typeof album.name === 'string' ? album.name.trim() : '';
   if (name !== '') detail.album = name;
   if (Number.isSafeInteger(song.publishTime) && song.publishTime > 0) detail.publishedAt = song.publishTime;
+  // sourceId 已驗過是安全整數的數字字串；music.163.com 本來就在 allowedHosts。
+  detail.webUrl = `https://music.163.com/song?id=${sourceId}`;
   return detail;
 }
 

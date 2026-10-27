@@ -6,7 +6,7 @@ import { writeFileSync, statSync } from 'node:fs';
 const manifest = {
   id: 'youtube',
   name: 'YouTube',
-  version: '1.6.0',
+  version: '1.7.0',
   author: 'FMP',
   description: '搜尋 YouTube 影片並播放其音訊，可匯入播放清單與瀏覽「本週新歌」榜單。',
   apiVersion: 1,
