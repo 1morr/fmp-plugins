@@ -1,14 +1,15 @@
 // 把 src/plugin.js 打包成一個 FMP 安裝檔：manifest 標頭 + ES module（youtube.js）。
 // 用法：npm ci && node build.mjs
 import { build } from 'esbuild';
-import { writeFileSync, statSync } from 'node:fs';
+import { readFileSync, writeFileSync, statSync } from 'node:fs';
 
 const manifest = {
   id: 'youtube',
   name: 'YouTube',
-  version: '1.7.0',
+  version: '1.7.1',
   author: 'FMP',
   description: '搜尋 YouTube 影片並播放其音訊，可匯入播放清單與瀏覽「本週新歌」榜單。',
+  icon: 'data:image/png;base64,' + readFileSync(new URL('./icon.png', import.meta.url)).toString('base64'),
   apiVersion: 1,
   capabilities: ['search', 'resolveStream', 'mix', 'trackDetail', 'importPlaylist', 'libraryRead', 'libraryWrite', 'charts', 'login'],
   // accounts.google.com：登入頁（webView.url）；ggpht.com：帳號頭像。
