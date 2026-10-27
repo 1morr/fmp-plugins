@@ -6,7 +6,7 @@
       "name": "Bilibili",
       "author": "FMP",
       "description": "搜尋 Bilibili 影片並播放其音訊，也能搜尋與收聽直播間、匯入收藏夾、瀏覽音樂排行榜，可用 QR 碼登入。",
-      "version": "1.10.0",
+      "version": "1.11.0",
       "apiVersion": 1,
       "capabilities": [
         "search",
@@ -31,16 +31,16 @@
         "upos-hz-mirrorakam.akamaized.net"
       ],
       "url": "https://raw.githubusercontent.com/1morr/fmp-plugins/main/bilibili/bilibili.js",
-      "sha256": "00f4d7a9b5724c8debe31cd521146705429c7e73eecef90687b393b4e61a4e64",
+      "sha256": "3fbb67b8163aff415dd0362190969556667edf08bb7802b18ff4c45ad6f7f8b0",
       "checksUrl": "https://raw.githubusercontent.com/1morr/fmp-plugins/main/bilibili/checks.json",
-      "checksSha256": "993f7a62a7f40795c02253ed1d8308039a74cde99437c5827cf0f21efd705457"
+      "checksSha256": "19d81737f5c6dd0db206392760d3fcbb639a7188c5c2128ee25fab03fbbefff6"
     },
     {
       "id": "netease",
       "name": "網易雲音樂",
       "author": "FMP",
       "description": "搜尋網易雲音樂的歌曲並播放、匯入歌單、瀏覽熱歌榜，可用 QR 碼登入。",
-      "version": "1.7.0",
+      "version": "1.8.0",
       "apiVersion": 1,
       "capabilities": [
         "search",
@@ -58,9 +58,9 @@
         "163cn.tv"
       ],
       "url": "https://raw.githubusercontent.com/1morr/fmp-plugins/main/netease/netease.js",
-      "sha256": "97e9fdb6b650b0ce9246aa97ef84557708b2ba24e7d80677f6a603bd991e0414",
+      "sha256": "1d65bf5b24573f2fc2177eb3f9d18380e0b51c5ac7d60b1bded60b16d9960df9",
       "checksUrl": "https://raw.githubusercontent.com/1morr/fmp-plugins/main/netease/checks.json",
-      "checksSha256": "8851789f1b7ca2c512127fbfec76fc4dd8cd60543b8a5c2c00a04a9bc7f4a8f8"
+      "checksSha256": "7fbfb200be4a76ed46de517aa4ede6bd7450b8aa58084f8b69106354ca9e0660"
     },
     {
       "id": "qqmusic",
@@ -106,7 +106,7 @@
       "name": "YouTube",
       "author": "FMP",
       "description": "搜尋 YouTube 影片並播放其音訊，可匯入播放清單與瀏覽「本週新歌」榜單。",
-      "version": "1.6.0",
+      "version": "1.7.0",
       "apiVersion": 1,
       "capabilities": [
         "search",
@@ -127,9 +127,9 @@
         "accounts.google.com"
       ],
       "url": "https://raw.githubusercontent.com/1morr/fmp-plugins/main/youtube/youtube.js",
-      "sha256": "864aac50cec0c742c072b7352209dc779fe466d7bbc6839a48e153db8bf278b3",
+      "sha256": "2520deed3d33d7bfc9d8c4cda73ad542bd9f7d09e55e741fc1314e8ce22f127a",
       "checksUrl": "https://raw.githubusercontent.com/1morr/fmp-plugins/main/youtube/checks.json",
-      "checksSha256": "ac4da919bf5693ccca9413391f9aa565651a233b2ee8a45a64f75efeb5374979"
+      "checksSha256": "fa67b33ea3a17a9aa1784fabf392482c55ad8632733539c04e35dab6a92325fa"
     }
   ]
 }
