@@ -1,14 +1,15 @@
 // 把 src/plugin.js 打包成一個 FMP 安裝檔：manifest 標頭 + ES module（bilibili.js）。
 // 用法：npm ci && node build.mjs
 import { build } from 'esbuild';
-import { writeFileSync, statSync } from 'node:fs';
+import { readFileSync, writeFileSync, statSync } from 'node:fs';
 
 const manifest = {
   id: 'bilibili',
   name: 'Bilibili',
-  version: '1.11.0',
+  version: '1.11.1',
   author: 'FMP',
   description: '搜尋 Bilibili 影片並播放其音訊，也能搜尋與收聽直播間、匯入收藏夾、瀏覽音樂排行榜，可用 QR 碼登入。',
+  icon: 'data:image/png;base64,' + readFileSync(new URL('./icon.png', import.meta.url)).toString('base64'),
   apiVersion: 1,
   capabilities: ['search', 'resolveStream', 'multiPart', 'trackDetail', 'live', 'importPlaylist', 'libraryRead', 'libraryWrite', 'charts', 'login'],
   allowedHosts: [

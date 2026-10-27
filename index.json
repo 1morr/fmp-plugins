@@ -6,7 +6,7 @@
       "name": "Bilibili",
       "author": "FMP",
       "description": "搜尋 Bilibili 影片並播放其音訊，也能搜尋與收聽直播間、匯入收藏夾、瀏覽音樂排行榜，可用 QR 碼登入。",
-      "version": "1.11.0",
+      "version": "1.11.1",
       "apiVersion": 1,
       "capabilities": [
         "search",
@@ -31,7 +31,7 @@
         "upos-hz-mirrorakam.akamaized.net"
       ],
       "url": "https://raw.githubusercontent.com/1morr/fmp-plugins/main/bilibili/bilibili.js",
-      "sha256": "eadb1c92fb45c101f6a21dbef4933f8f571a4d2e2051b50a8ae66c877a4ddcfb",
+      "sha256": "db43ca8cc8e751be40c84b932c1845280715c916067fb9766665661221434432",
       "checksUrl": "https://raw.githubusercontent.com/1morr/fmp-plugins/main/bilibili/checks.json",
       "checksSha256": "19d81737f5c6dd0db206392760d3fcbb639a7188c5c2128ee25fab03fbbefff6"
     },
@@ -40,7 +40,7 @@
       "name": "網易雲音樂",
       "author": "FMP",
       "description": "搜尋網易雲音樂的歌曲並播放、匯入歌單、瀏覽熱歌榜，可用 QR 碼登入。",
-      "version": "1.8.0",
+      "version": "1.8.1",
       "apiVersion": 1,
       "capabilities": [
         "search",
@@ -58,7 +58,7 @@
         "163cn.tv"
       ],
       "url": "https://raw.githubusercontent.com/1morr/fmp-plugins/main/netease/netease.js",
-      "sha256": "1d65bf5b24573f2fc2177eb3f9d18380e0b51c5ac7d60b1bded60b16d9960df9",
+      "sha256": "57b0292c3049c6fedb2be63b94612999e57ccbd2cdf2f24e9971ca6ec368a90d",
       "checksUrl": "https://raw.githubusercontent.com/1morr/fmp-plugins/main/netease/checks.json",
       "checksSha256": "7fbfb200be4a76ed46de517aa4ede6bd7450b8aa58084f8b69106354ca9e0660"
     },
@@ -67,7 +67,7 @@
       "name": "QQ 音樂",
       "author": "FMP",
       "description": "匯入 QQ 音樂的公開歌單（只讀曲目資料，用來在其他音源配對播放），不需要登入。",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "apiVersion": 1,
       "capabilities": [
         "importPlaylist"
@@ -77,7 +77,7 @@
         "url.cn"
       ],
       "url": "https://raw.githubusercontent.com/1morr/fmp-plugins/main/qqmusic/qqmusic.js",
-      "sha256": "ec5bd87ac92332e04dde40afa4fa29888b25184b9ce98adb279f2fd4d790a853",
+      "sha256": "1842cfd0fdf1759ff750846adad7c2605e2b8878facb3139d62a3f696d4662f9",
       "checksUrl": "https://raw.githubusercontent.com/1morr/fmp-plugins/main/qqmusic/checks.json",
       "checksSha256": "4dc0fcc186ce51639212606a1be1c13429a5cea879bab7b59358037312da0134"
     },
@@ -86,7 +86,7 @@
       "name": "Spotify",
       "author": "FMP",
       "description": "匯入 Spotify 公開歌單的曲目清單（不需登入）；Spotify 的曲目不能直接播放，只用來到其他音源匹配。",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "apiVersion": 1,
       "capabilities": [
         "importPlaylist"
@@ -97,7 +97,7 @@
         "scdn.co"
       ],
       "url": "https://raw.githubusercontent.com/1morr/fmp-plugins/main/spotify/spotify.js",
-      "sha256": "2adfb2a3f6e42ad73eee137cead4c682dd615f1b26d5af0360e92c93eee2d2eb",
+      "sha256": "b315d51f2b984f082cdada5182ab4b0f0c49ed7e6fb302af9b8ad3ea7d4266aa",
       "checksUrl": "https://raw.githubusercontent.com/1morr/fmp-plugins/main/spotify/checks.json",
       "checksSha256": "6646f13333c76014ad83eda3fe810f019e66d4724ab6c33f8362bb3f85c539c7"
     },
@@ -106,7 +106,7 @@
       "name": "YouTube",
       "author": "FMP",
       "description": "搜尋 YouTube 影片並播放其音訊，可匯入播放清單與瀏覽「本週新歌」榜單。",
-      "version": "1.7.0",
+      "version": "1.7.1",
       "apiVersion": 1,
       "capabilities": [
         "search",
@@ -127,7 +127,7 @@
         "accounts.google.com"
       ],
       "url": "https://raw.githubusercontent.com/1morr/fmp-plugins/main/youtube/youtube.js",
-      "sha256": "2520deed3d33d7bfc9d8c4cda73ad542bd9f7d09e55e741fc1314e8ce22f127a",
+      "sha256": "8a1a51690782f63acb9debc586c96c34d5769fb506d23b6e0f955c7e44b9f8ec",
       "checksUrl": "https://raw.githubusercontent.com/1morr/fmp-plugins/main/youtube/checks.json",
       "checksSha256": "644a312868eab81431a75159dfeea34632d6da6e95f1f7d4a143b48f35e5f821"
     }

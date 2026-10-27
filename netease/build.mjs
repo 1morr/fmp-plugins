@@ -1,14 +1,15 @@
 // 把 src/plugin.js 打包成一個 FMP 安裝檔：manifest 標頭 + ES module（netease.js）。
 // 用法：npm ci && node build.mjs
 import { build } from 'esbuild';
-import { writeFileSync, statSync } from 'node:fs';
+import { readFileSync, writeFileSync, statSync } from 'node:fs';
 
 const manifest = {
   id: 'netease',
   name: '網易雲音樂',
-  version: '1.8.0',
+  version: '1.8.1',
   author: 'FMP',
   description: '搜尋網易雲音樂的歌曲並播放、匯入歌單、瀏覽熱歌榜，可用 QR 碼登入。',
+  icon: 'data:image/png;base64,' + readFileSync(new URL('./icon.png', import.meta.url)).toString('base64'),
   apiVersion: 1,
   capabilities: ['search', 'resolveStream', 'trackDetail', 'importPlaylist', 'libraryRead', 'libraryWrite', 'charts', 'login'],
   allowedHosts: ['music.163.com', 'music.126.net', '163cn.tv'],

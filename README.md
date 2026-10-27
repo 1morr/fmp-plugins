@@ -10,6 +10,7 @@
 - `checks.json`：每個能力一條檢查案例。
 - `fixtures/`：錄下的 HTTP 請求與回應，已遮蔽憑證，供契約測試重播。
 - `package.json`（選用）：插件有自己的單元測試或建置步驟時才有。
+- `icon.png`（選用）：`build.mjs` 把它轉成 `data:image/png;base64,` 嵌進 manifest 的 `icon`，執行時不連網取圖。bilibili、netease、youtube、spotify 是 [Simple Icons](https://simpleicons.org/) 16.36.0（CC0）的圖樣放在品牌色底上；qqmusic 用 y.qq.com 的 favicon。商標歸各自擁有者。
 
 欄位與宿主 API 的型別見 FMP 的 `app/lib/plugins/types/fmp-plugin.d.ts`。
 
