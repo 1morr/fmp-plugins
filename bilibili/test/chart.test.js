@@ -161,7 +161,7 @@ test('rankingTrack: skips entries without a bvid, fills in missing fields', () =
   });
   // stat.view 是非負整數才給 viewCount（被隱藏時是 "--"）；缺 stat 也不炸。
   assert.equal(rankingTrack(item('BV1aaaaaaaaa', { stat: { view: 0 } })).viewCount, 0);
-  for (const stat of [{ view: '--' }, { view: -1 }, { view: 1.5 }, {}, null, undefined]) {
+  for (const stat of [{ view: '--' }, { view: -1 }, { view: 1.5 }, { view: 2 ** 53 }, {}, null, undefined]) {
     assert.equal('viewCount' in rankingTrack(item('BV1aaaaaaaaa', { stat })), false, JSON.stringify(stat));
   }
   // 封面不在 hdslb.com 就不給。

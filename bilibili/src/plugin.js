@@ -271,9 +271,12 @@ export function artwork(pic) {
   return [...ARTWORK_WIDTHS.map((width) => ({ url: `${url}@${width}w`, width })), { url }];
 }
 
-/** 播放數：非負整數才給（被隱藏時是 `"--"` 之類的字串），否則整個欄位省略。 */
+/**
+ * 播放數：非負的安全整數才給（被隱藏時是 `"--"` 之類的字串；超過 2^53 的不是精確整數，
+ * 宿主可能當成小數而整筆 ParseError），否則整個欄位省略。
+ */
 function viewCountOf(value) {
-  return Number.isInteger(value) && value >= 0 ? { viewCount: value } : {};
+  return Number.isSafeInteger(value) && value >= 0 ? { viewCount: value } : {};
 }
 
 /** 分區名：第一個去頭尾空白後不空的字串；都沒有回 `{}`（欄位省略）。 */

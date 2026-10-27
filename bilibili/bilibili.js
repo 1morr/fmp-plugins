@@ -3484,7 +3484,7 @@ function artwork(pic) {
   return [...ARTWORK_WIDTHS.map((width) => ({ url: `${url}@${width}w`, width })), { url }];
 }
 function viewCountOf(value) {
-  return Number.isInteger(value) && value >= 0 ? { viewCount: value } : {};
+  return Number.isSafeInteger(value) && value >= 0 ? { viewCount: value } : {};
 }
 function areaOf(...candidates) {
   for (const name of candidates) {

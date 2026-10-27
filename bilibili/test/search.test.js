@@ -28,13 +28,15 @@ const video = (bvid, extra = {}) => ({ bvid, title: bvid, author: 'a', duration:
 test('search: viewCount is play when it is a non-negative integer, otherwise left out', async () => {
   fakeHost(
     ok({
-      numResults: 5,
+      numResults: 7,
       result: [
         video('BV1aaaaaaaaa', { play: 466187 }),
         video('BV1bbbbbbbbb', { play: 0 }),
         video('BV1ccccccccc', { play: '--' }),
         video('BV1ddddddddd', { play: -3 }),
         video('BV1eeeeeeeee'),
+        video('BV1fffffffff', { play: 2 ** 53 }),
+        video('BV1ggggggggg', { play: 1e21 }),
       ],
     }),
   );
