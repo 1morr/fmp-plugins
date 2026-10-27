@@ -50,3 +50,10 @@ test('searchViewCount: every video in the recorded search response has a count',
   for (const n of counts) assert.ok(Number.isInteger(n) && n >= 0);
   assert.equal(counts[0], 1824429303);
 });
+
+test('searchViewCount: a live or upcoming video without viewCountText gets no viewCount and the result still maps', () => {
+  // YouTube.js 只在有 viewCountText 時才建 view_count，所以缺的時候是 undefined。
+  const result = { sourceId: 'abc', title: 't', ...searchViewCount(undefined) };
+  assert.deepEqual(result, { sourceId: 'abc', title: 't' });
+  assert.equal('viewCount' in result, false);
+});

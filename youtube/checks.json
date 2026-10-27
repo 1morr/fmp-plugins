@@ -3,7 +3,7 @@
     "input": { "keyword": "rick astley never gonna give you up", "page": 1 },
     "expect": {
       "minItems": 5,
-      "nonEmpty": ["sourceId", "title", "uploader", "durationMs", "artwork", "viewCount"]
+      "nonEmpty": ["sourceId", "title", "uploader", "durationMs", "artwork"]
     }
   },
   "resolveStream": {
