@@ -63,7 +63,9 @@ B 站音源，可匿名使用，也可用 QR 碼登入（啟動時自動刷新�
 - `liveRoomFromUrl`：不連網，只認 `live.bilibili.com/<數字>` 與 `live.bilibili.com/h5/<數字>`（`http`／`https` 可省，後面接結尾、`/`、`?`、`#` 或空白），規則同舊專案 `parseLiveUrl`，只多一條：前面不准緊接 `/`（`https://evil.example/live.bilibili.com/1` 的網域不是 B 站，舊專案會認）；其他一律 `null`。不處理短連結（舊專案也沒有）。回的 `roomId` 是網址裡的號碼，可能是短號，`liveStatus`、`resolveLive` 各自用 `room_init` 換成真實房號；`liveStatus` 回的 `roomId` 是真實房號（舊專案同）。
 - `liveStatus`：`room_init`（短號 → 真實房號）、`get_info`（標題、封面、人數、`live_status`）、`get_anchor_in_room`（主播名），三個請求都在 `api.live.bilibili.com`。主播名（`hostName`，契約裡選填）查不到（請求失敗、業務碼不是 0、沒有 `uname`）時照樣回房間資料、不給 `hostName`，只寫一筆 warning。`live_status` `1` → `live`，`0` 與 `2`（輪播）→ `offline`，其他值或缺 → `ParseError`。封面取 `user_cover`、沒有時取 `keyframe`，格式同 `search` 的封面。**查詢失敗一律拋錯，絕不回 `offline`**（FMP design D10）：HTTP 非 200、不是 JSON、業務碼不是 0、`title` 不是字串、缺 `live_status`，全都拋。房間不存在（`room_init` 的 `60004`）→ `NotFound`（`60004` 的意義來自記憶，還沒在真實回應上看過）。
 - 標題是空字串（去掉標籤與空白後）時三處都換成 `Unknown`，同 `search`：宿主拒收空白標題，`liveSearch` 會整頁被拒。主播名空的不給。
-- `resolveLive`：`room_init` 後呼叫 `/room/v1/Room/playUrl?cid=<真實房號>&platform=web&quality=2&qn=80`，取第一個 `durl`；它的 `backup_url` 排在後面當備援。網址不在 `allowedHosts` 的丟掉並寫 warning，全被丟掉回 `Unavailable`；沒有 `durl` 回 `NotFound`。候選只帶 `Referer`（`live.bilibili.com`）與 `User-Agent`；`container`、`codec` 不標，`formats` 不參與挑選。`expiresAt` 照 `resolveStream` 從網址讀 `deadline`／`hdnts=exp=`，讀不到是 `null`。
+- `resolveLive`：`room_init` 後呼叫 `/room/v1/Room/playUrl?cid=<真實房號>&platform=<web|h5>&quality=2&qn=80`，取第一個 `durl`；它的 `backup_url` 排在後面當備援。網址不在 `allowedHosts` 的丟掉並寫 warning，全被丟掉回 `Unavailable`；沒有 `durl` 回 `NotFound`。候選只帶 `Referer`（`live.bilibili.com`）與 `User-Agent`。
+  - `formats` 有 `hls/aac`（FMP 的 macOS、iOS：AVPlayer 不播 FLV，FMP ADR 0036 §決定 7）時要 `platform=h5`，候選標 `container: 'hls'`、`codec: 'aac'`；沒有時照舊版要 `platform=web` 的 FLV，`container`、`codec` 不標。
+  - h5 的回應形狀和 web 相同，`durl` 是 `bilivideo.com` 上的 `.m3u8`：2026-10-28 匿名實測一個開播中的房間（一次 `playUrl`；找房間用了一次 `area/getRoomList`），回應沒有存成 fixture，由 `test/live.test.js` 的手寫回應守。`expiresAt` 照 `resolveStream` 從網址讀 `deadline`／`hdnts=exp=`，讀不到是 `null`。
 
 ## 登入（QR）
 

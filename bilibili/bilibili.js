@@ -2,7 +2,7 @@
 {
   "id": "bilibili",
   "name": "Bilibili",
-  "version": "1.11.1",
+  "version": "1.12.0",
   "author": "FMP",
   "description": "搜尋 Bilibili 影片並播放其音訊，也能搜尋與收聽直播間、匯入收藏夾、瀏覽音樂排行榜，可用 QR 碼登入。",
   "icon": "data:image/png;base64,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",
@@ -4225,9 +4225,10 @@ async function liveAnchorSearch(keyword, page, status) {
   fmp.log.debug("live anchor search results", { count: items.length, total: numResults });
   return { items, hasMore };
 }
-async function resolveLive({ roomId }) {
+async function resolveLive({ roomId, formats }) {
   const real = await realRoomId(roomId);
-  const params = { cid: real, platform: "web", quality: 2, qn: LIVE_QN };
+  const hls = Array.isArray(formats) && accepts(formats, "hls", "aac");
+  const params = { cid: real, platform: hls ? "h5" : "web", quality: 2, qn: LIVE_QN };
   const data = checkCode(
     await get(`${LIVE_API}/room/v1/Room/playUrl?${query(params)}`, LIVE_API_HEADERS, "live playUrl"),
     "live playUrl"
@@ -4238,7 +4239,8 @@ async function resolveLive({ roomId }) {
   }
   const dropped = [];
   const urls = [first.url, ...Array.isArray(first.backup_url) ? first.backup_url : []];
-  const candidates = candidatesFor(urls, {}, dropped).map((c) => ({ ...c, headers: { ...LIVE_MEDIA_HEADERS } }));
+  const fields = hls ? { container: "hls", codec: "aac" } : {};
+  const candidates = candidatesFor(urls, fields, dropped).map((c) => ({ ...c, headers: { ...LIVE_MEDIA_HEADERS } }));
   if (dropped.length > 0) fmp.log.warn("dropped live stream URLs outside allowedHosts", { hosts: dropped });
   if (candidates.length === 0) {
     throw error("Unavailable", `live playUrl: no stream URL inside allowedHosts for room ${real}`);
