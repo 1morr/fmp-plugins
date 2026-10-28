@@ -6,7 +6,7 @@
       "name": "Bilibili",
       "author": "FMP",
       "description": "搜尋 Bilibili 影片並播放其音訊，也能搜尋與收聽直播間、匯入收藏夾、瀏覽音樂排行榜，可用 QR 碼登入。",
-      "version": "1.11.1",
+      "version": "1.12.0",
       "apiVersion": 1,
       "capabilities": [
         "search",
@@ -31,7 +31,7 @@
         "upos-hz-mirrorakam.akamaized.net"
       ],
       "url": "https://raw.githubusercontent.com/1morr/fmp-plugins/main/bilibili/bilibili.js",
-      "sha256": "db43ca8cc8e751be40c84b932c1845280715c916067fb9766665661221434432",
+      "sha256": "6fc188023b69aa34a42b3856715e4ebcc2dbb6b3ba500f234eebde0686c224e8",
       "checksUrl": "https://raw.githubusercontent.com/1morr/fmp-plugins/main/bilibili/checks.json",
       "checksSha256": "19d81737f5c6dd0db206392760d3fcbb639a7188c5c2128ee25fab03fbbefff6"
     },

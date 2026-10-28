@@ -460,6 +460,51 @@ test('resolveLive asks playUrl with qn=80 and takes the first durl', async () =>
   assert.equal(stream.candidates[0].headers.Cookie, undefined);
 });
 
+test('resolveLive asks for the h5 HLS stream when the platform plays HLS', async () => {
+  const requests = fakeHost([
+    roomInit,
+    playUrl([
+      {
+        url: 'https://d1--ov-gotcha105.bilivideo.com/live-bvc/1/live_1_1500.m3u8?expires=1893456000&sign=x',
+        backup_url: [],
+      },
+      { url: 'https://d1--ov-gotcha105b.bilivideo.com/live-bvc/1/live_1_1500.m3u8?expires=1893456000&sign=y' },
+    ]),
+  ]);
+  const stream = await resolveLive({
+    roomId: '5',
+    formats: [
+      { container: 'mp4', codec: 'aac' },
+      { container: 'hls', codec: 'aac' },
+    ],
+  });
+  const url = new URL(requests[1].url);
+  assert.equal(url.searchParams.get('platform'), 'h5');
+  assert.equal(url.searchParams.get('qn'), '80');
+  // 舊版同樣只取第一段（它的備用網址排在後面）。
+  assert.deepEqual(
+    stream.candidates.map((c) => [c.url.split('?')[0], c.container, c.codec]),
+    [['https://d1--ov-gotcha105.bilivideo.com/live-bvc/1/live_1_1500.m3u8', 'hls', 'aac']],
+  );
+  assert.equal(stream.candidates[0].headers.Referer, 'https://live.bilibili.com/');
+});
+
+test('resolveLive keeps the web FLV stream when the platform does not declare HLS', async () => {
+  const requests = fakeHost([
+    roomInit,
+    playUrl([{ url: 'https://c.bilivideo.com/live-bvc/2/live_2.flv' }]),
+  ]);
+  const stream = await resolveLive({
+    roomId: '5',
+    formats: [
+      { container: 'mp4', codec: 'aac' },
+      { container: 'webm', codec: 'opus' },
+    ],
+  });
+  assert.equal(new URL(requests[1].url).searchParams.get('platform'), 'web');
+  assert.equal(stream.candidates[0].container, undefined);
+});
+
 test('resolveLive throws when there is no usable stream', async () => {
   fakeHost([roomInit, playUrl([])]);
   await rejects(resolveLive({ roomId: '5', formats }), 'NotFound');

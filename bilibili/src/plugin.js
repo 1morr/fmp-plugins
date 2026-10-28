@@ -1207,9 +1207,12 @@ async function liveAnchorSearch(keyword, page, status) {
   return { items, hasMore };
 }
 
-export async function resolveLive({ roomId }) {
+export async function resolveLive({ roomId, formats }) {
   const real = await realRoomId(roomId);
-  const params = { cid: real, platform: 'web', quality: 2, qn: LIVE_QN };
+  // 平台宣告能播 HLS（macOS、iOS 的 AVPlayer 不播 FLV，FMP ADR 0036 §決定 7）就要 h5 的網址：回應形狀相同，
+  // `durl` 是 `.m3u8`（2026-10-28 實測一次）。其他平台照舊版要 web 的 FLV。
+  const hls = Array.isArray(formats) && accepts(formats, 'hls', 'aac');
+  const params = { cid: real, platform: hls ? 'h5' : 'web', quality: 2, qn: LIVE_QN };
   const data = checkCode(
     await get(`${LIVE_API}/room/v1/Room/playUrl?${query(params)}`, LIVE_API_HEADERS, 'live playUrl'),
     'live playUrl',
@@ -1221,7 +1224,8 @@ export async function resolveLive({ roomId }) {
   }
   const dropped = [];
   const urls = [first.url, ...(Array.isArray(first.backup_url) ? first.backup_url : [])];
-  const candidates = candidatesFor(urls, {}, dropped).map((c) => ({ ...c, headers: { ...LIVE_MEDIA_HEADERS } }));
+  const fields = hls ? { container: 'hls', codec: 'aac' } : {};
+  const candidates = candidatesFor(urls, fields, dropped).map((c) => ({ ...c, headers: { ...LIVE_MEDIA_HEADERS } }));
   if (dropped.length > 0) fmp.log.warn('dropped live stream URLs outside allowedHosts', { hosts: dropped });
   if (candidates.length === 0) {
     throw error('Unavailable', `live playUrl: no stream URL inside allowedHosts for room ${real}`);
